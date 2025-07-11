@@ -43,7 +43,6 @@ const extractActDetailsPrompt = ai.definePrompt({
   name: 'extractActDetailsPrompt',
   input: { schema: ExtractActDetailsInputSchema },
   output: { schema: ExtractActDetailsOutputSchema },
-  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em analisar documentos legais.
 Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais importantes de forma estruturada.
