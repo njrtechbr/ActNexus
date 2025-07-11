@@ -87,7 +87,7 @@ export function AtoFormDialog({
             dataAverbacao: format(data.dataAverbacao, "yyyy-MM-dd"),
             dataRegistro: new Date().toISOString(),
         }
-      await updateAto(atoToEdit.id, novaAverbacao);
+      await updateAto(atoToEdit.id, { averbacao: novaAverbacao });
       onAtoSaved();
     } catch (error) {
         console.error("Falha ao salvar averbação:", error);

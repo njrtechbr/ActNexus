@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getAtoById, getLivroById, type Ato, type Livro } from '@/services/apiClientLocal';
+import { getAtoById, getLivroById, updateAto, type Ato, type Livro } from '@/services/apiClientLocal';
 import { extractActDetails, type ExtractActDetailsOutput } from '@/lib/actions';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Users, Edit, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Users, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
@@ -70,10 +70,30 @@ export default function DetalhesAtoPage() {
     const atoId = params.atoId as string;
     const livroId = params.id as string;
 
+    const runAndSaveExtraction = useCallback(async (currentAto: Ato) => {
+        if (!currentAto.conteudoMarkdown || currentAto.dadosExtraidos) return;
+
+        setIsExtracting(true);
+        try {
+            const result = await extractActDetails({ actContent: currentAto.conteudoMarkdown });
+            if (result.details) {
+                setExtractedDetails(result.details);
+                // Salva os detalhes extraídos no "banco de dados"
+                await updateAto(currentAto.id, { dadosExtraidos: result.details });
+            }
+        } catch (error) {
+            console.error("Falha ao extrair e salvar detalhes do ato:", error);
+        } finally {
+            setIsExtracting(false);
+        }
+
+    }, []);
+
     useEffect(() => {
         if (!atoId || !livroId) return;
 
         async function loadData() {
+            setIsLoading(true);
             try {
                 const atoData = await getAtoById(atoId);
                 if (!atoData) {
@@ -84,11 +104,11 @@ export default function DetalhesAtoPage() {
                 setAto(atoData);
                 setLivro(livroData);
 
-                if (atoData.conteudoMarkdown) {
-                    setIsExtracting(true);
-                    const result = await extractActDetails({ actContent: atoData.conteudoMarkdown });
-                    setExtractedDetails(result.details);
-                    setIsExtracting(false);
+                if (atoData.dadosExtraidos) {
+                    setExtractedDetails(atoData.dadosExtraidos);
+                } else if (atoData.conteudoMarkdown) {
+                    // Executa a extração em segundo plano
+                    runAndSaveExtraction(atoData);
                 }
 
             } catch (error) {
@@ -98,7 +118,7 @@ export default function DetalhesAtoPage() {
             }
         }
         loadData();
-    }, [atoId, livroId, router]);
+    }, [atoId, livroId, router, runAndSaveExtraction]);
 
     if (isLoading) {
         return <Loading />;
@@ -107,6 +127,8 @@ export default function DetalhesAtoPage() {
     if (!ato || !livro) {
         return <div className="text-center p-8">Ato ou Livro não encontrado.</div>;
     }
+
+    const showExtractionLoader = isExtracting || (!extractedDetails && !!ato.conteudoMarkdown);
 
     return (
         <div className="space-y-6">
@@ -137,7 +159,7 @@ export default function DetalhesAtoPage() {
                                     <Sparkles className="h-5 w-5 text-primary"/>
                                     Detalhes do Ato
                                 </CardTitle>
-                                {isExtracting && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                                {showExtractionLoader && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
                              </div>
                             <CardDescription>Dados extraídos pela IA do conteúdo.</CardDescription>
                         </CardHeader>
@@ -146,7 +168,7 @@ export default function DetalhesAtoPage() {
                                 <span className="font-medium text-muted-foreground">Escrevente</span>
                                 <span className="font-semibold text-right text-foreground">{ato.escrevente || 'Não informado'}</span>
                             </div>
-                            {isExtracting && (
+                            {showExtractionLoader && (
                                 <div className="space-y-3 pt-1">
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-4/5" />

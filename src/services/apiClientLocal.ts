@@ -53,6 +53,7 @@ export interface Ato {
     averbacoes: Averbacao[];
     escrevente?: string;
     conteudoMarkdown?: string;
+    dadosExtraidos?: { label: string; value: string; }[];
 }
 
 export interface DocumentoCliente {
@@ -131,9 +132,14 @@ export const getAtoById = async (atoId: string): Promise<Ato | null> => {
     return atos.find(ato => ato.id === atoId) || null;
 }
 
-export const updateAto = async (atoId: string, novaAverbacao: Averbacao): Promise<Ato | null> => {
+type UpdateAtoPayload = {
+    averbacao?: Averbacao;
+    dadosExtraidos?: { label: string; value: string; }[];
+};
+
+export const updateAto = async (atoId: string, payload: UpdateAtoPayload): Promise<Ato | null> => {
     await delay(600);
-    console.log(`MOCK API: Adicionando averbação ao ato ${atoId}...`);
+    console.log(`MOCK API: Atualizando ato ${atoId}...`);
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
     const atoIndex = todosAtos.findIndex(a => a.id === atoId);
 
@@ -143,17 +149,23 @@ export const updateAto = async (atoId: string, novaAverbacao: Averbacao): Promis
     }
 
     const atoAtual = todosAtos[atoIndex];
-    if (!atoAtual.averbacoes) {
-        atoAtual.averbacoes = [];
+
+    if (payload.averbacao) {
+        if (!atoAtual.averbacoes) {
+            atoAtual.averbacoes = [];
+        }
+        atoAtual.averbacoes.push(payload.averbacao);
     }
-    atoAtual.averbacoes.push(novaAverbacao);
+
+    if (payload.dadosExtraidos) {
+        atoAtual.dadosExtraidos = payload.dadosExtraidos;
+    }
     
     todosAtos[atoIndex] = atoAtual;
 
     saveToStorage('actnexus_atos', todosAtos);
     return atoAtual;
 }
-
 
 export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     await delay(300);
