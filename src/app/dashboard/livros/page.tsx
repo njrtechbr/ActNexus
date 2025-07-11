@@ -98,7 +98,7 @@ export default function LivrosPage() {
                                         <TableHead className="w-[100px]">Número</TableHead>
                                         <TableHead className="w-[100px]">Ano</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Total de Atos</TableHead>
+                                        <TableHead className="text-right">Total de Folhas</TableHead>
                                         <TableHead className="w-[100px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -141,4 +141,3 @@ export default function LivrosPage() {
         </div>
     );
 }
-
