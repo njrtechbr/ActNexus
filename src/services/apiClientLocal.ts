@@ -316,34 +316,37 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
         return null;
     }
 
-    const clienteAtual = clientes[clienteIndex];
+    let clienteAtual = clientes[clienteIndex];
 
-    // Merge payload fields into the current client data
-    const updatedCliente = { ...clienteAtual, ...payload };
-
+    // Merge payload fields into the current client data, ensuring arrays are replaced not merged
+    clienteAtual = {
+        ...clienteAtual,
+        ...payload,
+    };
+    
     // Special handling for merging 'campos' into 'dadosAdicionais'
     if (payload.campos) {
-        if (!updatedCliente.dadosAdicionais) {
-            updatedCliente.dadosAdicionais = [];
+        if (!clienteAtual.dadosAdicionais) {
+            clienteAtual.dadosAdicionais = [];
         }
 
         payload.campos.forEach(campo => {
-            const campoExistenteIndex = updatedCliente.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
+            const campoExistenteIndex = clienteAtual.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
             if (campoExistenteIndex > -1) {
                 // Update the value if the field already exists
-                updatedCliente.dadosAdicionais![campoExistenteIndex] = campo; 
+                clienteAtual.dadosAdicionais![campoExistenteIndex] = campo; 
             } else {
                 // Add new field
-                updatedCliente.dadosAdicionais!.push(campo); 
+                clienteAtual.dadosAdicionais!.push(campo); 
             }
         });
         // Remove the 'campos' property after merging
-        delete (updatedCliente as any).campos;
+        delete (clienteAtual as any).campos;
     }
     
-    clientes[clienteIndex] = updatedCliente;
+    clientes[clienteIndex] = clienteAtual;
     saveToStorage('actnexus_clientes', clientes);
-    return updatedCliente;
+    return clienteAtual;
 }
 
 

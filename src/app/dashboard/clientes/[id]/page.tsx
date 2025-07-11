@@ -10,7 +10,7 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save, UploadCloud, File as FileIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -18,12 +18,18 @@ import { useToast } from '@/hooks/use-toast';
 import { QualificationGeneratorDialog } from '@/components/dashboard/qualification-generator-dialog';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { format, isBefore, isWithinInterval, addDays, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 interface UserProfile {
     role: string;
@@ -66,10 +72,18 @@ const enderecoSchema = z.object({
     label: z.string().optional(),
 });
 
+const documentoSchema = z.object({
+  nome: z.string(),
+  url: z.string(),
+  dataValidade: z.date().transform(val => val.toISOString()).optional(),
+});
+
+
 const formSchema = z.object({
   contatos: z.array(contatoSchema).optional(),
   enderecos: z.array(enderecoSchema).optional(),
   observacoes: z.array(z.object({ value: z.string() })).optional(),
+  documentos: z.array(documentoSchema).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -96,9 +110,10 @@ export default function DetalhesClientePage() {
         defaultValues: {},
     });
 
-    const { fields: contatoFields, append: appendContato, remove: removeContato, replace: replaceContatos } = useFieldArray({ control: form.control, name: "contatos" });
-    const { fields: enderecoFields, append: appendEndereco, remove: removeEndereco, replace: replaceEnderecos } = useFieldArray({ control: form.control, name: "enderecos" });
-    const { fields: obsFields, append: appendObs, remove: removeObs, replace: replaceObs } = useFieldArray({ control: form.control, name: "observacoes" });
+    const { fields: contatoFields, append: appendContato, remove: removeContato } = useFieldArray({ control: form.control, name: "contatos" });
+    const { fields: enderecoFields, append: appendEndereco, remove: removeEndereco } = useFieldArray({ control: form.control, name: "enderecos" });
+    const { fields: obsFields, append: appendObs, remove: removeObs } = useFieldArray({ control: form.control, name: "observacoes" });
+    const { fields: docFields, append: appendDoc, remove: removeDoc } = useFieldArray({ control: form.control, name: "documentos" });
 
     useEffect(() => {
         const userData = localStorage.getItem("actnexus_user");
@@ -106,6 +121,18 @@ export default function DetalhesClientePage() {
             setUser(JSON.parse(userData));
         }
     }, []);
+
+    const resetFormValues = useCallback((clienteData: Cliente) => {
+        form.reset({
+            contatos: clienteData.contatos || [],
+            enderecos: clienteData.enderecos || [],
+            observacoes: clienteData.observacoes?.map(obs => ({ value: obs })) || [],
+            documentos: clienteData.documentos?.map(doc => ({
+                ...doc,
+                dataValidade: doc.dataValidade ? parseISO(doc.dataValidade) : undefined,
+            })) || [],
+        });
+    }, [form]);
 
     const loadData = useCallback(async () => {
         if (!clienteId) return;
@@ -128,17 +155,14 @@ export default function DetalhesClientePage() {
             
             setCliente(clienteData);
             setAtos(atosData);
-            form.reset({
-                contatos: clienteData.contatos || [],
-                enderecos: clienteData.enderecos || [],
-                observacoes: clienteData.observacoes?.map(obs => ({ value: obs })) || [],
-            });
+            resetFormValues(clienteData);
+
         } catch (error) {
             console.error("Falha ao buscar dados do cliente:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [clienteId, router, toast, form]);
+    }, [clienteId, router, toast, resetFormValues]);
 
     useEffect(() => {
         loadData();
@@ -174,6 +198,18 @@ export default function DetalhesClientePage() {
         });
     };
 
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files) {
+            const newDocs = Array.from(files).map(file => ({
+                nome: file.name,
+                url: `/docs/simulado/${file.name}`, // Simula um caminho
+            }));
+            appendDoc(newDocs as any);
+        }
+        event.target.value = '';
+    };
+
     const onSubmit = async (data: FormData) => {
         if (!cliente) return;
         setIsSubmitting(true);
@@ -181,11 +217,15 @@ export default function DetalhesClientePage() {
             const clienteData = {
                 ...data,
                 observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean) || [],
+                documentos: data.documentos?.map(doc => ({
+                    ...doc,
+                    dataValidade: doc.dataValidade ? format(parseISO(doc.dataValidade), 'yyyy-MM-dd') : undefined,
+                })) || [],
             };
             await updateCliente(cliente.id, clienteData);
             toast({ title: 'Sucesso!', description: 'Dados do cliente atualizados.' });
             setIsEditing(false);
-            loadData(); // Recarrega os dados para exibir as informações atualizadas
+            await loadData(); // Recarrega os dados para exibir as informações atualizadas
         } catch (error) {
             console.error("Falha ao atualizar cliente:", error);
             toast({ variant: "destructive", title: "Erro ao Salvar", description: "Não foi possível atualizar o cliente." });
@@ -196,11 +236,9 @@ export default function DetalhesClientePage() {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        form.reset({
-            contatos: cliente?.contatos || [],
-            enderecos: cliente?.enderecos || [],
-            observacoes: cliente?.observacoes?.map(obs => ({ value: obs })) || [],
-        });
+        if(cliente) {
+            resetFormValues(cliente);
+        }
     }
 
     const contactIcons = {
@@ -283,7 +321,7 @@ export default function DetalhesClientePage() {
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="dados">Dados Principais</TabsTrigger>
                         <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
-                        <TabsTrigger value="documentos">Documentos ({cliente.documentos?.length || 0})</TabsTrigger>
+                        <TabsTrigger value="documentos">Documentos ({isEditing ? docFields.length : (cliente.documentos?.length || 0)})</TabsTrigger>
                     </TabsList>
                     
                     {/* DADOS PRINCIPAIS */}
@@ -480,40 +518,98 @@ export default function DetalhesClientePage() {
                     {/* DOCUMENTOS */}
                     <TabsContent value="documentos">
                         <Card>
-                            <CardHeader>
+                             <CardHeader>
                                 <CardTitle>Documentos Anexados</CardTitle>
-                                <CardDescription>Documentos do cliente e suas validades.</CardDescription>
+                                <CardDescription>Gerencie os documentos do cliente e suas validades.</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                {cliente.documentos && cliente.documentos.length > 0 ? (
+                             <CardContent className="space-y-4">
+                                {isEditing && (
+                                     <FormItem>
+                                        <FormLabel>Anexar Novos Documentos</FormLabel>
+                                        <FormControl>
+                                            <div className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 text-center">
+                                                <UploadCloud className="h-10 w-10 text-muted-foreground" />
+                                                <p className="mt-2 text-sm text-muted-foreground">Arraste ou clique para anexar</p>
+                                                <Input 
+                                                    type="file" 
+                                                    multiple 
+                                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                                    onChange={handleFileChange}
+                                                />
+                                            </div>
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+
+                                {docFields.length > 0 ? (
                                     <ul className="space-y-3">
-                                        {cliente.documentos.map(doc => {
-                                            const status = getDocumentStatus(doc);
-                                            return (
-                                                <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
-                                                    <div className="flex items-start gap-3">
-                                                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                                        <div className="flex flex-col">
-                                                        <span className="font-medium">{doc.nome}</span>
-                                                            {doc.dataValidade ? (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-xs text-muted-foreground">Sem data de validade</span>
-                                                            )}
-                                                        </div>
+                                        {docFields.map((doc, index) => (
+                                            <li key={doc.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
+                                                <div className="flex items-start gap-3 w-full sm:w-auto">
+                                                    <FileIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                                    <div className="flex flex-col overflow-hidden">
+                                                        <span className="font-medium truncate">{doc.nome}</span>
+                                                        {!isEditing && doc.dataValidade && (
+                                                            <span className="text-xs text-muted-foreground">
+                                                                Validade: {format(parseISO(doc.dataValidade as unknown as string), 'dd/MM/yyyy')}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
+                                                </div>
+                                                
+                                                {isEditing ? (
+                                                    <div className="flex items-center gap-2 w-full sm:w-auto ml-7 sm:ml-0">
+                                                        <FormField
+                                                            control={form.control}
+                                                            name={`documentos.${index}.dataValidade`}
+                                                            render={({ field }) => (
+                                                            <FormItem className="flex-1">
+                                                                <Popover>
+                                                                    <PopoverTrigger asChild>
+                                                                    <FormControl>
+                                                                        <Button
+                                                                        variant={"outline"}
+                                                                        className={cn(
+                                                                            "w-full justify-start text-left font-normal",
+                                                                            !field.value && "text-muted-foreground"
+                                                                        )}
+                                                                        >
+                                                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                        {field.value ? (
+                                                                            format(field.value as unknown as Date, "dd/MM/yyyy")
+                                                                        ) : (
+                                                                            <span>Validade</span>
+                                                                        )}
+                                                                        </Button>
+                                                                    </FormControl>
+                                                                    </PopoverTrigger>
+                                                                    <PopoverContent className="w-auto p-0">
+                                                                    <Calendar
+                                                                        mode="single"
+                                                                        selected={field.value as unknown as Date}
+                                                                        onSelect={field.onChange}
+                                                                        initialFocus
+                                                                    />
+                                                                    </PopoverContent>
+                                                                </Popover>
+                                                            </FormItem>
+                                                            )}
+                                                        />
+                                                        <Button type="button" variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => removeDoc(index)}>
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <Badge variant={getDocumentStatus(doc as any).variant} className="gap-1.5 whitespace-nowrap">
                                                         <status.icon className="h-3 w-3"/>
-                                                        {status.text}
+                                                        {getDocumentStatus(doc as any).text}
                                                     </Badge>
-                                                </li>
-                                            );
-                                        })}
+                                                )}
+                                            </li>
+                                        ))}
                                     </ul>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
+                                    !isEditing && <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
                                 )}
                             </CardContent>
                         </Card>
@@ -532,3 +628,5 @@ export default function DetalhesClientePage() {
         </>
     );
 }
+
+    

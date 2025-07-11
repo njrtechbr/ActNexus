@@ -238,8 +238,10 @@ A URL base para os endpoints pode ser `/api`.
 
 #### **`PATCH /clientes/:id`**
 
--   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos, gerenciar contatos, endereços, observações e documentos.
--   **Regra de Negócio**: Ao mesclar `dadosAdicionais` (campos), o backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
+-   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos e gerenciar listas como contatos, endereços, observações e documentos.
+-   **Regra de Negócio**: 
+    - Ao mesclar `dadosAdicionais` (campos), o backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
+    - As listas como `contatos`, `enderecos`, `observacoes` e `documentos` devem ser substituídas inteiramente pelo novo array fornecido no payload. O frontend enviará a lista completa e atualizada.
 -   **Autorização**: `admin` para edições manuais. Pode também ser chamado por um processo interno do sistema (após extração da IA).
 -   **Payload (parcial, todos os campos são opcionais)**:
     ```json
