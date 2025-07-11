@@ -61,7 +61,10 @@ const summarizeClientHistoryFlow = ai.defineFlow(
     if (input.acts.length === 0) {
         return { summary: `${input.clientName} ainda não possui atos registrados no cartório.`};
     }
-    const {output} = await summarizeClientHistoryPrompt(input);
+    const {output} = await ai.generate({
+        prompt: summarizeClientHistoryPrompt,
+        input: input,
+    });
     return output!;
   }
 );

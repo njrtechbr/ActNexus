@@ -51,7 +51,10 @@ const semanticSearchFlow = ai.defineFlow(
     outputSchema: SemanticSearchOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await ai.generate({
+        prompt: prompt,
+        input: input,
+    });
     return output!;
   }
 );

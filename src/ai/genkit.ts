@@ -6,9 +6,6 @@ import {calculateCost} from '@/lib/ai-pricing';
 export const ai = genkit({
   plugins: [googleAI({
       apiVersion: 'v1beta',
-      defaultGenerationOptions: {
-          model: 'gemini-1.5-flash-latest',
-      }
   })],
   enableTracing: true, 
   middleware: [
@@ -22,7 +19,9 @@ export const ai = genkit({
           const usage = result.usage as GenerationUsage;
           const prompt = call.input;
           const response = result.output;
-          const model = (call.options?.model as string) || (call.model as string);
+          
+          // Updated logic to reliably get the model name
+          const model = (call.options?.model as any)?.name || 'gemini-1.5-flash-latest';
 
           const {inputCost, outputCost, totalCost} = calculateCost(
             usage.inputTokens,
@@ -52,4 +51,5 @@ export const ai = genkit({
       }
     },
   ],
+  defaultModel: 'googleai/gemini-1.5-flash-latest'
 });

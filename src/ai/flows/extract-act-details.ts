@@ -68,7 +68,10 @@ const extractActDetailsFlow = ai.defineFlow(
     outputSchema: ExtractActDetailsOutputSchema,
   },
   async (input) => {
-    const { output } = await extractActDetailsPrompt(input);
+    const { output } = await ai.generate({
+        prompt: extractActDetailsPrompt,
+        input: input
+    });
     return output!;
   }
 );

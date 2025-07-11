@@ -67,7 +67,10 @@ const generateQualificationFlow = ai.defineFlow(
     if (input.fields.length === 0) {
       return { qualificationText: "Nenhum campo selecionado para gerar a qualificação." };
     }
-    const { output } = await generateQualificationPrompt(input);
+    const { output } = await ai.generate({
+        prompt: generateQualificationPrompt,
+        input: input
+    });
     return output!;
   }
 );

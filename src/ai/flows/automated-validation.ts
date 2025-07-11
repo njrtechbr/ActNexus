@@ -60,7 +60,10 @@ const automatedValidationFlow = ai.defineFlow(
     outputSchema: AutomatedValidationOutputSchema,
   },
   async input => {
-    const {output} = await automatedValidationPrompt(input);
+    const {output} = await ai.generate({
+        prompt: automatedValidationPrompt,
+        input: input,
+    });
     return output!;
   }
 );

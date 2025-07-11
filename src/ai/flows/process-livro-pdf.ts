@@ -78,7 +78,10 @@ const processLivroPdfFlow = ai.defineFlow(
     outputSchema: ProcessLivroPdfOutputSchema,
   },
   async (input) => {
-    const { output } = await processLivroPdfPrompt(input);
+    const { output } = await ai.generate({
+        prompt: processLivroPdfPrompt,
+        input: input
+    });
     return {
       markdownContent: output!.markdownContent,
     };
