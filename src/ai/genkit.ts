@@ -5,7 +5,10 @@ import {calculateCost} from '@/lib/ai-pricing';
 
 export const ai = genkit({
   plugins: [googleAI({
-      apiVersion: 'v1beta'
+      apiVersion: 'v1beta',
+      defaultGenerationOptions: {
+          model: 'gemini-1.5-flash-latest',
+      }
   })],
   enableTracing: true, 
   middleware: [
