@@ -208,11 +208,20 @@ export default function DetalhesClientePage() {
 
         } catch (error) {
             console.error("Falha ao gerar resumo:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Erro de IA',
-                description: 'Não foi possível gerar o resumo do cliente.',
-            });
+            const errorMessage = (error as Error).message;
+            if (errorMessage.includes('503 Service Unavailable')) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Serviço de IA Indisponível',
+                    description: 'O modelo de IA está sobrecarregado. Por favor, tente novamente em alguns instantes.',
+                });
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Erro de IA',
+                    description: 'Não foi possível gerar o resumo do cliente.',
+                });
+            }
         } finally {
             setIsSummarizing(false);
         }
@@ -720,3 +729,4 @@ export default function DetalhesClientePage() {
         </>
     );
 }
+
