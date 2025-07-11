@@ -77,9 +77,11 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 - **Mock de API**:
   - **`localStorage`**: Utilizado para persistir os dados da aplicação no navegador.
   - **`src/services/apiClientLocal.ts`**: Centraliza toda a lógica de acesso e manipulação do `localStorage`, simulando uma API real com latência.
-- **Inteligência Artificial (Fluxo de Validação)**:
+- **Inteligência Artificial**:
   - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google.
-  - **Validação de Atos**: Ao clicar em um ato na listagem, um diálogo é aberto e o fluxo de IA `automatedValidation` é acionado para verificar os dados do ato (simulando a extração de texto de um PDF). O resultado é exibido para o usuário.
+  - **Fluxos de IA**:
+    - `automatedValidation`: Valida dados em um texto simulado de documento.
+    - `summarizeClientHistory`: Gera um resumo do histórico de atos de um cliente.
 - **Gerenciamento de Formulários**:
   - **React Hook Form**: Para gerenciamento de estado de formulários.
   - **Zod**: Para validação de esquemas de dados.
@@ -89,17 +91,15 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 ```
 /src
 ├── data/              # Dados iniciais para popular o localStorage
-│   └── initial-data.ts
 ├── services/          # Serviços de comunicação (mock ou real)
-│   └── apiClientLocal.ts
 ├── ai/                # Lógica de Inteligência Artificial com Genkit
-│   ├── flows/         # Fluxos de IA (pesquisa, validação)
+│   ├── flows/         # Fluxos de IA (pesquisa, validação, resumo)
 │   └── genkit.ts      # Configuração do Genkit
 ├── app/               # Rotas e páginas do Next.js (App Router)
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog, LivroFormDialog)
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog, LivroFormDialog, AtoFormDialog)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast)
 └── lib/               # Funções utilitárias e actions
@@ -111,3 +111,5 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 1. Instale as dependências: `npm install`
 2. Inicie o servidor de desenvolvimento: `npm run dev`
 3. Acesse a aplicação em `http://localhost:9002`. Os dados iniciais serão populados no `localStorage` automaticamente.
+   - **Login Admin**: `admin@actnexus.com` / `password`
+   - **Login Funcionário**: `employee@actnexus.com` / `password`
