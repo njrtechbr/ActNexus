@@ -25,6 +25,13 @@ import {
   type ProcessLivroPdfOutput,
 } from "@/ai/flows/process-livro-pdf";
 
+import {
+  extractActDetails as extractActDetailsFlow,
+  type ExtractActDetailsInput,
+  type ExtractActDetailsOutput,
+} from "@/ai/flows/extract-act-details";
+
+
 export async function automatedValidation(
   input: AutomatedValidationInput
 ): Promise<AutomatedValidationOutput> {
@@ -49,4 +56,10 @@ export async function processLivroPdf(
   input: ProcessLivroPdfInput
 ): Promise<ProcessLivroPdfOutput> {
   return await processLivroPdfFlow(input);
+}
+
+export async function extractActDetails(
+  input: ExtractActDetailsInput
+): Promise<ExtractActDetailsOutput> {
+  return await extractActDetailsFlow(input);
 }

@@ -4,20 +4,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getAtoById, getLivroById, type Ato, type Livro } from '@/services/apiClientLocal';
+import { extractActDetails, type ExtractActDetailsOutput } from '@/lib/actions';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Users, Edit } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Users, Edit, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const MarkdownRenderer = ({ content }: { content: string }) => {
   if (!content) {
     return null;
   }
 
-  // A IA vai retornar o corpo do texto a partir daqui.
   const blocks = content.split('\n\n');
 
   return (
@@ -28,7 +30,6 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 
         const lines = trimmedBlock.split('\n');
         
-        // Bloco de assinatura
         if (trimmedBlock.startsWith('_________________________________________')) {
             return (
               <div key={index} className="text-center pt-8">
@@ -36,8 +37,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
               </div>
             );
         }
-
-        // Título (all-caps com :)
+        
         if (lines.length === 1 && trimmedBlock === trimmedBlock.toUpperCase() && trimmedBlock.endsWith(':')) {
           return (
             <div key={index}>
@@ -47,7 +47,6 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
           );
         }
 
-        // Parágrafo normal
         return (
            <p key={index} className="leading-relaxed indent-8 text-justify">
               {trimmedBlock}
@@ -63,6 +62,8 @@ export default function DetalhesAtoPage() {
     const [ato, setAto] = useState<Ato | null>(null);
     const [livro, setLivro] = useState<Livro | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [extractedDetails, setExtractedDetails] = useState<ExtractActDetailsOutput['details'] | null>(null);
+    const [isExtracting, setIsExtracting] = useState(false);
     const params = useParams();
     const router = useRouter();
 
@@ -82,6 +83,14 @@ export default function DetalhesAtoPage() {
                 const livroData = await getLivroById(atoData.livroId);
                 setAto(atoData);
                 setLivro(livroData);
+
+                if (atoData.conteudoMarkdown) {
+                    setIsExtracting(true);
+                    const result = await extractActDetails({ actContent: atoData.conteudoMarkdown });
+                    setExtractedDetails(result.details);
+                    setIsExtracting(false);
+                }
+
             } catch (error) {
                 console.error("Falha ao buscar dados do ato:", error);
             } finally {
@@ -90,20 +99,6 @@ export default function DetalhesAtoPage() {
         }
         loadData();
     }, [atoId, livroId, router]);
-
-    const dadosEstruturados = useMemo(() => {
-        if (!ato || !livro) return [];
-        const dados = [
-            { label: 'Livro', value: `${livro.numero.toString().padStart(3, '0')}/${livro.ano}` },
-            { label: 'Folha', value: ato.numeroAto.toString().padStart(3, '0') },
-            { label: 'Tipo do Ato', value: ato.tipoAto },
-            { label: 'Data do Ato', value: format(parseISO(ato.dataAto), 'dd/MM/yyyy') },
-        ];
-        if (ato.escrevente) {
-            dados.push({ label: 'Escrevente', value: ato.escrevente });
-        }
-        return dados;
-    }, [ato, livro]);
 
     if (isLoading) {
         return <Loading />;
@@ -134,16 +129,32 @@ export default function DetalhesAtoPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Coluna de Metadados */}
                 <div className="lg:col-span-1 space-y-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Detalhes do Ato</CardTitle>
-                            <CardDescription>Dados extraídos pela IA.</CardDescription>
+                             <div className="flex items-center justify-between">
+                                <CardTitle className="flex items-center gap-2">
+                                    <Sparkles className="h-5 w-5 text-primary"/>
+                                    Detalhes do Ato
+                                </CardTitle>
+                                {isExtracting && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                             </div>
+                            <CardDescription>Dados extraídos pela IA do conteúdo.</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4 text-sm">
-                            {dadosEstruturados.map(item => (
-                                <div key={item.label} className="flex justify-between border-b pb-2">
+                        <CardContent className="space-y-3 text-sm">
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="font-medium text-muted-foreground">Escrevente</span>
+                                <span className="font-semibold text-right text-foreground">{ato.escrevente || 'Não informado'}</span>
+                            </div>
+                            {isExtracting && (
+                                <div className="space-y-3 pt-1">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-4/5" />
+                                    <Skeleton className="h-4 w-full" />
+                                </div>
+                            )}
+                            {extractedDetails?.map(item => (
+                                <div key={item.label} className="flex flex-col border-b pb-2">
                                     <span className="font-medium text-muted-foreground">{item.label}</span>
                                     <span className="font-semibold text-right text-foreground">{item.value}</span>
                                 </div>
@@ -171,7 +182,6 @@ export default function DetalhesAtoPage() {
                     </Card>
                 </div>
                 
-                {/* Coluna de Conteúdo */}
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader>
