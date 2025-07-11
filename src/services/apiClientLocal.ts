@@ -266,19 +266,23 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
-    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}` };
+    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}`, dadosAdicionais: [] };
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
 }
 
 type UpdateClientePayload = {
+    nome?: string;
+    cpfCnpj?: string;
+    tipo?: 'PF' | 'PJ';
+    documentos?: DocumentoCliente[];
     campos?: CampoAdicionalCliente[];
 };
 
 export const updateCliente = async (clienteId: string, payload: UpdateClientePayload): Promise<Cliente | null> => {
     await delay(400);
-    console.log(`MOCK API: Atualizando cliente ${clienteId} com novos campos...`);
+    console.log(`MOCK API: Atualizando cliente ${clienteId}...`);
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
     const clienteIndex = clientes.findIndex(c => c.id === clienteId);
 
@@ -289,6 +293,17 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
 
     const clienteAtual = clientes[clienteIndex];
 
+    // Atualiza campos básicos
+    if (payload.nome) clienteAtual.nome = payload.nome;
+    if (payload.cpfCnpj) clienteAtual.cpfCnpj = payload.cpfCnpj;
+    if (payload.tipo) clienteAtual.tipo = payload.tipo;
+    
+    // Substitui a lista de documentos completamente se fornecida
+    if (payload.documentos) {
+        clienteAtual.documentos = payload.documentos;
+    }
+
+    // Mescla dados adicionais
     if (payload.campos) {
         if (!clienteAtual.dadosAdicionais) {
             clienteAtual.dadosAdicionais = [];

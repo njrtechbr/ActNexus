@@ -2,13 +2,13 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getClienteById, getAtosByClienteId, type Cliente, type Ato, type DocumentoCliente } from '@/services/apiClientLocal';
 import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -18,6 +18,11 @@ import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { format, isBefore, isWithinInterval, addDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
+import { ClientEditDialog } from '@/components/dashboard/client-edit-dialog';
+
+interface UserProfile {
+    role: string;
+}
 
 const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "default" | "secondary" | "destructive", icon: React.ElementType} => {
     if (!doc.dataValidade) {
@@ -45,6 +50,8 @@ export default function DetalhesClientePage() {
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState<string | null>(null);
     const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
+    const [isClientEditDialogOpen, setIsClientEditDialogOpen] = useState(false);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
@@ -52,35 +59,43 @@ export default function DetalhesClientePage() {
     const clienteId = params.id as string;
 
     useEffect(() => {
-        if (!clienteId) return;
-
-        async function loadData() {
-            try {
-                const [clienteData, atosData] = await Promise.all([
-                    getClienteById(clienteId),
-                    getAtosByClienteId(clienteId)
-                ]);
-
-                if (!clienteData) {
-                    toast({
-                        variant: 'destructive',
-                        title: 'Cliente não encontrado',
-                        description: 'O cliente que você está tentando acessar não existe.',
-                    });
-                    router.push('/dashboard/clientes');
-                    return;
-                }
-                
-                setCliente(clienteData);
-                setAtos(atosData);
-            } catch (error) {
-                console.error("Falha ao buscar dados do cliente:", error);
-            } finally {
-                setIsLoading(false);
-            }
+        const userData = localStorage.getItem("actnexus_user");
+        if (userData) {
+            setUser(JSON.parse(userData));
         }
-        loadData();
+    }, []);
+
+    const loadData = useCallback(async () => {
+        if (!clienteId) return;
+        setIsLoading(true);
+        try {
+            const [clienteData, atosData] = await Promise.all([
+                getClienteById(clienteId),
+                getAtosByClienteId(clienteId)
+            ]);
+
+            if (!clienteData) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Cliente não encontrado',
+                    description: 'O cliente que você está tentando acessar não existe.',
+                });
+                router.push('/dashboard/clientes');
+                return;
+            }
+            
+            setCliente(clienteData);
+            setAtos(atosData);
+        } catch (error) {
+            console.error("Falha ao buscar dados do cliente:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }, [clienteId, router, toast]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleSummarize = async () => {
         if (!cliente || !atos) return;
@@ -110,6 +125,15 @@ export default function DetalhesClientePage() {
             title: 'Copiado!',
             description: `O campo "${label}" foi copiado para a área de transferência.`,
         });
+    };
+
+    const handleClientUpdated = () => {
+        setIsClientEditDialogOpen(false);
+        toast({
+            title: 'Sucesso!',
+            description: 'Dados do cliente atualizados.',
+        });
+        loadData();
     };
 
     if (isLoading) {
@@ -143,14 +167,22 @@ export default function DetalhesClientePage() {
                             </div>
                         </div>
                     </div>
-                    <Button onClick={handleSummarize} disabled={isSummarizing}>
-                        {isSummarizing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Sparkles className="mr-2 h-4 w-4" />
+                    <div className='flex items-center gap-2'>
+                        {user?.role === 'admin' && (
+                            <Button variant="secondary" onClick={() => setIsClientEditDialogOpen(true)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar Cliente
+                            </Button>
                         )}
-                        Resumir com IA
-                    </Button>
+                        <Button onClick={handleSummarize} disabled={isSummarizing}>
+                            {isSummarizing ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-4 w-4" />
+                            )}
+                            Resumir com IA
+                        </Button>
+                    </div>
                 </div>
 
                 {summary && (
@@ -172,7 +204,7 @@ export default function DetalhesClientePage() {
                                 <CardDescription>Documentos anexados e suas validades.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {cliente.documentos.length > 0 ? (
+                                {cliente.documentos && cliente.documentos.length > 0 ? (
                                     <ul className="space-y-3">
                                         {cliente.documentos.map(doc => {
                                             const status = getDocumentStatus(doc);
@@ -285,6 +317,14 @@ export default function DetalhesClientePage() {
                 <QualificationGeneratorDialog
                     isOpen={isQualificationDialogOpen}
                     setIsOpen={setIsQualificationDialogOpen}
+                    cliente={cliente}
+                />
+            )}
+             {cliente && user?.role === 'admin' && (
+                <ClientEditDialog
+                    isOpen={isClientEditDialogOpen}
+                    setIsOpen={setIsClientEditDialogOpen}
+                    onClientUpdated={handleClientUpdated}
                     cliente={cliente}
                 />
             )}

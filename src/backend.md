@@ -25,6 +25,7 @@ O backend deve implementar as seguintes regras para garantir a integridade dos d
 -   **Perfil `admin`**:
     -   Pode adicionar averbações em atos (`PATCH /atos/:atoId`).
     -   Pode criar novos clientes (`POST /clientes`).
+    -   Pode editar clientes existentes (`PATCH /clientes/:id`).
     -   Pode gerenciar os tipos de livro (`GET`, `POST`, `DELETE` em `/configuracoes/tipos-livro`).
     -   Pode acessar a tela de auditoria de IA (`GET /auditoria-ia`).
 
@@ -216,21 +217,24 @@ A URL base para os endpoints pode ser `/api`.
 
 #### **`PATCH /clientes/:id`**
 
--   **Descrição**: Atualiza um cliente, principalmente para adicionar/sincronizar `dadosAdicionais` extraídos pela IA ou para gerenciar documentos.
--   **Regra de Negócio**: O backend deve fazer a gestão para não criar `labels` duplicadas em `dadosAdicionais`, atualizando o `value` se a `label` já existir.
--   **Autorização**: Pode ser chamado por um processo interno do sistema (após extração da IA) ou por um `admin`.
--   **Payload**:
+-   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos, gerenciar a lista de documentos ou sincronizar `dadosAdicionais` extraídos pela IA.
+-   **Regra de Negócio**: Ao mesclar `dadosAdicionais` (campos), o backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
+-   **Autorização**: `admin` para edições manuais. Pode também ser chamado por um processo interno do sistema (após extração da IA).
+-   **Payload (parcial, todos os campos são opcionais)**:
     ```json
     {
-      "campos": [ // Opcional, para dados adicionais
-        { "label": "string", "value": "string" }
-      ],
-      "documentos": [ // Opcional, para gerenciar todos os documentos
+      "nome": "string",
+      "cpfCnpj": "string",
+      "tipo": "string (PF ou PJ)",
+      "documentos": [ // Para gerenciar a lista completa de documentos
          { 
             "nome": "string", 
             "url": "string",
             "dataValidade": "string (YYYY-MM-DD, opcional)"
           }
+      ],
+      "campos": [ // Para mesclar/sincronizar dados adicionais
+        { "label": "string", "value": "string" }
       ]
     }
     ```
