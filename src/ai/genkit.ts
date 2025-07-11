@@ -20,8 +20,7 @@ export const ai = genkit({
           const prompt = call.input;
           const response = result.output;
           
-          // Updated logic to reliably get the model name
-          const model = (call.options?.model as any)?.name || 'gemini-1.5-flash-latest';
+          const model = (call.options?.model as any)?.name || 'googleai/gemini-1.5-flash-latest';
 
           const {inputCost, outputCost, totalCost} = calculateCost(
             usage.inputTokens,

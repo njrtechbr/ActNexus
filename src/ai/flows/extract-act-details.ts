@@ -70,8 +70,11 @@ const extractActDetailsFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: extractActDetailsPrompt,
-        input: input
+        prompt: extractActDetailsPrompt.prompt,
+        input: input,
+        output: {
+            schema: ExtractActDetailsOutputSchema,
+        }
     });
     return output!;
   }

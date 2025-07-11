@@ -53,8 +53,11 @@ const semanticSearchFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: prompt,
+        prompt: prompt.prompt,
         input: input,
+        output: {
+            schema: SemanticSearchOutputSchema
+        }
     });
     return output!;
   }

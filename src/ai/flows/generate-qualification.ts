@@ -69,8 +69,11 @@ const generateQualificationFlow = ai.defineFlow(
     }
     const { output } = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: generateQualificationPrompt,
-        input: input
+        prompt: generateQualificationPrompt.prompt,
+        input: input,
+        output: {
+            schema: GenerateQualificationOutputSchema,
+        }
     });
     return output!;
   }

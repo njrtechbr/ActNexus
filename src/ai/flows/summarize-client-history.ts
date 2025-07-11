@@ -63,8 +63,11 @@ const summarizeClientHistoryFlow = ai.defineFlow(
     }
     const {output} = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: summarizeClientHistoryPrompt,
+        prompt: summarizeClientHistoryPrompt.prompt,
         input: input,
+        output: {
+            schema: SummarizeClientHistoryOutputSchema,
+        }
     });
     return output!;
   }

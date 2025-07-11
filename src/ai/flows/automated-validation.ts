@@ -62,8 +62,11 @@ const automatedValidationFlow = ai.defineFlow(
   async input => {
     const {output} = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: automatedValidationPrompt,
+        prompt: automatedValidationPrompt.prompt,
         input: input,
+        output: {
+            schema: AutomatedValidationOutputSchema,
+        }
     });
     return output!;
   }

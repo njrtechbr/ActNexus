@@ -80,8 +80,11 @@ const processLivroPdfFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
         model: 'googleai/gemini-1.5-flash-latest',
-        prompt: processLivroPdfPrompt,
-        input: input
+        prompt: processLivroPdfPrompt.prompt,
+        input: input,
+        output: {
+            schema: ProcessLivroPdfOutputSchema,
+        }
     });
     return {
       markdownContent: output!.markdownContent,
