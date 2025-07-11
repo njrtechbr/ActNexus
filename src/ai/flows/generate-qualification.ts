@@ -34,6 +34,7 @@ export async function generateQualification(input: GenerateQualificationInput): 
 
 const generateQualificationPrompt = ai.definePrompt({
   name: 'generateQualificationPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: { schema: GenerateQualificationInputSchema },
   output: { schema: GenerateQualificationOutputSchema },
   prompt: `

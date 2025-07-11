@@ -27,6 +27,7 @@ export async function processLivroPdf(input: ProcessLivroPdfInput): Promise<Proc
 
 const processLivroPdfPrompt = ai.definePrompt({
   name: 'processLivroPdfPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: { schema: ProcessLivroPdfInputSchema },
   output: { schema: ProcessLivroPdfOutputSchema },
   prompt: `

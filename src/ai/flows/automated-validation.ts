@@ -34,6 +34,7 @@ export async function automatedValidation(input: AutomatedValidationInput): Prom
 
 const automatedValidationPrompt = ai.definePrompt({
   name: 'automatedValidationPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: AutomatedValidationInputSchema},
   output: {schema: AutomatedValidationOutputSchema},
   prompt: `Você é um especialista em validação de documentos legais.

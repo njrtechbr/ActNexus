@@ -34,6 +34,7 @@ export async function summarizeClientHistory(input: SummarizeClientHistoryInput)
 
 const summarizeClientHistoryPrompt = ai.definePrompt({
   name: 'summarizeClientHistoryPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: SummarizeClientHistoryInputSchema},
   output: {schema: SummarizeClientHistoryOutputSchema},
   prompt: `Você é um assistente de cartório especialista em analisar o histórico de clientes.

@@ -53,5 +53,4 @@ export const ai = genkit({
       }
     },
   ],
-  defaultModel: 'googleai/gemini-1.5-flash-latest',
 });

@@ -41,6 +41,7 @@ export async function extractActDetails(input: ExtractActDetailsInput): Promise<
 
 const extractActDetailsPrompt = ai.definePrompt({
   name: 'extractActDetailsPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: { schema: ExtractActDetailsInputSchema },
   output: { schema: ExtractActDetailsOutputSchema },
   prompt: `

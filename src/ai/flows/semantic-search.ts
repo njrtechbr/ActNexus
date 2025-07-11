@@ -34,6 +34,7 @@ export async function semanticSearch(input: SemanticSearchInput): Promise<Semant
 
 const prompt = ai.definePrompt({
   name: 'semanticSearchPrompt',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
   prompt: `Você é um assistente de busca para atos notariais. Um usuário fornecerá uma consulta em linguagem natural, e você deve retornar uma lista de documentos relevantes, classificados por relevância. Inclua uma breve descrição do conteúdo do documento na resposta.
