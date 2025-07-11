@@ -56,7 +56,8 @@ export interface Cliente {
 export const getLivros = async (): Promise<Livro[]> => {
   await delay(500);
   console.log("MOCK API: Buscando livros...");
-  return getFromStorage('actnexus_livros');
+  const livros: Livro[] = getFromStorage('actnexus_livros');
+  return livros.sort((a,b) => b.ano - a.ano || b.numero - a.numero);
 };
 
 export const getLivroById = async (livroId: string): Promise<Livro | null> => {
@@ -64,6 +65,16 @@ export const getLivroById = async (livroId: string): Promise<Livro | null> => {
     console.log(`MOCK API: Buscando livro pelo ID ${livroId}...`);
     const livros: Livro[] = getFromStorage('actnexus_livros');
     return livros.find(livro => livro.id === livroId) || null;
+}
+
+export const createLivro = async (livroData: Omit<Livro, 'id'>): Promise<Livro> => {
+    await delay(800);
+    console.log("MOCK API: Criando novo livro...");
+    const livros: Livro[] = getFromStorage('actnexus_livros');
+    const novoLivro: Livro = { ...livroData, id: `livro-${livroData.numero}-${livroData.ano}-${Date.now()}` };
+    livros.push(novoLivro);
+    saveToStorage('actnexus_livros', livros);
+    return novoLivro;
 }
 
 export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {

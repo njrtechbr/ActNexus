@@ -99,7 +99,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog)
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog, LivroFormDialog)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast)
 └── lib/               # Funções utilitárias e actions
