@@ -36,6 +36,7 @@ const generateQualificationPrompt = ai.definePrompt({
   name: 'generateQualificationPrompt',
   input: { schema: GenerateQualificationInputSchema },
   output: { schema: GenerateQualificationOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em redigir textos legais.
 Sua tarefa é criar um parágrafo de "qualificação" para um cliente, usando o nome e os detalhes fornecidos.

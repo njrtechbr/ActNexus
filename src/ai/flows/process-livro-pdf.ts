@@ -29,6 +29,7 @@ const processLivroPdfPrompt = ai.definePrompt({
   name: 'processLivroPdfPrompt',
   input: { schema: ProcessLivroPdfInputSchema },
   output: { schema: ProcessLivroPdfOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em digitalização e estruturação de documentos.
 Sua tarefa é receber o texto completo de um livro de atos notariais e transformá-lo em um arquivo Markdown estruturado.

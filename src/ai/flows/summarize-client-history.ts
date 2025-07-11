@@ -36,6 +36,7 @@ const summarizeClientHistoryPrompt = ai.definePrompt({
   name: 'summarizeClientHistoryPrompt',
   input: {schema: SummarizeClientHistoryInputSchema},
   output: {schema: SummarizeClientHistoryOutputSchema},
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de cartório especialista em analisar o histórico de clientes.
 Sua tarefa é gerar um resumo em linguagem natural sobre as atividades de um cliente com base em uma lista de atos notariais.
 O resumo deve ser um único parágrafo, profissional e conciso.

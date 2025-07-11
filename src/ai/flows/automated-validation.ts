@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -35,6 +36,7 @@ const automatedValidationPrompt = ai.definePrompt({
   name: 'automatedValidationPrompt',
   input: {schema: AutomatedValidationInputSchema},
   output: {schema: AutomatedValidationOutputSchema},
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um especialista em validação de documentos legais.
   Sua tarefa é validar as informações extraídas de um documento.
   Especificamente, você precisa determinar se o documento é válido com base no CPF e no nome fornecidos no texto do documento.
