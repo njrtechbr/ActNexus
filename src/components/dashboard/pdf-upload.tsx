@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -77,19 +76,19 @@ export function PdfUpload() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Validação Automatizada</CardTitle>
-        <CardDescription>Envie um PDF para validar seu conteúdo automaticamente.</CardDescription>
+        <CardDescription>Envie um PDF para validar seu conteúdo.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex flex-col flex-1">
         {!file ? (
           <div
             onDragEnter={(e) => handleDragEvent(e, true)}
             onDragOver={(e) => handleDragEvent(e, true)}
             onDragLeave={(e) => handleDragEvent(e, false)}
             onDrop={handleDrop}
-            className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
+            className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center transition-colors flex-1 ${
               isDragging ? "border-primary bg-primary/10" : "border-border"
             }`}
           >
@@ -104,26 +103,26 @@ export function PdfUpload() {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <File className="h-8 w-8 flex-shrink-0 text-primary" />
-              <div className="truncate">
-                <p className="truncate text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
-              </div>
+          <>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+                <div className="flex items-center gap-3 overflow-hidden">
+                <File className="h-8 w-8 flex-shrink-0 text-primary" />
+                <div className="truncate">
+                    <p className="truncate text-sm font-medium">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
+                </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remover arquivo">
+                <X className="h-4 w-4" />
+                </Button>
             </div>
-            <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remover arquivo">
-              <X className="h-4 w-4" />
+             <Button onClick={handleValidation} disabled={isLoading} className="w-full">
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Validar Documento
             </Button>
-          </div>
+          </>
         )}
 
-        {file && (
-          <Button onClick={handleValidation} disabled={isLoading} className="w-full">
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Validar Documento
-          </Button>
-        )}
 
         {validationResult && (
           <Alert variant={validationResult.isValid ? 'default' : 'destructive'} className={validationResult.isValid ? "border-green-300 bg-green-50 text-green-900" : ""}>

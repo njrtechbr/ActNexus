@@ -40,12 +40,12 @@ export function SemanticSearch() {
   };
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>Pesquisa Semântica</CardTitle>
         <CardDescription>Use linguagem natural para encontrar atos e documentos notariais.</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col">
+      <CardContent className="flex flex-col flex-1">
         <form onSubmit={handleSearch} className="flex gap-2">
           <Input
             placeholder="ex: 'acordo pré-nupcial para Silva'"
@@ -60,7 +60,7 @@ export function SemanticSearch() {
           </Button>
         </form>
 
-        <div className="mt-4 min-h-[250px] relative">
+        <div className="mt-4 flex-1 relative min-h-[150px]">
           {isLoading && (
             <div className="absolute inset-0 z-10 flex justify-center items-center bg-background/50 rounded-md">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -70,13 +70,13 @@ export function SemanticSearch() {
             <SearchResultsTable results={results} />
           )}
           {!isLoading && hasSearched && results.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-10">
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
               <p className="font-semibold">Nenhum resultado encontrado.</p>
               <p className="text-sm">Tente uma consulta de pesquisa diferente ou mais específica.</p>
             </div>
           )}
           {!isLoading && !hasSearched && (
-             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-10">
+             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
                 <p className="font-semibold">Os resultados da pesquisa aparecerão aqui.</p>
                 <p className="text-sm">Digite uma consulta acima para começar.</p>
              </div>
