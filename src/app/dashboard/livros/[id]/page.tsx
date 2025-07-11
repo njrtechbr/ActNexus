@@ -236,7 +236,7 @@ export default function DetalhesLivroPage() {
                                                             <span className="sr-only">Averbar Folha</span>
                                                         </Button>
                                                     )}
-                                                     {user?.role === 'admin' && !canAverbate && (
+                                                     {user?.role !== 'admin' && (
                                                          <Button variant="ghost" size="icon" disabled>
                                                             <MessageSquareQuote className="h-4 w-4" />
                                                             <span className="sr-only">Averbar Folha</span>
