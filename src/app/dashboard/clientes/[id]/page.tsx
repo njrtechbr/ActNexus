@@ -256,13 +256,15 @@ export default function DetalhesClientePage() {
         if (!cliente || !user) return;
         setIsSubmitting(true);
         try {
-            const clienteData = {
+            // Merge form data with existing client data to preserve all fields
+            const updatedClienteData = {
+                ...cliente,
                 ...data,
                 observacoes: data.observacoes?.map(obs => {
-                    // Garante que novas observações tenham autor e data
+                    // Ensure new observations have author and date
                     if (!obs.data) {
                         return {
-                            ...obs,
+                            texto: obs.texto,
                             autor: user.name,
                             data: new Date().toISOString(),
                             tipo: 'manual' as const,
@@ -275,7 +277,7 @@ export default function DetalhesClientePage() {
                     dataValidade: doc.dataValidade ? format(doc.dataValidade, 'yyyy-MM-dd') : undefined,
                 })) || [],
             };
-            await updateCliente(cliente.id, clienteData, user.name);
+            await updateCliente(cliente.id, updatedClienteData, user.name);
             toast({ title: 'Sucesso!', description: 'Dados do cliente atualizados.' });
             setIsEditing(false);
             await loadData();
