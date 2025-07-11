@@ -49,6 +49,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`GET /livros`**
 
 -   **Descrição**: Retorna a lista de todos os livros cadastrados.
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**:
     ```json
     [
@@ -98,15 +99,16 @@ A URL base para os endpoints pode ser `/api`.
 #### **`GET /livros/:livroId`**
 
 -   **Descrição**: Retorna os detalhes de um livro específico.
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**: O objeto `Livro`.
 
 #### **`GET /livros/:livroId/atos`**
 
 -   **Descrição**: Retorna todos os atos (folhas) de um livro específico.
--   **Resposta (200 OK)**: Um array de objetos `Ato`.
+-   **Autorização**: `admin`, `employee`.
+-   **Resposta (200 OK)**: Um array de objetos `Ato`. O objeto `Ato` deve ter a estrutura:
     ```json
-    [
-      {
+    {
         "id": "string",
         "livroId": "string",
         "numeroAto": "number",
@@ -134,17 +136,18 @@ A URL base para os endpoints pode ser `/api`.
           ]
         }
       }
-    ]
     ```
 
 #### **`GET /atos/:atoId`**
 
 -   **Descrição**: Retorna os detalhes de um ato (folha) específico.
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**: O objeto `Ato`.
 
 #### **`PATCH /atos/:atoId`**
 
 -   **Descrição**: Atualiza um ato, principalmente para adicionar averbações ou dados extraídos pela IA.
+-   **Regra de Negócio**: A adição de `averbacao` só é permitida se o livro associado tiver status "Concluído" ou "Arquivado".
 -   **Autorização**: A adição de `averbacao` é restrita a `admin`. A atualização de `dadosExtraidos` pode ser feita por qualquer processo do sistema.
 -   **Payload**:
     ```json
@@ -155,8 +158,8 @@ A URL base para os endpoints pode ser `/api`.
         "dataRegistro": "string (ISO 8601)"
       },
       "dadosExtraidos": { // Opcional
-        "detalhesGerais": [...],
-        "partes": [...]
+        "detalhesGerais": [],
+        "partes": []
       }
     }
     ```
@@ -169,6 +172,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`GET /clientes`**
 
 -   **Descrição**: Retorna a lista de todos os clientes.
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**: Um array de objetos `Cliente`.
     ```json
     [
@@ -197,16 +201,19 @@ A URL base para os endpoints pode ser `/api`.
 #### **`GET /clientes/:id`**
 
 -   **Descrição**: Retorna os detalhes de um cliente específico.
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**: O objeto `Cliente`.
 
 #### **`GET /clientes/:id/atos`**
 
 -   **Descrição**: Retorna os atos associados a um cliente (o backend deve buscar atos onde o nome do cliente aparece nas partes).
+-   **Autorização**: `admin`, `employee`.
 -   **Resposta (200 OK)**: Um array de objetos `Ato`.
 
 #### **`PATCH /clientes/:id`**
 
 -   **Descrição**: Atualiza um cliente, principalmente para adicionar/sincronizar `dadosAdicionais` extraídos pela IA.
+-   **Regra de Negócio**: O backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
 -   **Autorização**: Pode ser chamado por um processo interno do sistema (após extração da IA) ou por um `admin`.
 -   **Payload**:
     ```json
@@ -231,6 +238,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`POST /configuracoes/tipos-livro`**
 
 -   **Descrição**: Adiciona um novo tipo de livro.
+-   **Regra de Negócio**: Não permitir a criação de tipos duplicados (case-insensitive).
 -   **Autorização**: `admin`.
 -   **Payload**: `{ "novoTipo": "string" }`
 -   **Resposta (201 Created)**.
@@ -273,7 +281,7 @@ A URL base para os endpoints pode ser `/api`.
 
 #### **`POST /auditoria-ia`**
 
--   **Descrição**: Este endpoint seria chamado pelo próprio backend (ou por um webhook do Genkit) para registrar um novo log de uso.
+-   **Descrição**: Este endpoint seria chamado pelo próprio backend (ou por um middleware/webhook do Genkit) para registrar um novo log de uso.
 -   **Autorização**: Acesso interno do sistema/backend.
 -   **Payload**: `Omit<AiUsageLog, 'id'>`.
 -   **Resposta (201 Created)**.
