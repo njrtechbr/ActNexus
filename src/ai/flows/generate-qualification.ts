@@ -36,6 +36,7 @@ const generateQualificationPrompt = ai.definePrompt({
   name: 'generateQualificationPrompt',
   input: { schema: GenerateQualificationInputSchema },
   output: { schema: GenerateQualificationOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em redigir textos legais.
 Sua tarefa é criar um parágrafo de "qualificação" para um cliente, usando o nome e os detalhes fornecidos.
@@ -67,14 +68,7 @@ const generateQualificationFlow = ai.defineFlow(
     if (input.fields.length === 0) {
       return { qualificationText: "Nenhum campo selecionado para gerar a qualificação." };
     }
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: generateQualificationPrompt.prompt,
-        input: input,
-        output: {
-            schema: GenerateQualificationOutputSchema,
-        }
-    });
+    const { output } = await generateQualificationPrompt(input);
     return output!;
   }
 );

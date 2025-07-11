@@ -43,6 +43,7 @@ const extractActDetailsPrompt = ai.definePrompt({
   name: 'extractActDetailsPrompt',
   input: { schema: ExtractActDetailsInputSchema },
   output: { schema: ExtractActDetailsOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em analisar documentos legais.
 Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais importantes de forma estruturada.
@@ -68,14 +69,7 @@ const extractActDetailsFlow = ai.defineFlow(
     outputSchema: ExtractActDetailsOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: extractActDetailsPrompt.prompt,
-        input: input,
-        output: {
-            schema: ExtractActDetailsOutputSchema,
-        }
-    });
+    const { output } = await extractActDetailsPrompt(input);
     return output!;
   }
 );

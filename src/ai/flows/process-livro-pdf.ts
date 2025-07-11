@@ -29,6 +29,7 @@ const processLivroPdfPrompt = ai.definePrompt({
   name: 'processLivroPdfPrompt',
   input: { schema: ProcessLivroPdfInputSchema },
   output: { schema: ProcessLivroPdfOutputSchema },
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `
 Você é um assistente de cartório especialista em digitalização e estruturação de documentos.
 Sua tarefa é receber o texto completo de um livro de atos notariais e transformá-lo em um arquivo Markdown estruturado.
@@ -78,14 +79,7 @@ const processLivroPdfFlow = ai.defineFlow(
     outputSchema: ProcessLivroPdfOutputSchema,
   },
   async (input) => {
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: processLivroPdfPrompt.prompt,
-        input: input,
-        output: {
-            schema: ProcessLivroPdfOutputSchema,
-        }
-    });
+    const { output } = await processLivroPdfPrompt(input);
     return {
       markdownContent: output!.markdownContent,
     };

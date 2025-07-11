@@ -36,6 +36,7 @@ const summarizeClientHistoryPrompt = ai.definePrompt({
   name: 'summarizeClientHistoryPrompt',
   input: {schema: SummarizeClientHistoryInputSchema},
   output: {schema: SummarizeClientHistoryOutputSchema},
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de cartório especialista em analisar o histórico de clientes.
 Sua tarefa é gerar um resumo em linguagem natural sobre as atividades de um cliente com base em uma lista de atos notariais.
 O resumo deve ser um único parágrafo, profissional e conciso.
@@ -61,14 +62,7 @@ const summarizeClientHistoryFlow = ai.defineFlow(
     if (input.acts.length === 0) {
         return { summary: `${input.clientName} ainda não possui atos registrados no cartório.`};
     }
-    const {output} = await ai.generate({
-        model: 'googleai/gemini-1.5-flash-latest',
-        prompt: summarizeClientHistoryPrompt.prompt,
-        input: input,
-        output: {
-            schema: SummarizeClientHistoryOutputSchema,
-        }
-    });
+    const {output} = await summarizeClientHistoryPrompt(input);
     return output!;
   }
 );
