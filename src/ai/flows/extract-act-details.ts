@@ -12,13 +12,11 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-// Input Schema: The markdown content of the act
 const ExtractActDetailsInputSchema = z.object({
   actContent: z.string().describe("The full Markdown content of the notarial act."),
 });
 export type ExtractActDetailsInput = z.infer<typeof ExtractActDetailsInputSchema>;
 
-// Output Schema
 const ExtractedDetailSchema = z.object({
     label: z.string().describe("The label for the extracted detail (e.g., 'CPF', 'Endereço', 'Nacionalidade')."),
     value: z.string().describe("The value of the extracted detail."),
@@ -37,12 +35,10 @@ const ExtractActDetailsOutputSchema = z.object({
 export type ExtractActDetailsOutput = z.infer<typeof ExtractActDetailsOutputSchema>;
 
 
-// The main exported function that clients will call.
 export async function extractActDetails(input: ExtractActDetailsInput): Promise<ExtractActDetailsOutput> {
   return extractActDetailsFlow(input);
 }
 
-// Genkit Prompt: Instructs the AI on how to perform the extraction
 const extractActDetailsPrompt = ai.definePrompt({
   name: 'extractActDetailsPrompt',
   input: { schema: ExtractActDetailsInputSchema },
@@ -63,9 +59,9 @@ Seja exaustivo e preciso na extração da qualificação. Evite texto introdutó
 Conteúdo do Ato:
 {{{actContent}}}
 `,
+  model: 'googleai/gemini-1.5-flash-preview-0527'
 });
 
-// Genkit Flow: Orchestrates the call to the AI prompt
 const extractActDetailsFlow = ai.defineFlow(
   {
     name: 'extractActDetailsFlow',

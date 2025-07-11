@@ -11,24 +11,20 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-// Input Schema: The text extracted from the PDF
 const ProcessLivroPdfInputSchema = z.object({
   pdfText: z.string().describe('The full text content extracted from the book PDF.'),
 });
 export type ProcessLivroPdfInput = z.infer<typeof ProcessLivroPdfInputSchema>;
 
-// Output Schema: The structured Markdown content
 const ProcessLivroPdfOutputSchema = z.object({
   markdownContent: z.string().describe('The structured Markdown content representing the entire book and its acts.'),
 });
 export type ProcessLivroPdfOutput = z.infer<typeof ProcessLivroPdfOutputSchema>;
 
-// The main exported function that clients will call.
 export async function processLivroPdf(input: ProcessLivroPdfInput): Promise<ProcessLivroPdfOutput> {
   return processLivroPdfFlow(input);
 }
 
-// Genkit Prompt: Instructs the AI on how to perform the transformation
 const processLivroPdfPrompt = ai.definePrompt({
   name: 'processLivroPdfPrompt',
   input: { schema: ProcessLivroPdfInputSchema },
@@ -73,9 +69,9 @@ Analise o texto de entrada para extrair todas as informações necessárias, inc
 Texto de Entrada:
 {{{pdfText}}}
 `,
+  model: 'googleai/gemini-1.5-flash-preview-0527'
 });
 
-// Genkit Flow: Orchestrates the call to the AI prompt
 const processLivroPdfFlow = ai.defineFlow(
   {
     name: 'processLivroPdfFlow',

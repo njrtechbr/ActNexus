@@ -11,7 +11,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-// Input Schema
 const QualificationFieldSchema = z.object({
   label: z.string(),
   value: z.string(),
@@ -23,19 +22,16 @@ const GenerateQualificationInputSchema = z.object({
 });
 export type GenerateQualificationInput = z.infer<typeof GenerateQualificationInputSchema>;
 
-// Output Schema
 const GenerateQualificationOutputSchema = z.object({
   qualificationText: z.string().describe("The formatted, legally-styled qualification paragraph."),
 });
 export type GenerateQualificationOutput = z.infer<typeof GenerateQualificationOutputSchema>;
 
 
-// The main exported function that clients will call.
 export async function generateQualification(input: GenerateQualificationInput): Promise<GenerateQualificationOutput> {
   return generateQualificationFlow(input);
 }
 
-// Genkit Prompt: Instructs the AI on how to perform the generation
 const generateQualificationPrompt = ai.definePrompt({
   name: 'generateQualificationPrompt',
   input: { schema: GenerateQualificationInputSchema },
@@ -59,9 +55,9 @@ Detalhes:
 
 Construa o parágrafo de qualificação de forma fluida e natural, incorporando os detalhes fornecidos.
 `,
+  model: 'googleai/gemini-1.5-flash-preview-0527'
 });
 
-// Genkit Flow: Orchestrates the call to the AI prompt
 const generateQualificationFlow = ai.defineFlow(
   {
     name: 'generateQualificationFlow',

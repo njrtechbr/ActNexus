@@ -4,16 +4,17 @@ import {logAiUsage} from '@/services/apiClientLocal';
 import {calculateCost} from '@/lib/ai-pricing';
 
 export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
-  enableTracing: true, // Habilita tracing
+  plugins: [googleAI({
+      apiVersion: 'v1beta'
+  })],
+  enableTracing: true, 
   middleware: [
     async (call, next) => {
       const startTime = Date.now();
       try {
         const result = await next(call);
 
-        if (call.type === 'generate') {
+        if (call.type === 'generate' && result.usage) {
           const endTime = Date.now();
           const usage = result.usage as GenerationUsage;
           const prompt = call.input;
