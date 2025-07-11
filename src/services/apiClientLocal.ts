@@ -6,7 +6,8 @@ const getFromStorage = (key: string) => {
   if (typeof window === 'undefined') {
     return [];
   }
-  return JSON.parse(localStorage.getItem(key) || '[]');
+  const item = localStorage.getItem(key);
+  return item ? JSON.parse(item) : [];
 };
 
 const saveToStorage = (key: string, data: any) => {
@@ -16,7 +17,7 @@ const saveToStorage = (key: string, data: any) => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// -- FUNÇÕES EXPORTADAS --
+// -- INTERFACES DE DADOS --
 
 export interface Livro {
     id: string;
@@ -26,16 +27,36 @@ export interface Livro {
     totalAtos: number;
 }
 
+export interface Ato {
+    id: string;
+    livroId: string;
+    numeroAto: number;
+    tipoAto: string;
+    dataAto: string; // Formato YYYY-MM-DD
+    partes: string[];
+    urlPdf: string;
+    dadosExtraidos: Record<string, any> | null;
+}
+
+// -- FUNÇÕES EXPORTADAS --
+
 export const getLivros = async (): Promise<Livro[]> => {
-  await delay(500); // Simula o tempo de uma requisição de rede
+  await delay(500);
   console.log("MOCK API: Buscando livros...");
   return getFromStorage('actnexus_livros');
 };
 
-export const getAtosByLivroId = async (livroId: string) => {
+export const getLivroById = async (livroId: string): Promise<Livro | null> => {
+    await delay(200);
+    console.log(`MOCK API: Buscando livro pelo ID ${livroId}...`);
+    const livros: Livro[] = getFromStorage('actnexus_livros');
+    return livros.find(livro => livro.id === livroId) || null;
+}
+
+export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   await delay(300);
   console.log(`MOCK API: Buscando atos para o livro ${livroId}...`);
-  const todosAtos = getFromStorage('actnexus_atos');
+  const todosAtos: Ato[] = getFromStorage('actnexus_atos');
   return todosAtos.filter((ato: any) => ato.livroId === livroId);
 };
 
