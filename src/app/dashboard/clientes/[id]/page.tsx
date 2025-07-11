@@ -35,13 +35,15 @@ interface UserProfile {
     role: string;
 }
 
-const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "default" | "secondary" | "destructive", icon: React.ElementType} => {
+const getDocumentStatus = (doc: { dataValidade?: string | Date | null }): {text: string; variant: "default" | "secondary" | "destructive", icon: React.ElementType} => {
     if (!doc.dataValidade) {
         return { text: "Válido", variant: "secondary", icon: CheckCircle };
     }
     const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    const validityDate = parseISO(doc.dataValidade);
+    today.setHours(0, 0, 0, 0);
+    
+    // Handle both string and Date objects
+    const validityDate = typeof doc.dataValidade === 'string' ? parseISO(doc.dataValidade) : doc.dataValidade;
 
     if (isBefore(validityDate, today)) {
         return { text: "Expirado", variant: "destructive", icon: XCircle };
@@ -76,7 +78,7 @@ const enderecoSchema = z.object({
 const documentoSchema = z.object({
   nome: z.string(),
   url: z.string(),
-  dataValidade: z.date().optional(),
+  dataValidade: z.date().optional().nullable(),
 });
 
 
@@ -130,7 +132,7 @@ export default function DetalhesClientePage() {
             observacoes: clienteData.observacoes?.map(obs => ({ value: obs })) || [],
             documentos: clienteData.documentos?.map(doc => ({
                 ...doc,
-                dataValidade: doc.dataValidade ? parseISO(doc.dataValidade) : undefined,
+                dataValidade: doc.dataValidade ? parseISO(doc.dataValidade) : null,
             })) || [],
         });
     }, [form]);
@@ -205,6 +207,7 @@ export default function DetalhesClientePage() {
             const newDocs = Array.from(files).map(file => ({
                 nome: file.name,
                 url: `/docs/simulado/${file.name}`,
+                dataValidade: null
             }));
             appendDoc(newDocs as any);
         }
@@ -549,7 +552,7 @@ export default function DetalhesClientePage() {
                                         {docList.map((doc, index) => {
                                             const docDate = (doc as any).dataValidade;
                                             const dateToFormat = docDate instanceof Date ? docDate : (typeof docDate === 'string' ? parseISO(docDate) : null);
-                                            const status = getDocumentStatus(doc as DocumentoCliente);
+                                            const status = getDocumentStatus(doc);
                                             return (
                                             <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
                                                 <div className="flex items-start gap-3 w-full sm:w-auto">
@@ -593,7 +596,7 @@ export default function DetalhesClientePage() {
                                                                     <PopoverContent className="w-auto p-0">
                                                                     <Calendar
                                                                         mode="single"
-                                                                        selected={field.value}
+                                                                        selected={field.value ?? undefined}
                                                                         onSelect={field.onChange}
                                                                         initialFocus
                                                                     />
@@ -634,4 +637,5 @@ export default function DetalhesClientePage() {
             )}
         </>
     );
-}
+
+    
