@@ -15,7 +15,8 @@ O **ActNexus** é uma plataforma moderna projetada para otimizar o gerenciamento
     -   **Extração Detalhada da Qualificação com IA**: Após o cadastro, a IA analisa o conteúdo de cada ato e extrai a qualificação completa de todas as partes envolvidas (CPF, endereço, profissão, etc.).
     -   **Averbações**: Admins podem adicionar averbações (modificações/observações) a atos existentes, mas apenas em livros com status "Concluído" ou "Arquivado", garantindo a imutabilidade de registros em processamento.
 -   **Gestão de Clientes**:
-    -   **CRUD para Clientes**: Funcionalidades para gerenciar os clientes do cartório, com a criação de novos clientes restrita a admins.
+    -   **Visualização 360° e Edição Inline**: Uma página de detalhes do cliente completa, com abas para dados principais, histórico de atos e documentos. Admins podem ativar um "modo de edição" para atualizar todas as informações do cliente diretamente na página, sem a necessidade de modais.
+    -   **Gerenciamento de Contatos, Endereços e Documentos**: Suporte para cadastrar múltiplos contatos (email, telefone), endereços e documentos para cada cliente. Os documentos podem ter uma data de validade associada, com indicadores visuais de status (válido, expirando, expirado).
     -   **Sincronização Automática com IA**: Os dados de qualificação extraídos dos atos são automaticamente salvos nos perfis dos clientes correspondentes, enriquecendo a base de dados.
     -   **Geração de Qualificação com IA**: Permite gerar um parágrafo de qualificação formatado, no estilo legal, a partir dos dados salvos no perfil do cliente.
 -   **Validação Automatizada com IA**: Um fluxo de IA que analisa o texto de um documento (com base no nome do arquivo) para validar informações como CPF e nome.
@@ -45,7 +46,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
         -   `semanticSearch`: Realiza buscas em linguagem natural (funcionalidade presente no dashboard).
         -   `summarizeClientHistory`: Gera um resumo do histórico de atos de um cliente.
 -   **Gerenciamento de Formulários**:
-    -   **React Hook Form**: Para gerenciamento de estado de formulários.
+    -   **React Hook Form**: Para gerenciamento de estado de formulários, incluindo a lógica de edição inline e campos dinâmicos (`useFieldArray`).
     -   **Zod**: Para validação de esquemas de dados.
 
 ## 4. Estrutura do Projeto
@@ -61,7 +62,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login/bypass
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: LivroUpload, QualificationGeneratorDialog, AtosPorMesChart)
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: LivroUpload, QualificationGeneratorDialog, AtosPorMesChart, ClientFormDialog)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast, use-mobile)
 ├── lib/               # Funções utilitárias e actions
