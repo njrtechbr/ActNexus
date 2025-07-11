@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import type { Ato } from '@/services/apiClientLocal';
 import { Card, CardContent } from '../ui/card';
+import React from 'react';
 
 // Componente para renderizar o Markdown
 const MarkdownRenderer = ({ content }: { content: string }) => {
@@ -26,7 +27,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
     } else if (line.trim().startsWith('- **')) {
       const parts = line.trim().substring(2).split(':');
       const key = parts[0].replace(/\*\*/g, '').trim();
-      const value = parts.slice(1).join(':').trim();
+      const value = parts.slice(1).join(':').replace(/\*\*/g, '').trim(); // Remove asteriscos do valor
 
       if (value) {
         isList = false;
