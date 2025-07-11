@@ -122,6 +122,14 @@ const initialClientes = [
     "documentos": [
       { "nome": "RG", "url": "/docs/rg_maria.pdf" },
       { "nome": "Comprovante de Endereço", "url": "/docs/comp_end_maria.pdf" }
+    ],
+    "dadosAdicionais": [
+        { "label": "Nacionalidade", "value": "brasileira" },
+        { "label": "Estado Civil", "value": "solteira" },
+        { "label": "Profissão", "value": "administradora" },
+        { "label": "RG", "value": "11.222.333-4 SSP/SP" },
+        { "label": "CPF", "value": "111.222.333-44" },
+        { "label": "Endereço", "value": "Rua das Flores, nº 123, Bairro Centro, São Paulo-SP, CEP 01000-000" }
     ]
   },
    {
@@ -129,7 +137,15 @@ const initialClientes = [
     "nome": "João Santos",
     "cpfCnpj": "555.666.777-88",
     "tipo": "PF",
-    "documentos": []
+    "documentos": [],
+    "dadosAdicionais": [
+        { "label": "Nacionalidade", "value": "brasileira" },
+        { "label": "Estado Civil", "value": "casado" },
+        { "label": "Profissão", "value": "autônomo" },
+        { "label": "RG", "value": "55.666.777-8 SSP/SP" },
+        { "label": "CPF", "value": "555.666.777-88" },
+        { "label": "Endereço", "value": "Avenida Principal, nº 456, Bairro Sul, Campinas-SP, CEP 13000-000" }
+    ]
   },
   {
     "id": "cliente-99988877766",
@@ -164,13 +180,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v11');
+    const isPopulated = localStorage.getItem('actnexus_populated_v12');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v11', 'true');
+        localStorage.setItem('actnexus_populated_v12', 'true');
     }
 }

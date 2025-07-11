@@ -7,12 +7,13 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { QualificationGeneratorDialog } from '@/components/dashboard/qualification-generator-dialog';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -20,9 +21,11 @@ export default function DetalhesClientePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState<string | null>(null);
+    const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
+    const { copy } = useCopyToClipboard();
     const clienteId = params.id as string;
 
     useEffect(() => {
@@ -36,6 +39,11 @@ export default function DetalhesClientePage() {
                 ]);
 
                 if (!clienteData) {
+                    toast({
+                        variant: 'destructive',
+                        title: 'Cliente não encontrado',
+                        description: 'O cliente que você está tentando acessar não existe.',
+                    });
                     router.push('/dashboard/clientes');
                     return;
                 }
@@ -49,7 +57,7 @@ export default function DetalhesClientePage() {
             }
         }
         loadData();
-    }, [clienteId, router]);
+    }, [clienteId, router, toast]);
 
     const handleSummarize = async () => {
         if (!cliente || !atos) return;
@@ -72,6 +80,14 @@ export default function DetalhesClientePage() {
             setIsSummarizing(false);
         }
     };
+    
+    const handleCopy = (value: string, label: string) => {
+        copy(value);
+        toast({
+            title: 'Copiado!',
+            description: `O campo "${label}" foi copiado para a área de transferência.`,
+        });
+    };
 
     if (isLoading) {
         return <Loading />;
@@ -82,132 +98,154 @@ export default function DetalhesClientePage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                 <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" onClick={() => router.back()}>
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Voltar</span>
-                    </Button>
+        <>
+            <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                            {cliente.tipo === 'PF' ? <User className="h-6 w-6 text-muted-foreground" /> : <Building className="h-6 w-6 text-muted-foreground" />}
-                        </div>
-                        <div>
-                            <h1 className="font-headline text-3xl font-bold tracking-tight">
-                                {cliente.nome}
-                            </h1>
-                            <p className="text-muted-foreground">
-                            {cliente.cpfCnpj}
-                            </p>
+                        <Button variant="outline" size="icon" onClick={() => router.back()}>
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Voltar</span>
+                        </Button>
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                {cliente.tipo === 'PF' ? <User className="h-6 w-6 text-muted-foreground" /> : <Building className="h-6 w-6 text-muted-foreground" />}
+                            </div>
+                            <div>
+                                <h1 className="font-headline text-3xl font-bold tracking-tight">
+                                    {cliente.nome}
+                                </h1>
+                                <p className="text-muted-foreground">
+                                {cliente.cpfCnpj}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                 </div>
-                 <Button onClick={handleSummarize} disabled={isSummarizing}>
-                    {isSummarizing ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
-                    )}
-                    Resumir com IA
-                </Button>
-            </div>
-
-            {summary && (
-                 <Alert>
-                    <Sparkles className="h-4 w-4" />
-                    <AlertTitle>Resumo do Cliente</AlertTitle>
-                    <AlertDescription>
-                       {summary}
-                    </AlertDescription>
-                </Alert>
-            )}
-
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
-                
-                <div className="space-y-6 lg:col-span-1">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Documentos</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {cliente.documentos.length > 0 ? (
-                                <ul className="space-y-2 text-sm">
-                                    {cliente.documentos.map(doc => (
-                                        <li key={doc.nome} className="flex items-center gap-2">
-                                            <FileText className="h-4 w-4 text-muted-foreground" />
-                                            <span>{doc.nome}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {cliente.dadosAdicionais && cliente.dadosAdicionais.length > 0 && (
-                        <Card>
-                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Database className="h-5 w-5"/>
-                                    Dados Adicionais
-                                </CardTitle>
-                                <CardDescription>Campos salvos a partir de atos.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm">
-                                {cliente.dadosAdicionais.map(item => (
-                                    <div key={item.label} className="flex justify-between items-center border-b pb-2 last:border-b-0">
-                                        <span className="font-medium text-muted-foreground">{item.label}</span>
-                                        <span className="font-semibold text-right text-foreground max-w-[70%] truncate" title={item.value}>{item.value}</span>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    )}
+                    <Button onClick={handleSummarize} disabled={isSummarizing}>
+                        {isSummarizing ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Resumir com IA
+                    </Button>
                 </div>
 
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Folhas Vinculadas (Atos)</CardTitle>
-                        <CardDescription>
-                            Total de {atos.length} atos encontrados para este cliente.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Livro</TableHead>
-                                        <TableHead>Folha Nº</TableHead>
-                                        <TableHead>Tipo</TableHead>
-                                        <TableHead>Data</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {atos.length > 0 ? (
-                                        atos.map((ato) => (
-                                            <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
-                                                <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
-                                                <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
-                                                <TableCell>{ato.tipoAto}</TableCell>
-                                                <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
+                {summary && (
+                    <Alert>
+                        <Sparkles className="h-4 w-4" />
+                        <AlertTitle>Resumo do Cliente</AlertTitle>
+                        <AlertDescription>
+                        {summary}
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+                    
+                    <div className="space-y-6 lg:col-span-1">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Documentos</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {cliente.documentos.length > 0 ? (
+                                    <ul className="space-y-2 text-sm">
+                                        {cliente.documentos.map(doc => (
+                                            <li key={doc.nome} className="flex items-center gap-2">
+                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                                <span>{doc.nome}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {cliente.dadosAdicionais && cliente.dadosAdicionais.length > 0 && (
+                             <Card>
+                                <CardHeader>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <CardTitle className="flex items-center gap-2">
+                                                <Database className="h-5 w-5"/>
+                                                Dados Adicionais
+                                            </CardTitle>
+                                            <CardDescription>Campos salvos a partir de atos.</CardDescription>
+                                        </div>
+                                        <Button variant="secondary" onClick={() => setIsQualificationDialogOpen(true)}>
+                                            <FileSignature className="mr-2 h-4 w-4"/>
+                                            Gerar Qualificação
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="space-y-1 text-sm">
+                                    {cliente.dadosAdicionais.map(item => (
+                                        <div key={item.label} className="group flex justify-between items-center rounded-md p-2 -mx-2 hover:bg-muted/50">
+                                            <div>
+                                                <span className="font-medium text-muted-foreground">{item.label}</span>
+                                                <p className="font-semibold text-foreground max-w-[250px] truncate" title={item.value}>{item.value}</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleCopy(item.value, item.label)}>
+                                                <ClipboardCopy className="h-4 w-4"/>
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
+
+                    <Card className="lg:col-span-2">
+                        <CardHeader>
+                            <CardTitle>Folhas Vinculadas (Atos)</CardTitle>
+                            <CardDescription>
+                                Total de {atos.length} atos encontrados para este cliente.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                Nenhum ato vinculado a este cliente.
-                                            </TableCell>
+                                            <TableHead>Livro</TableHead>
+                                            <TableHead>Folha Nº</TableHead>
+                                            <TableHead>Tipo</TableHead>
+                                            <TableHead>Data</TableHead>
                                         </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {atos.length > 0 ? (
+                                            atos.map((ato) => (
+                                                <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
+                                                    <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
+                                                    <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
+                                                    <TableCell>{ato.tipoAto}</TableCell>
+                                                    <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-24 text-center">
+                                                    Nenhum ato vinculado a este cliente.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+            {cliente && (
+                <QualificationGeneratorDialog
+                    isOpen={isQualificationDialogOpen}
+                    setIsOpen={setIsQualificationDialogOpen}
+                    cliente={cliente}
+                />
+            )}
+        </>
     );
 }

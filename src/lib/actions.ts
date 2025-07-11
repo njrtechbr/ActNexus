@@ -31,6 +31,12 @@ import {
   type ExtractActDetailsOutput,
 } from "@/ai/flows/extract-act-details";
 
+import {
+    generateQualification as generateQualificationFlow,
+    type GenerateQualificationInput,
+    type GenerateQualificationOutput,
+} from "@/ai/flows/generate-qualification";
+
 
 export async function automatedValidation(
   input: AutomatedValidationInput
@@ -62,4 +68,10 @@ export async function extractActDetails(
   input: ExtractActDetailsInput
 ): Promise<ExtractActDetailsOutput> {
   return await extractActDetailsFlow(input);
+}
+
+export async function generateQualification(
+    input: GenerateQualificationInput
+): Promise<GenerateQualificationOutput> {
+    return await generateQualificationFlow(input);
 }
