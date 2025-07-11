@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getAtosByLivroId, type Ato, getLivroById, type Livro } from '@/services/apiClientLocal';
 import { useParams, useRouter } from 'next/navigation';
-import Loading from './loading';
+import Loading from '../../loading';
 import {
   Table,
   TableBody,
