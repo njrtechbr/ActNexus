@@ -10,7 +10,7 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save, UploadCloud, File as FileIcon } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save, UploadCloud, File as FileIcon, Eye, Download, Printer } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -42,7 +42,6 @@ const getDocumentStatus = (doc: { dataValidade?: string | Date | null }): {text:
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Handle both string and Date objects
     const validityDate = typeof doc.dataValidade === 'string' ? parseISO(doc.dataValidade) : doc.dataValidade;
 
     if (isBefore(validityDate, today)) {
@@ -214,12 +213,18 @@ export default function DetalhesClientePage() {
         event.target.value = '';
     };
 
-    const handleDocumentClick = (doc: { nome: string, url: string }) => {
+    const handleDocumentAction = (doc: { nome: string }, action: 'view' | 'download' | 'print') => {
+        const messages = {
+            view: `Em uma aplicação real, o documento "${doc.nome}" seria aberto para visualização.`,
+            download: `Em uma aplicação real, o download do documento "${doc.nome}" seria iniciado.`,
+            print: `Em uma aplicação real, a janela de impressão para o documento "${doc.nome}" seria aberta.`
+        };
         toast({
-            title: "Visualização de Documento",
-            description: `Em uma aplicação real, o documento "${doc.nome}" seria aberto.`,
+            title: "Função Simulada",
+            description: messages[action],
         });
     };
+
 
     const onSubmit = async (data: FormData) => {
         if (!cliente) return;
@@ -236,7 +241,7 @@ export default function DetalhesClientePage() {
             await updateCliente(cliente.id, clienteData);
             toast({ title: 'Sucesso!', description: 'Dados do cliente atualizados.' });
             setIsEditing(false);
-            await loadData(); // Recarrega os dados para exibir as informações atualizadas
+            await loadData();
         } catch (error) {
             console.error("Falha ao atualizar cliente:", error);
             toast({ variant: "destructive", title: "Erro ao Salvar", description: "Não foi possível atualizar o cliente." });
@@ -559,18 +564,10 @@ export default function DetalhesClientePage() {
                                         {docList.map((doc, index) => {
                                             const docDate = (doc as any).dataValidade;
                                             const dateToFormat = docDate instanceof Date ? docDate : (typeof docDate === 'string' ? parseISO(docDate) : null);
-                                            const status = getDocumentStatus(doc);
+                                            const status = getDocumentStatus(doc as {dataValidade?: string | Date | null});
                                             return (
                                             <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => !isEditing && handleDocumentClick(doc)}
-                                                    className={cn(
-                                                        "flex items-start gap-3 w-full sm:w-auto text-left",
-                                                        !isEditing && "hover:text-primary transition-colors cursor-pointer"
-                                                    )}
-                                                    disabled={isEditing}
-                                                >
+                                                 <div className="flex items-start gap-3 w-full sm:w-auto overflow-hidden">
                                                     <FileIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                                     <div className="flex flex-col overflow-hidden">
                                                         <span className="font-medium truncate">{doc.nome}</span>
@@ -580,7 +577,7 @@ export default function DetalhesClientePage() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                </button>
+                                                </div>
                                                 
                                                 {isEditing ? (
                                                     <div className="flex items-center gap-2 w-full sm:w-auto ml-7 sm:ml-0">
@@ -625,10 +622,15 @@ export default function DetalhesClientePage() {
                                                         </Button>
                                                     </div>
                                                 ) : (
-                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
-                                                        <status.icon className="h-3 w-3"/>
-                                                        {status.text}
-                                                    </Badge>
+                                                    <div className="flex items-center gap-1">
+                                                        <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
+                                                            <status.icon className="h-3 w-3"/>
+                                                            {status.text}
+                                                        </Badge>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'view')}><Eye className="h-4 w-4" /></Button>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'download')}><Download className="h-4 w-4" /></Button>
+                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'print')}><Printer className="h-4 w-4" /></Button>
+                                                    </div>
                                                 )}
                                             </li>
                                         )})}
@@ -655,5 +657,7 @@ export default function DetalhesClientePage() {
 
     
 }
+
+    
 
     
