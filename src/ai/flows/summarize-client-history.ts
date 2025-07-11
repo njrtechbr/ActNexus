@@ -62,6 +62,7 @@ const summarizeClientHistoryFlow = ai.defineFlow(
         return { summary: `${input.clientName} ainda não possui atos registrados no cartório.`};
     }
     const {output} = await ai.generate({
+        model: 'googleai/gemini-1.5-flash-latest',
         prompt: summarizeClientHistoryPrompt,
         input: input,
     });

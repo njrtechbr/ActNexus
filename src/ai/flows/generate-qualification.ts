@@ -68,6 +68,7 @@ const generateQualificationFlow = ai.defineFlow(
       return { qualificationText: "Nenhum campo selecionado para gerar a qualificação." };
     }
     const { output } = await ai.generate({
+        model: 'googleai/gemini-1.5-flash-latest',
         prompt: generateQualificationPrompt,
         input: input
     });
