@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Search, PlusCircle, Edit, Calendar, CheckCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Search, PlusCircle, Edit, Calendar, CheckCircle, FileDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ValidationDialog } from '@/components/dashboard/validation-dialog';
@@ -22,7 +22,6 @@ import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface UserProfile {
     role: string;
@@ -118,6 +117,13 @@ export default function DetalhesLivroPage() {
         setAtoToEdit(null);
         setIsAtoFormOpen(true);
     }
+    
+    const handlePdfDownload = () => {
+        toast({
+            title: "Função de Demonstração",
+            description: `Em uma aplicação real, o download do arquivo "${livro?.urlPdfOriginal}" seria iniciado.`,
+        })
+    }
 
     const filteredAtos = useMemo(() => {
         if (!searchTerm) {
@@ -171,12 +177,20 @@ export default function DetalhesLivroPage() {
                             </div>
                         </div>
                     </div>
-                    {user?.role === 'admin' && (
-                        <Button onClick={handleNewAtoClick}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Nova Folha (Ato)
-                        </Button>
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                         {livro.urlPdfOriginal && (
+                            <Button variant="outline" onClick={handlePdfDownload}>
+                                <FileDown className="mr-2 h-4 w-4" />
+                                Ver PDF Original
+                            </Button>
+                        )}
+                        {user?.role === 'admin' && (
+                            <Button onClick={handleNewAtoClick}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Nova Folha (Ato)
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <Card>
@@ -268,3 +282,5 @@ export default function DetalhesLivroPage() {
         </>
     );
 }
+
+    

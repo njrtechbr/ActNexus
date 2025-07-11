@@ -8,7 +8,8 @@ const initialLivros = [
     "status": "Concluído",
     "totalAtos": 2,
     "dataAbertura": "2025-01-02",
-    "dataFechamento": "2025-01-30"
+    "dataFechamento": "2025-01-30",
+    "urlPdfOriginal": "livro_notas_001_2025.pdf"
   },
   {
     "id": "livro-002",
@@ -17,7 +18,8 @@ const initialLivros = [
     "tipo": "Procuração",
     "status": "Processando",
     "totalAtos": 1,
-    "dataAbertura": "2025-02-01"
+    "dataAbertura": "2025-02-01",
+    "urlPdfOriginal": "livro_procuracao_002_2025.pdf"
   },
   {
     "id": "livro-003",
@@ -131,3 +133,5 @@ export function populateInitialData() {
         localStorage.setItem('actnexus_populated_v2', 'true');
     }
 }
+
+    

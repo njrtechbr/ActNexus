@@ -95,7 +95,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
   };
 
   const handleSaveChanges = async () => {
-    if (!markdownContent) return;
+    if (!markdownContent || !file) return;
     setUploadState(UploadState.Saving);
     
     try {
@@ -134,6 +134,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
             dataFechamento: metadata.dataFechamento,
             totalAtos: atos.length,
             conteudoMarkdown: markdownContent,
+            urlPdfOriginal: file.name,
         };
         
         await createLivroComAtos(livroData, atos);
@@ -259,3 +260,5 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
     </Card>
   );
 }
+
+    

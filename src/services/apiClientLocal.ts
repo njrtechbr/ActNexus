@@ -34,6 +34,7 @@ export interface Livro {
     dataAbertura: string; // YYYY-MM-DD
     dataFechamento?: string; // YYYY-MM-DD, optional
     conteudoMarkdown?: string;
+    urlPdfOriginal?: string;
 }
 
 export interface Ato {
@@ -231,3 +232,5 @@ export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> 
     tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
     saveToStorage('actnexus_tipos_livro', tipos);
 };
+
+    
