@@ -156,10 +156,12 @@ export default function DetalhesLivroPage() {
                                     <CheckCircle className="h-3 w-3"/>
                                     {livro.status}
                                 </Badge>
-                                <div className="flex items-center gap-1.5">
-                                    <Calendar className="h-4 w-4" />
-                                    Abertura: {format(parseISO(livro.dataAbertura), "dd/MM/yyyy")}
-                                </div>
+                                {livro.dataAbertura && (
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-4 w-4" />
+                                        Abertura: {format(parseISO(livro.dataAbertura), "dd/MM/yyyy")}
+                                    </div>
+                                )}
                                 {livro.dataFechamento && (
                                      <div className="flex items-center gap-1.5">
                                         <Calendar className="h-4 w-4" />
