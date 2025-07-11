@@ -17,14 +17,14 @@ const QualificationFieldSchema = z.object({
   value: z.string(),
 });
 
-export const GenerateQualificationInputSchema = z.object({
+const GenerateQualificationInputSchema = z.object({
   clientName: z.string().describe("The client's full name."),
   fields: z.array(QualificationFieldSchema).describe("An array of key-value pairs representing the client's details."),
 });
 export type GenerateQualificationInput = z.infer<typeof GenerateQualificationInputSchema>;
 
 // Output Schema
-export const GenerateQualificationOutputSchema = z.object({
+const GenerateQualificationOutputSchema = z.object({
   qualificationText: z.string().describe("The formatted, legally-styled qualification paragraph."),
 });
 export type GenerateQualificationOutput = z.infer<typeof GenerateQualificationOutputSchema>;
