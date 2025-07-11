@@ -16,13 +16,35 @@ O frontend atualmente simula o login salvando um objeto de usuário no `localSto
 
 O `role` pode ser `"admin"` ou `"employee"`, controlando o acesso a certas funcionalidades no frontend.
 
-## 2. Endpoints da API
+## 2. Regras de Negócio e Autorização
+
+O backend deve implementar as seguintes regras para garantir a integridade dos dados e o controle de acesso correto.
+
+### 2.1. Autorização por Perfil (`role`)
+
+-   **Perfil `admin`**:
+    -   Pode adicionar averbações em atos (`PATCH /atos/:atoId`).
+    -   Pode criar novos clientes (`POST /clientes`).
+    -   Pode gerenciar os tipos de livro (`GET`, `POST`, `DELETE` em `/configuracoes/tipos-livro`).
+    -   Pode acessar a tela de auditoria de IA (`GET /auditoria-ia`).
+
+-   **Perfil `employee`**:
+    -   Possui acesso de leitura à maioria dos dados (livros, atos, clientes).
+    -   **Não pode** realizar as ações restritas ao perfil `admin`.
+
+### 2.2. Regras de Negócio Específicas
+
+-   **Averbações**: Uma averbação só pode ser adicionada a um `Ato` se o `Livro` ao qual ele pertence tiver o status `"Concluído"` ou `"Arquivado"`. O backend deve validar essa condição antes de aceitar um `PATCH` em `/atos/:atoId` que contenha uma averbação.
+-   **Extração de Dados da IA**: Quando a IA extrai dados de qualificação de um ato (`dadosExtraidos`), o backend deve automaticamente procurar pelo cliente correspondente (usando o nome/CPF) e adicionar/atualizar os `dadosAdicionais` no perfil do cliente. A lógica deve evitar duplicatas de `label`.
+-   **Tipos de Livro**: Ao adicionar um novo tipo de livro, o backend deve validar para não permitir a criação de tipos duplicados (a verificação deve ser case-insensitive).
+
+## 3. Endpoints da API
 
 A URL base para os endpoints pode ser `/api`.
 
 ---
 
-### 2.1. Livros e Atos
+### 3.1. Livros e Atos
 
 #### **`GET /livros`**
 
@@ -47,6 +69,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`POST /livros/processar-pdf`**
 
 -   **Descrição**: Endpoint para receber o conteúdo Markdown gerado pela IA no frontend e criar um novo livro e seus respectivos atos.
+-   **Autorização**: `admin`, `employee`.
 -   **Payload**:
     ```json
     {
@@ -122,16 +145,16 @@ A URL base para os endpoints pode ser `/api`.
 #### **`PATCH /atos/:atoId`**
 
 -   **Descrição**: Atualiza um ato, principalmente para adicionar averbações ou dados extraídos pela IA.
+-   **Autorização**: A adição de `averbacao` é restrita a `admin`. A atualização de `dadosExtraidos` pode ser feita por qualquer processo do sistema.
 -   **Payload**:
     ```json
     {
-      "averbacao": {
+      "averbacao": { // Opcional
         "texto": "string",
         "dataAverbacao": "string (YYYY-MM-DD)",
         "dataRegistro": "string (ISO 8601)"
       },
-      // OU
-      "dadosExtraidos": {
+      "dadosExtraidos": { // Opcional
         "detalhesGerais": [...],
         "partes": [...]
       }
@@ -141,7 +164,7 @@ A URL base para os endpoints pode ser `/api`.
 
 ---
 
-### 2.2. Clientes
+### 3.2. Clientes
 
 #### **`GET /clientes`**
 
@@ -167,6 +190,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`POST /clientes`**
 
 -   **Descrição**: Cria um novo cliente.
+-   **Autorização**: `admin`.
 -   **Payload**: `Omit<Cliente, 'id'>`.
 -   **Resposta (201 Created)**: O objeto `Cliente` criado.
 
@@ -183,6 +207,7 @@ A URL base para os endpoints pode ser `/api`.
 #### **`PATCH /clientes/:id`**
 
 -   **Descrição**: Atualiza um cliente, principalmente para adicionar/sincronizar `dadosAdicionais` extraídos pela IA.
+-   **Autorização**: Pode ser chamado por um processo interno do sistema (após extração da IA) ou por um `admin`.
 -   **Payload**:
     ```json
     {
@@ -195,32 +220,36 @@ A URL base para os endpoints pode ser `/api`.
 
 ---
 
-### 2.3. Configurações
+### 3.3. Configurações
 
 #### **`GET /configuracoes/tipos-livro`**
 
 -   **Descrição**: Retorna a lista de tipos de livro permitidos.
+-   **Autorização**: `admin`.
 -   **Resposta (200 OK)**: `["string"]`
 
 #### **`POST /configuracoes/tipos-livro`**
 
 -   **Descrição**: Adiciona um novo tipo de livro.
+-   **Autorização**: `admin`.
 -   **Payload**: `{ "novoTipo": "string" }`
 -   **Resposta (201 Created)**.
 
 #### **`DELETE /configuracoes/tipos-livro`**
 
 -   **Descrição**: Remove um tipo de livro.
+-   **Autorização**: `admin`.
 -   **Payload**: `{ "tipoParaRemover": "string" }`
 -   **Resposta (204 No Content)**.
 
 ---
 
-### 2.4. Auditoria de IA
+### 3.4. Auditoria de IA
 
 #### **`GET /auditoria-ia`**
 
 -   **Descrição**: Retorna todos os logs de uso da IA, ordenados por data decrescente.
+-   **Autorização**: `admin`.
 -   **Resposta (200 OK)**: Um array de objetos `AiUsageLog`.
     ```json
     [
@@ -245,5 +274,6 @@ A URL base para os endpoints pode ser `/api`.
 #### **`POST /auditoria-ia`**
 
 -   **Descrição**: Este endpoint seria chamado pelo próprio backend (ou por um webhook do Genkit) para registrar um novo log de uso.
+-   **Autorização**: Acesso interno do sistema/backend.
 -   **Payload**: `Omit<AiUsageLog, 'id'>`.
 -   **Resposta (201 Created)**.
