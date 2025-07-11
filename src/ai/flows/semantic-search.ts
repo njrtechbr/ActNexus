@@ -36,7 +36,6 @@ const prompt = ai.definePrompt({
   name: 'semanticSearchPrompt',
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
-  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de busca para atos notariais. Um usuário fornecerá uma consulta em linguagem natural, e você deve retornar uma lista de documentos relevantes, classificados por relevância. Inclua uma breve descrição do conteúdo do documento na resposta.
 
 Consulta do Usuário: {{{query}}}

@@ -4,10 +4,12 @@ import {logAiUsage} from '@/services/apiClientLocal';
 import {calculateCost} from '@/lib/ai-pricing';
 
 export const ai = genkit({
-  plugins: [googleAI({
+  plugins: [
+    googleAI({
       apiVersion: 'v1beta',
-  })],
-  enableTracing: true, 
+    }),
+  ],
+  enableTracing: true,
   middleware: [
     async (call, next) => {
       const startTime = Date.now();
@@ -19,8 +21,9 @@ export const ai = genkit({
           const usage = result.usage as GenerationUsage;
           const prompt = call.input;
           const response = result.output;
-          
-          const model = (call.options?.model as any)?.name || 'googleai/gemini-1.5-flash-latest';
+
+          const model =
+            (call.options?.model as any)?.name || 'googleai/gemini-1.5-flash-latest';
 
           const {inputCost, outputCost, totalCost} = calculateCost(
             usage.inputTokens,
@@ -50,5 +53,5 @@ export const ai = genkit({
       }
     },
   ],
-  defaultModel: 'googleai/gemini-1.5-flash-latest'
+  defaultModel: 'googleai/gemini-1.5-flash-latest',
 });
