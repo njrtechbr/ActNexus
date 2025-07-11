@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getClientes, type Cliente } from '@/services/apiClientLocal';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, User, Building, Eye, Search } from 'lucide-react';
+import { PlusCircle, User, Building, Eye, Search, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
@@ -22,11 +22,8 @@ export default function ClientesPage() {
     const router = useRouter();
 
     const loadData = useCallback(async () => {
+        setIsLoading(true);
         try {
-            // Nao mostrar o loading se ja tiver dados
-            if (clientes.length === 0) {
-                setIsLoading(true);
-            }
             const data = await getClientes();
             setClientes(data);
         } catch (error) {
@@ -39,11 +36,11 @@ export default function ClientesPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [toast, clientes.length]);
+    }, [toast]);
 
     useEffect(() => {
         loadData();
-    }, []); // Executado apenas uma vez
+    }, []);
 
     const handleClientCreated = () => {
         setIsFormOpen(false);
@@ -63,10 +60,6 @@ export default function ClientesPage() {
             cliente.cpfCnpj.replace(/[^\d]/g, '').includes(searchTerm.replace(/[^\d]/g, ''))
         );
     }, [clientes, searchTerm]);
-
-    if (isLoading && clientes.length === 0) {
-        return <Loading />;
-    }
 
     return (
         <>
@@ -120,8 +113,9 @@ export default function ClientesPage() {
                                     {isLoading && (
                                         <TableRow>
                                             <TableCell colSpan={6}>
-                                                <div className="flex justify-center p-4">
-                                                    <Loading />
+                                                <div className="flex justify-center p-8 items-center gap-2 text-muted-foreground">
+                                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                                    <span>Carregando clientes...</span>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
