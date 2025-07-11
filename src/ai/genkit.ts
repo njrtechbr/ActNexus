@@ -22,7 +22,7 @@ export const ai = genkit({
           const usage = result.usage as GenerationUsage;
           const prompt = call.input;
           const response = result.output;
-          const model = call.model as string;
+          const model = (call.options?.model as string) || (call.model as string);
 
           const {inputCost, outputCost, totalCost} = calculateCost(
             usage.inputTokens,

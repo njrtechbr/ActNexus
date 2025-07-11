@@ -12,6 +12,7 @@ const GEMINI_1_5_FLASH_PRICING = {
 // Outros modelos podem ser adicionados aqui
 const PRICING_TABLE: Record<string, typeof GEMINI_1_5_FLASH_PRICING> = {
   'googleai/gemini-1.5-flash-latest': GEMINI_1_5_FLASH_PRICING,
+  'gemini-1.5-flash-latest': GEMINI_1_5_FLASH_PRICING
 };
 
 const CONTEXT_WINDOW_LIMIT = 128_000;
@@ -21,7 +22,8 @@ export function calculateCost(
   outputTokens: number,
   modelName: string
 ) {
-  const pricing = PRICING_TABLE[modelName] || PRICING_TABLE['googleai/gemini-1.5-flash-latest']; // Default to flash
+  const normalizedModelName = modelName.startsWith('googleai/') ? modelName : `googleai/${modelName}`;
+  const pricing = PRICING_TABLE[normalizedModelName] || GEMINI_1_5_FLASH_PRICING; // Default to flash
   const totalTokens = inputTokens + outputTokens;
 
   const inputPrice = totalTokens <= CONTEXT_WINDOW_LIMIT

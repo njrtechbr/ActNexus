@@ -4,7 +4,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppLogo } from "@/components/app-logo";
-import { Loader2 } from "lucide-react";
 
 export default function BypassLoginPage() {
   const router = useRouter();
@@ -15,17 +14,14 @@ export default function BypassLoginPage() {
     localStorage.setItem('actnexus_user', JSON.stringify(defaultAdminUser));
     
     // Redireciona para o dashboard
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }, [router]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center gap-4 text-center">
             <AppLogo />
-            <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Iniciando em modo de desenvolvimento...</span>
-            </div>
+            <p className="text-muted-foreground">Redirecionando...</p>
         </div>
     </main>
   );
