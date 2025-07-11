@@ -58,8 +58,7 @@ Seja exaustivo e preciso na extração da qualificação. Evite texto introdutó
 
 Conteúdo do Ato:
 {{{actContent}}}
-`,
-  model: 'googleai/gemini-1.5-flash-preview-0527'
+`
 });
 
 const extractActDetailsFlow = ai.defineFlow(

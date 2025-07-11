@@ -48,8 +48,7 @@ Atos Realizados:
 {{/each}}
 
 Analise os atos e datas para criar um resumo coeso. Por exemplo, mencione quando o cliente começou o relacionamento com o cartório, a frequência ou a variedade de atos realizados.
-`,
-  model: 'googleai/gemini-1.5-flash-preview-0527'
+`
 });
 
 const summarizeClientHistoryFlow = ai.defineFlow(

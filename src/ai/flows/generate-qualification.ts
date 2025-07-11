@@ -54,8 +54,7 @@ Detalhes:
 {{/each}}
 
 Construa o parágrafo de qualificação de forma fluida e natural, incorporando os detalhes fornecidos.
-`,
-  model: 'googleai/gemini-1.5-flash-preview-0527'
+`
 });
 
 const generateQualificationFlow = ai.defineFlow(

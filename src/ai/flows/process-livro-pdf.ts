@@ -68,8 +68,7 @@ Analise o texto de entrada para extrair todas as informações necessárias, inc
 
 Texto de Entrada:
 {{{pdfText}}}
-`,
-  model: 'googleai/gemini-1.5-flash-preview-0527'
+`
 });
 
 const processLivroPdfFlow = ai.defineFlow(
