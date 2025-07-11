@@ -77,8 +77,9 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 - **Mock de API**:
   - **`localStorage`**: Utilizado para persistir os dados da aplicação no navegador.
   - **`src/services/apiClientLocal.ts`**: Centraliza toda a lógica de acesso e manipulação do `localStorage`, simulando uma API real com latência.
-- **Inteligência Artificial (Simulação Inicial)**:
-  - **Genkit**: Será o framework utilizado para orquestrar as chamadas para os modelos de IA do Google. Inicialmente, as respostas da IA serão simuladas.
+- **Inteligência Artificial (Fluxo de Validação)**:
+  - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google.
+  - **Validação de Atos**: Ao clicar em um ato na listagem, um diálogo é aberto e o fluxo de IA `automatedValidation` é acionado para verificar os dados do ato (simulando a extração de texto de um PDF). O resultado é exibido para o usuário.
 
 ## 4. Estrutura do Projeto
 
@@ -95,7 +96,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast)
 └── lib/               # Funções utilitárias e actions
