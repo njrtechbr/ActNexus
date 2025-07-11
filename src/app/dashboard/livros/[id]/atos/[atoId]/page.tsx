@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getAtoById, getLivroById, updateAto, type Ato, type Livro, getClienteByNome, updateCliente } from '@/services/apiClientLocal';
+import { getAtoById, getLivroById, updateAto, type Ato, type Livro, getClienteByNome, updateCliente, type CampoAdicionalCliente } from '@/services/apiClientLocal';
 import { extractActDetails, type ExtractActDetailsOutput } from '@/lib/actions';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Sparkles, Loader2, Save, BadgeInfo } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Sparkles, Loader2, Save, BadgeInfo, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
@@ -66,6 +66,7 @@ export default function DetalhesAtoPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [extractedDetails, setExtractedDetails] = useState<ExtractActDetailsOutput | null>(null);
     const [isExtracting, setIsExtracting] = useState(false);
+    const [syncedFields, setSyncedFields] = useState<Record<string, string[]>>({});
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
@@ -78,42 +79,49 @@ export default function DetalhesAtoPage() {
 
         setIsExtracting(true);
         try {
+            // 1. Extrai detalhes do ato com a IA
             const result = await extractActDetails({ actContent: currentAto.conteudoMarkdown });
             if (result) {
                 setExtractedDetails(result);
-                // Salva os detalhes extraídos no "banco de dados"
+                // 2. Salva os detalhes extraídos no "banco de dados" do ato
                 await updateAto(currentAto.id, { dadosExtraidos: result });
+
+                // 3. Salva automaticamente os campos no cliente correspondente
+                const newSyncedFields: Record<string, string[]> = {};
+                let totalSavedCount = 0;
+
+                for (const parte of result.partes) {
+                    const cliente = await getClienteByNome(parte.nome);
+                    if (cliente) {
+                        const camposParaSalvar: CampoAdicionalCliente[] = parte.detalhes.map(d => ({ label: d.label, value: d.value }));
+                        await updateCliente(cliente.id, { campos: camposParaSalvar });
+                        
+                        newSyncedFields[parte.nome] = parte.detalhes.map(d => d.label);
+                        totalSavedCount += camposParaSalvar.length;
+                    }
+                }
+                setSyncedFields(newSyncedFields);
+
+                if (totalSavedCount > 0) {
+                     toast({
+                        title: 'Sincronização Automática',
+                        description: `${totalSavedCount} campos foram salvos nos perfis dos clientes correspondentes.`,
+                    });
+                }
             }
         } catch (error) {
             console.error("Falha ao extrair e salvar detalhes do ato:", error);
+             toast({
+                variant: 'destructive',
+                title: 'Erro de IA',
+                description: 'Não foi possível extrair e salvar os detalhes do ato.',
+            });
         } finally {
             setIsExtracting(false);
         }
 
-    }, []);
+    }, [toast]);
 
-    const handleSaveField = async (nomeParte: string, label: string, value: string) => {
-        if (!ato) return;
-
-        try {
-            const cliente = await getClienteByNome(nomeParte);
-            if (!cliente) {
-                toast({ variant: 'destructive', title: 'Cliente não encontrado', description: `Não foi possível encontrar um cliente com o nome "${nomeParte}".`});
-                return;
-            }
-
-            await updateCliente(cliente.id, { label, value });
-
-            toast({
-                title: 'Campo Salvo!',
-                description: `O campo "${label}" foi salvo no perfil de ${cliente.nome}.`,
-            });
-
-        } catch (error) {
-            console.error('Falha ao salvar campo para cliente:', error);
-            toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar o campo no perfil do cliente.'});
-        }
-    };
 
     useEffect(() => {
         if (!atoId || !livroId) return;
@@ -133,7 +141,7 @@ export default function DetalhesAtoPage() {
                 if (atoData.dadosExtraidos) {
                     setExtractedDetails(atoData.dadosExtraidos);
                 } else if (atoData.conteudoMarkdown) {
-                    // Executa a extração em segundo plano
+                    // Executa a extração em segundo plano se não houver dados salvos
                     runAndSaveExtraction(atoData);
                 }
 
@@ -187,7 +195,7 @@ export default function DetalhesAtoPage() {
                                 </CardTitle>
                                 {showExtractionLoader && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
                              </div>
-                            <CardDescription>Dados analisados pela IA do conteúdo do ato.</CardDescription>
+                            <CardDescription>Dados analisados e salvos automaticamente pela IA.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {showExtractionLoader && (
@@ -211,15 +219,9 @@ export default function DetalhesAtoPage() {
                                             <div key={detalhe.label} className="flex flex-col gap-1 group">
                                                 <div className="flex justify-between items-center">
                                                     <span className="font-medium text-muted-foreground">{detalhe.label}</span>
-                                                    <Button 
-                                                        size="icon" 
-                                                        variant="ghost" 
-                                                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        onClick={() => handleSaveField(parte.nome, detalhe.label, detalhe.value)}
-                                                        title={`Salvar "${detalhe.label}" no cadastro de ${parte.nome}`}
-                                                    >
-                                                        <Save className="h-4 w-4" />
-                                                    </Button>
+                                                    {(syncedFields[parte.nome] || ato.dadosExtraidos?.partes.find(p => p.nome === parte.nome)?.detalhes.some(d => d.label === detalhe.label)) && (
+                                                        <CheckCircle className="h-4 w-4 text-green-500" title={`"${detalhe.label}" salvo no perfil de ${parte.nome}`} />
+                                                    )}
                                                 </div>
                                                 <span className="font-semibold text-foreground text-left">{detalhe.value}</span>
                                             </div>

@@ -233,9 +233,13 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     return novoCliente;
 }
 
-export const updateCliente = async (clienteId: string, campo: CampoAdicionalCliente): Promise<Cliente | null> => {
+type UpdateClientePayload = {
+    campos?: CampoAdicionalCliente[];
+};
+
+export const updateCliente = async (clienteId: string, payload: UpdateClientePayload): Promise<Cliente | null> => {
     await delay(400);
-    console.log(`MOCK API: Atualizando cliente ${clienteId} com novo campo...`);
+    console.log(`MOCK API: Atualizando cliente ${clienteId} com novos campos...`);
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
     const clienteIndex = clientes.findIndex(c => c.id === clienteId);
 
@@ -246,16 +250,21 @@ export const updateCliente = async (clienteId: string, campo: CampoAdicionalClie
 
     const clienteAtual = clientes[clienteIndex];
 
-    if (!clienteAtual.dadosAdicionais) {
-        clienteAtual.dadosAdicionais = [];
-    }
+    if (payload.campos) {
+        if (!clienteAtual.dadosAdicionais) {
+            clienteAtual.dadosAdicionais = [];
+        }
 
-    // Evita duplicados
-    const campoExistenteIndex = clienteAtual.dadosAdicionais.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
-    if (campoExistenteIndex > -1) {
-        clienteAtual.dadosAdicionais[campoExistenteIndex] = campo; // Atualiza o valor
-    } else {
-        clienteAtual.dadosAdicionais.push(campo); // Adiciona novo
+        payload.campos.forEach(campo => {
+            const campoExistenteIndex = clienteAtual.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
+            if (campoExistenteIndex > -1) {
+                // Atualiza o valor se o campo já existir
+                clienteAtual.dadosAdicionais![campoExistenteIndex] = campo; 
+            } else {
+                // Adiciona novo campo
+                clienteAtual.dadosAdicionais!.push(campo); 
+            }
+        });
     }
     
     clientes[clienteIndex] = clienteAtual;
