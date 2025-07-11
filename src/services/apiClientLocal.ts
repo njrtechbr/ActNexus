@@ -207,5 +207,3 @@ export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> 
     tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
     saveToStorage('actnexus_tipos_livro', tipos);
 };
-
-    

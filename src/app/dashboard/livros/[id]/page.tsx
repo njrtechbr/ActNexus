@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Search, Edit, Calendar, CheckCircle, FileDown, MessageSquareQuote } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, CheckCircle, FileDown, MessageSquareQuote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
@@ -262,5 +262,3 @@ export default function DetalhesLivroPage() {
         </>
     );
 }
-
-    

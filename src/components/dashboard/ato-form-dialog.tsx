@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from "date-fns";
-import { Loader2, Calendar as CalendarIcon, MessageSquareQuote } from 'lucide-react';
+import { Loader2, MessageSquareQuote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
