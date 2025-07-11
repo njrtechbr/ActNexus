@@ -194,7 +194,7 @@ export default function DetalhesClientePage() {
                 texto: result.summary,
                 autor: user.name,
                 data: new Date().toISOString(),
-                tipo: 'ia'
+                tipo: 'ia' as const
             };
             
             await updateCliente(cliente.id, { observacoes: [...(cliente.observacoes || []), newObservation] }, user.name);
@@ -260,7 +260,7 @@ export default function DetalhesClientePage() {
                 ...data,
                 observacoes: data.observacoes?.map(obs => {
                     // Garante que novas observações tenham autor e data
-                    if (!obs.autor) {
+                    if (!obs.data) {
                         return {
                             ...obs,
                             autor: user.name,
@@ -716,3 +716,4 @@ export default function DetalhesClientePage() {
         </>
     );
 }
+

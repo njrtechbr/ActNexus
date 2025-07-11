@@ -13,12 +13,14 @@ import {z} from 'zod';
 
 // Define schemas that mirror the structure in apiClientLocal.ts
 const ContatoSchema = z.object({
+  id: z.string(),
   tipo: z.enum(['email', 'telefone', 'whatsapp']),
   valor: z.string(),
   label: z.string().optional(),
 });
 
 const EnderecoSchema = z.object({
+  id: z.string(),
   logradouro: z.string(),
   numero: z.string(),
   bairro: z.string(),
@@ -30,6 +32,7 @@ const EnderecoSchema = z.object({
 
 const DocumentoClienteSchema = z.object({
   nome: z.string(),
+  url: z.string(),
   dataValidade: z.string().optional(),
 });
 
@@ -37,6 +40,14 @@ const CampoAdicionalClienteSchema = z.object({
     label: z.string(),
     value: z.string(),
 });
+
+const ObservacaoSchema = z.object({
+    texto: z.string(),
+    autor: z.string(),
+    data: z.string(),
+    tipo: z.enum(['ia', 'manual']),
+});
+
 
 const AtoHistorySchema = z.object({
     type: z.string().describe("The type of the notarial act (e.g., 'Procuração', 'Escritura')."),
@@ -51,7 +62,7 @@ const SummarizeClientHistoryInputSchema = z.object({
   enderecos: z.array(EnderecoSchema).optional(),
   documentos: z.array(DocumentoClienteSchema).optional(),
   dadosAdicionais: z.array(CampoAdicionalClienteSchema).optional(),
-  observacoes: z.array(z.string()).optional(),
+  observacoes: z.array(ObservacaoSchema).optional(),
   atos: z.array(AtoHistorySchema).describe("A list of notarial acts associated with the client."),
 });
 export type SummarizeClientHistoryInput = z.infer<typeof SummarizeClientHistoryInputSchema>;
@@ -113,7 +124,7 @@ Analise todos os dados a seguir para criar um resumo coeso. Destaque os pontos m
 {{#if observacoes.length}}
 **Observações Existentes:**
 {{#each observacoes}}
-- {{this}}
+- {{this.texto}} (por {{this.autor}} em {{this.data}})
 {{/each}}
 {{/if}}
 
@@ -142,3 +153,4 @@ const summarizeClientHistoryFlow = ai.defineFlow(
     return output!;
   }
 );
+
