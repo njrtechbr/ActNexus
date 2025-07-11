@@ -34,7 +34,6 @@ export interface Livro {
     dataAbertura: string; // YYYY-MM-DD
     dataFechamento?: string; // YYYY-MM-DD, optional
     urlPdfOriginal?: string;
-    conteudoMarkdown?: string;
 }
 
 export interface Averbacao {
@@ -52,6 +51,7 @@ export interface Ato {
     partes: string[];
     urlPdf: string;
     averbacoes: Averbacao[];
+    escrevente?: string;
     conteudoMarkdown?: string;
 }
 
@@ -85,13 +85,17 @@ export const getLivroById = async (livroId: string): Promise<Livro | null> => {
     return livros.find(livro => livro.id === livroId) || null;
 }
 
-export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'averbacoes'>[]): Promise<Livro> => {
+export const createLivroComAtos = async (livroData: Omit<Livro, 'id' | 'totalAtos'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'averbacoes'>[]): Promise<Livro> => {
     await delay(1200);
     console.log("MOCK API: Criando novo livro com atos via processamento de PDF...");
     const livros: Livro[] = getFromStorage('actnexus_livros');
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
 
-    const novoLivro: Livro = { ...livroData, id: `livro-${livroData.numero}-${livroData.ano}-${Date.now()}` };
+    const novoLivro: Livro = { 
+        ...livroData, 
+        id: `livro-${livroData.numero}-${livroData.ano}-${Date.now()}`,
+        totalAtos: atosData.length
+    };
     
     const novosAtos: Ato[] = atosData.map(ato => ({
         ...ato,
@@ -159,7 +163,7 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
     // Filtra atos onde o nome do cliente aparece na lista de partes
-    return todosAtos.filter((ato: any) => ato.partes.includes(cliente.nome));
+    return todosAtos.filter((ato: any) => ato.partes.some(p => p.toLowerCase().includes(cliente.nome.toLowerCase())));
 }
 
 // Clientes

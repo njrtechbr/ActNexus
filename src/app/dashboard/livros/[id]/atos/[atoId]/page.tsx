@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { getAtoById, getLivroById, type Ato, type Livro } from '@/services/apiClientLocal';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Users, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
@@ -92,12 +92,18 @@ export default function DetalhesAtoPage() {
     }, [atoId, livroId, router]);
 
     const dadosEstruturados = useMemo(() => {
-        if (!ato) return [];
-        return [
+        if (!ato || !livro) return [];
+        const dados = [
+            { label: 'Livro', value: `${livro.numero.toString().padStart(3, '0')}/${livro.ano}` },
+            { label: 'Folha', value: ato.numeroAto.toString().padStart(3, '0') },
             { label: 'Tipo do Ato', value: ato.tipoAto },
             { label: 'Data do Ato', value: format(parseISO(ato.dataAto), 'dd/MM/yyyy') },
-        ]
-    }, [ato]);
+        ];
+        if (ato.escrevente) {
+            dados.push({ label: 'Escrevente', value: ato.escrevente });
+        }
+        return dados;
+    }, [ato, livro]);
 
     if (isLoading) {
         return <Loading />;
@@ -139,7 +145,7 @@ export default function DetalhesAtoPage() {
                             {dadosEstruturados.map(item => (
                                 <div key={item.label} className="flex justify-between border-b pb-2">
                                     <span className="font-medium text-muted-foreground">{item.label}</span>
-                                    <span className="font-semibold text-foreground">{item.value}</span>
+                                    <span className="font-semibold text-right text-foreground">{item.value}</span>
                                 </div>
                             ))}
                         </CardContent>

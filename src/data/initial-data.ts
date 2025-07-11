@@ -43,6 +43,7 @@ const initialAtos = [
     "tipoAto": "Procuração para Veículo",
     "dataAto": "2025-01-15",
     "partes": ["Maria Silva (Outorgante)", "João Santos (Outorgado)"],
+    "escrevente": "Ana Costa",
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [
       { 
@@ -60,6 +61,7 @@ const initialAtos = [
     "tipoAto": "Escritura de Compra e Venda",
     "dataAto": "2025-01-20",
     "partes": ["Pedro Costa", "Ana Pereira"],
+    "escrevente": "Roberto Lima",
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
     "conteudoMarkdown": "Corpo do texto da escritura de compra e venda. Conteúdo de exemplo."
@@ -71,6 +73,7 @@ const initialAtos = [
     "tipoAto": "Testamento",
     "dataAto": "2025-02-10",
     "partes": ["Carlos Nobrega"],
+    "escrevente": "Ana Costa",
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
     "conteudoMarkdown": "Corpo do texto do testamento. Conteúdo de exemplo."
@@ -128,13 +131,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v7');
+    const isPopulated = localStorage.getItem('actnexus_populated_v8');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v7', 'true');
+        localStorage.setItem('actnexus_populated_v8', 'true');
     }
 }
