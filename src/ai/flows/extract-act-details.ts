@@ -4,7 +4,7 @@
 /**
  * @fileOverview A Genkit flow to extract key details from a notarial act's content.
  *
- * This flow takes the Markdown content of an act and uses AI to extract
+ * This flow takes the Markdown content of the act and uses AI to extract
  * a structured list of key-value pairs representing the most important
  * information within the document, grouped by the involved parties.
  */
@@ -20,14 +20,14 @@ export type ExtractActDetailsInput = z.infer<typeof ExtractActDetailsInputSchema
 
 // Output Schema
 const ExtractedDetailSchema = z.object({
-    label: z.string().describe("The label for the extracted detail (e.g., 'CPF', 'Endereço')."),
+    label: z.string().describe("The label for the extracted detail (e.g., 'CPF', 'Endereço', 'Nacionalidade')."),
     value: z.string().describe("The value of the extracted detail."),
 });
 
 const InvolvedPartySchema = z.object({
     nome: z.string().describe("The full name of the involved party."),
     tipo: z.string().describe("The role of the party in the act (e.g., 'Outorgante', 'Vendedor')."),
-    detalhes: z.array(ExtractedDetailSchema).describe("A list of key details specific to this party.")
+    detalhes: z.array(ExtractedDetailSchema).describe("A list of key details specific to this party, including their full qualification.")
 });
 
 const ExtractActDetailsOutputSchema = z.object({
@@ -53,9 +53,12 @@ Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais
 
 Divida as informações em duas categorias:
 1.  **detalhesGerais**: Informações que pertencem ao ato como um todo (Ex: Objeto do ato, Prazos, Valores, Local e Data).
-2.  **partes**: Informações específicas de cada pessoa ou empresa envolvida. Para cada parte, identifique o nome, o tipo (Outorgante, Outorgado, Vendedor, etc.) e uma lista de detalhes (CPF, CNPJ, Endereço, etc.).
+2.  **partes**: Informações específicas de cada pessoa ou empresa envolvida. Para cada parte, identifique:
+    - O **nome** completo.
+    - O **tipo** (Outorgante, Outorgado, Vendedor, etc.).
+    - A **qualificação completa** nos mínimos detalhes, extraindo cada informação como um par de label/value (Ex: 'Nacionalidade', 'Estado Civil', 'Profissão', 'RG', 'CPF', 'Endereço Completo').
 
-Seja conciso e direto nos valores. Evite texto introdutório.
+Seja exaustivo e preciso na extração da qualificação. Evite texto introdutório na resposta.
 
 Conteúdo do Ato:
 {{{actContent}}}
