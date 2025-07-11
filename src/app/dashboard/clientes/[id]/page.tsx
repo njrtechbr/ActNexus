@@ -7,7 +7,7 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -123,28 +123,51 @@ export default function DetalhesClientePage() {
                 </Alert>
             )}
 
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card className="md:col-span-1">
-                    <CardHeader>
-                        <CardTitle>Documentos</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {cliente.documentos.length > 0 ? (
-                            <ul className="space-y-2 text-sm">
-                                {cliente.documentos.map(doc => (
-                                    <li key={doc.nome} className="flex items-center gap-2">
-                                        <FileText className="h-4 w-4 text-muted-foreground" />
-                                        <span>{doc.nome}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
-                        )}
-                    </CardContent>
-                </Card>
+            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+                
+                <div className="space-y-6 lg:col-span-1">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Documentos</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {cliente.documentos.length > 0 ? (
+                                <ul className="space-y-2 text-sm">
+                                    {cliente.documentos.map(doc => (
+                                        <li key={doc.nome} className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-muted-foreground" />
+                                            <span>{doc.nome}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                <Card className="md:col-span-2">
+                    {cliente.dadosAdicionais && cliente.dadosAdicionais.length > 0 && (
+                        <Card>
+                             <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Database className="h-5 w-5"/>
+                                    Dados Adicionais
+                                </CardTitle>
+                                <CardDescription>Campos salvos a partir de atos.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-3 text-sm">
+                                {cliente.dadosAdicionais.map(item => (
+                                    <div key={item.label} className="flex flex-col border-b pb-2 last:border-b-0">
+                                        <span className="font-medium text-muted-foreground">{item.label}</span>
+                                        <span className="font-semibold text-right text-foreground">{item.value}</span>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+
+                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>Folhas Vinculadas (Atos)</CardTitle>
                         <CardDescription>

@@ -3,16 +3,17 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getAtoById, getLivroById, updateAto, type Ato, type Livro } from '@/services/apiClientLocal';
+import { getAtoById, getLivroById, updateAto, type Ato, type Livro, getClienteByNome, updateCliente } from '@/services/apiClientLocal';
 import { extractActDetails, type ExtractActDetailsOutput } from '@/lib/actions';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Users, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Users, Sparkles, Loader2, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 
 const MarkdownRenderer = ({ content }: { content: string }) => {
@@ -66,6 +67,7 @@ export default function DetalhesAtoPage() {
     const [isExtracting, setIsExtracting] = useState(false);
     const params = useParams();
     const router = useRouter();
+    const { toast } = useToast();
 
     const atoId = params.atoId as string;
     const livroId = params.id as string;
@@ -88,6 +90,36 @@ export default function DetalhesAtoPage() {
         }
 
     }, []);
+
+    const handleSaveField = async (label: string, value: string) => {
+        if (!ato) return;
+
+        // Simplificação: Assume que a primeira parte é o cliente principal para salvar o campo.
+        const nomePartePrincipal = ato.partes[0];
+        if (!nomePartePrincipal) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível identificar a parte principal do ato.'});
+            return;
+        }
+
+        try {
+            const cliente = await getClienteByNome(nomePartePrincipal);
+            if (!cliente) {
+                toast({ variant: 'destructive', title: 'Cliente não encontrado', description: `Não foi possível encontrar um cliente com o nome "${nomePartePrincipal}".`});
+                return;
+            }
+
+            await updateCliente(cliente.id, { label, value });
+
+            toast({
+                title: 'Campo Salvo!',
+                description: `O campo "${label}" foi salvo no perfil de ${cliente.nome}.`,
+            });
+
+        } catch (error) {
+            console.error('Falha ao salvar campo para cliente:', error);
+            toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Não foi possível salvar o campo no perfil do cliente.'});
+        }
+    };
 
     useEffect(() => {
         if (!atoId || !livroId) return;
@@ -176,9 +208,20 @@ export default function DetalhesAtoPage() {
                                 </div>
                             )}
                             {extractedDetails?.map(item => (
-                                <div key={item.label} className="flex flex-col border-b pb-2">
+                                <div key={item.label} className="flex flex-col gap-1 border-b pb-2 group">
                                     <span className="font-medium text-muted-foreground">{item.label}</span>
-                                    <span className="font-semibold text-right text-foreground">{item.value}</span>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold text-right text-foreground">{item.value}</span>
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => handleSaveField(item.label, item.value)}
+                                            title={`Salvar "${item.label}" no cadastro do cliente`}
+                                        >
+                                            <Save className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </CardContent>

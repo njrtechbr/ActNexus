@@ -61,12 +61,18 @@ export interface DocumentoCliente {
     url: string;
 }
 
+export interface CampoAdicionalCliente {
+    label: string;
+    value: string;
+}
+
 export interface Cliente {
     id: string;
     nome: string;
     cpfCnpj: string;
     tipo: 'PF' | 'PJ';
     documentos: DocumentoCliente[];
+    dadosAdicionais?: CampoAdicionalCliente[];
 }
 
 // -- FUNÇÕES EXPORTADAS --
@@ -104,7 +110,6 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id' | 'totalAto
         livroId: novoLivro.id,
         urlPdf: "/path/to/dummy.pdf",
         averbacoes: [],
-        conteudoMarkdown: ato.conteudoMarkdown
     }));
 
     livros.push(novoLivro);
@@ -175,7 +180,7 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
     // Filtra atos onde o nome do cliente aparece na lista de partes
-    return todosAtos.filter((ato: any) => ato.partes.some(p => p.toLowerCase().includes(cliente.nome.toLowerCase())));
+    return todosAtos.filter((ato: any) => ato.partes.some((p: string) => p.toLowerCase().includes(cliente.nome.toLowerCase())));
 }
 
 // Clientes
@@ -193,6 +198,14 @@ export const getClienteById = async (clienteId: string): Promise<Cliente | null>
     return clientes.find(c => c.id === clienteId) || null;
 }
 
+export const getClienteByNome = async (nome: string): Promise<Cliente | null> => {
+    await delay(100);
+    console.log(`MOCK API: Buscando cliente pelo Nome "${nome}"...`);
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    // Busca exata pelo nome para evitar ambiguidades.
+    return clientes.find(c => c.nome.toLowerCase() === nome.toLowerCase()) || null;
+}
+
 export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<Cliente> => {
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
@@ -201,6 +214,36 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
+}
+
+export const updateCliente = async (clienteId: string, campo: CampoAdicionalCliente): Promise<Cliente | null> => {
+    await delay(400);
+    console.log(`MOCK API: Atualizando cliente ${clienteId} com novo campo...`);
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clienteIndex = clientes.findIndex(c => c.id === clienteId);
+
+    if (clienteIndex === -1) {
+        console.error("Cliente não encontrado para atualização.");
+        return null;
+    }
+
+    const clienteAtual = clientes[clienteIndex];
+
+    if (!clienteAtual.dadosAdicionais) {
+        clienteAtual.dadosAdicionais = [];
+    }
+
+    // Evita duplicados
+    const campoExistenteIndex = clienteAtual.dadosAdicionais.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
+    if (campoExistenteIndex > -1) {
+        clienteAtual.dadosAdicionais[campoExistenteIndex] = campo; // Atualiza o valor
+    } else {
+        clienteAtual.dadosAdicionais.push(campo); // Adiciona novo
+    }
+    
+    clientes[clienteIndex] = clienteAtual;
+    saveToStorage('actnexus_clientes', clientes);
+    return clienteAtual;
 }
 
 
