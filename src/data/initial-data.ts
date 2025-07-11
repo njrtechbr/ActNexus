@@ -103,7 +103,14 @@ const initialClientes = [
   }
 ];
 
-const initialTiposLivro = ["Notas", "Procuração", "Escritura", "Testamento"];
+const initialTiposLivro = [
+    "Livro de Notas",
+    "Livro de Procurações",
+    "Livro de Testamentos",
+    "Livro de Protocolo",
+    "Livro de Controle de Depósito Prévio",
+    "Livro Diário Auxiliar da Receita e da Despesa"
+];
 
 export function populateInitialData() {
     const isPopulated = localStorage.getItem('actnexus_populated_v2');
