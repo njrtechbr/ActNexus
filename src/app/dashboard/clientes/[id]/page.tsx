@@ -7,7 +7,7 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -42,24 +42,26 @@ const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "defa
     return { text: "Válido", variant: "secondary", icon: CheckCircle };
 };
 
-const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string }) => {
-    if (!value) return null;
-    return (
-        <div className="flex items-center gap-3 text-sm">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-            <div>
-                <p className="text-muted-foreground">{label}</p>
-                <p className="font-semibold">{value}</p>
-            </div>
-        </div>
-    );
-};
+const InfoCard = ({ icon: Icon, title, children }: { icon: React.ElementType, title: string, children: React.ReactNode }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+                <Icon className="h-5 w-5" />
+                {title}
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+            {children}
+        </CardContent>
+    </Card>
+);
+
 
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSummarizing, setIsSummarizing] = useState(false);
+    const [isSummarizing, setIsSummarizing] = useState(isSummarizing);
     const [summary, setSummary] = useState<string | null>(null);
     const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
     const [isClientEditDialogOpen, setIsClientEditDialogOpen] = useState(false);
@@ -147,6 +149,12 @@ export default function DetalhesClientePage() {
         });
         loadData();
     };
+    
+    const contactIcons = {
+        email: Mail,
+        telefone: Phone,
+        whatsapp: MessageSquare,
+    };
 
     if (isLoading) {
         return <Loading />;
@@ -207,166 +215,182 @@ export default function DetalhesClientePage() {
                     </Alert>
                 )}
 
-                <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
-                    
-                    <div className="space-y-6 lg:col-span-1">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Informações de Contato</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <InfoItem icon={Mail} label="E-mail" value={cliente.contatos?.email} />
-                                <InfoItem icon={Phone} label="Telefone" value={cliente.contatos?.telefone} />
-                                <InfoItem icon={MessageSquare} label="WhatsApp" value={cliente.contatos?.whatsapp} />
-                                {(!cliente.contatos?.email && !cliente.contatos?.telefone && !cliente.contatos?.whatsapp) && (
-                                    <p className="text-sm text-muted-foreground">Nenhuma informação de contato cadastrada.</p>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {cliente.dadosAdicionais && cliente.dadosAdicionais.length > 0 && (
-                             <Card>
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Database className="h-5 w-5"/>
-                                                Dados Adicionais
-                                            </CardTitle>
-                                            <CardDescription>Campos salvos a partir de atos.</CardDescription>
-                                        </div>
-                                        <Button variant="secondary" size="sm" onClick={() => setIsQualificationDialogOpen(true)}>
-                                            <FileSignature className="mr-2 h-4 w-4"/>
-                                            Gerar Qualificação
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
-                                    {cliente.dadosAdicionais.map(item => (
-                                        <div key={item.label} className="group flex justify-between items-center rounded-md p-2 -mx-2 hover:bg-muted/50">
-                                            <div>
-                                                <span className="font-medium text-muted-foreground">{item.label}</span>
-                                                <p className="font-semibold text-foreground max-w-[250px] truncate" title={item.value}>{item.value}</p>
+                <Tabs defaultValue="dados">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="dados">Dados Principais</TabsTrigger>
+                        <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
+                        <TabsTrigger value="documentos">Documentos ({cliente.documentos?.length || 0})</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="dados" className="mt-4">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <InfoCard icon={User} title="Contatos">
+                                {cliente.contatos && cliente.contatos.length > 0 ? (
+                                    cliente.contatos.map(contato => {
+                                        const Icon = contactIcons[contato.tipo];
+                                        return (
+                                            <div key={contato.id} className="border-l-2 border-primary pl-3">
+                                                <div className='flex items-center gap-2'>
+                                                    <Icon className="h-4 w-4 text-muted-foreground"/>
+                                                    <p className="font-semibold">{contato.valor}</p>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground capitalize ml-6">{contato.label || contato.tipo}</p>
                                             </div>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleCopy(item.value, item.label)}>
-                                                <ClipboardCopy className="h-4 w-4"/>
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        )}
+                                        )
+                                    })
+                                ) : (
+                                    <p className="text-muted-foreground">Nenhum contato cadastrado.</p>
+                                )}
+                            </InfoCard>
 
-                        {cliente.observacoes && cliente.observacoes.length > 0 && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Notebook className="h-5 w-5"/>
-                                        Observações
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-sm max-h-60 overflow-y-auto">
-                                    {cliente.observacoes.map((obs, index) => (
+                            <InfoCard icon={MapPin} title="Endereços">
+                                 {cliente.enderecos && cliente.enderecos.length > 0 ? (
+                                    cliente.enderecos.map(end => (
+                                        <div key={end.id} className="border-l-2 border-primary pl-3">
+                                            <p className="font-semibold">{end.logradouro}, {end.numero}</p>
+                                            <p className="text-xs text-muted-foreground">{end.bairro}, {end.cidade} - {end.estado}</p>
+                                            <p className="text-xs text-muted-foreground">CEP: {end.cep}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-muted-foreground">Nenhum endereço cadastrado.</p>
+                                )}
+                            </InfoCard>
+                            
+                            <InfoCard icon={Notebook} title="Observações">
+                                {cliente.observacoes && cliente.observacoes.length > 0 ? (
+                                    cliente.observacoes.map((obs, index) => (
                                         <div key={index} className="border-l-2 border-primary pl-3">
                                             <p className="text-foreground">{obs}</p>
                                         </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        )}
-                    </div>
-
-                    <div className="lg:col-span-2">
-                        <Tabs defaultValue="atos">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
-                                <TabsTrigger value="documentos">Documentos ({cliente.documentos.length})</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="atos">
+                                    ))
+                                ) : (
+                                    <p className="text-muted-foreground">Nenhuma observação cadastrada.</p>
+                                )}
+                            </InfoCard>
+                            
+                             <div className="lg:col-span-3">
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>Histórico de Atos</CardTitle>
-                                        <CardDescription>
-                                            Total de {atos.length} atos encontrados para este cliente.
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="rounded-md border">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Livro</TableHead>
-                                                        <TableHead>Folha Nº</TableHead>
-                                                        <TableHead>Tipo</TableHead>
-                                                        <TableHead>Data</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {atos.length > 0 ? (
-                                                        atos.map((ato) => (
-                                                            <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
-                                                                <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
-                                                                <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
-                                                                <TableCell>{ato.tipoAto}</TableCell>
-                                                                <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
-                                                            </TableRow>
-                                                        ))
-                                                    ) : (
-                                                        <TableRow>
-                                                            <TableCell colSpan={4} className="h-24 text-center">
-                                                                Nenhum ato vinculado a este cliente.
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-                                                </TableBody>
-                                            </Table>
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <CardTitle className="flex items-center gap-2 text-lg">
+                                                    <Database className="h-5 w-5"/>
+                                                    Dados Adicionais (Qualificação)
+                                                </CardTitle>
+                                                <CardDescription>Campos salvos a partir de atos, usados para gerar a qualificação.</CardDescription>
+                                            </div>
+                                            <Button variant="secondary" size="sm" onClick={() => setIsQualificationDialogOpen(true)}>
+                                                <FileSignature className="mr-2 h-4 w-4"/>
+                                                Gerar Qualificação com IA
+                                            </Button>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="documentos">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Documentos Anexados</CardTitle>
-                                        <CardDescription>Documentos do cliente e suas validades.</CardDescription>
                                     </CardHeader>
-                                    <CardContent>
-                                        {cliente.documentos && cliente.documentos.length > 0 ? (
-                                            <ul className="space-y-3">
-                                                {cliente.documentos.map(doc => {
-                                                    const status = getDocumentStatus(doc);
-                                                    return (
-                                                        <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
-                                                            <div className="flex items-start gap-3">
-                                                                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                                                <div className="flex flex-col">
-                                                                <span className="font-medium">{doc.nome}</span>
-                                                                    {doc.dataValidade ? (
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-xs text-muted-foreground">Sem data de validade</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
-                                                                <status.icon className="h-3 w-3"/>
-                                                                {status.text}
-                                                            </Badge>
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
+                                    <CardContent className="max-h-60 overflow-y-auto">
+                                        {cliente.dadosAdicionais && cliente.dadosAdicionais.length > 0 ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                                            {cliente.dadosAdicionais.map(item => (
+                                                <div key={item.label} className="group flex justify-between items-center rounded-md p-2 -mx-2 hover:bg-muted/50">
+                                                    <div>
+                                                        <span className="font-medium text-muted-foreground">{item.label}</span>
+                                                        <p className="font-semibold text-foreground max-w-[250px] truncate" title={item.value}>{item.value}</p>
+                                                    </div>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleCopy(item.value, item.label)}>
+                                                        <ClipboardCopy className="h-4 w-4"/>
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            </div>
                                         ) : (
-                                            <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
+                                            <p className="text-sm text-center text-muted-foreground py-4">Nenhum dado adicional salvo.</p>
                                         )}
                                     </CardContent>
                                 </Card>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="atos">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Histórico de Atos</CardTitle>
+                                <CardDescription>
+                                    Total de {atos.length} atos encontrados para este cliente.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Livro</TableHead>
+                                                <TableHead>Folha Nº</TableHead>
+                                                <TableHead>Tipo</TableHead>
+                                                <TableHead>Data</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {atos.length > 0 ? (
+                                                atos.map((ato) => (
+                                                    <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
+                                                        <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
+                                                        <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
+                                                        <TableCell>{ato.tipoAto}</TableCell>
+                                                        <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="h-24 text-center">
+                                                        Nenhum ato vinculado a este cliente.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="documentos">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Documentos Anexados</CardTitle>
+                                <CardDescription>Documentos do cliente e suas validades.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {cliente.documentos && cliente.documentos.length > 0 ? (
+                                    <ul className="space-y-3">
+                                        {cliente.documentos.map(doc => {
+                                            const status = getDocumentStatus(doc);
+                                            return (
+                                                <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
+                                                    <div className="flex items-start gap-3">
+                                                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                                        <div className="flex flex-col">
+                                                        <span className="font-medium">{doc.nome}</span>
+                                                            {doc.dataValidade ? (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground">Sem data de validade</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
+                                                        <status.icon className="h-3 w-3"/>
+                                                        {status.text}
+                                                    </Badge>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
             {cliente && (
                 <QualificationGeneratorDialog
@@ -386,3 +410,5 @@ export default function DetalhesClientePage() {
         </>
     );
 }
+
+    

@@ -125,7 +125,7 @@ export function ClientFormDialog({
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para adicionar um novo cliente.
+            Preencha os dados abaixo para adicionar um novo cliente. Campos de contato e endereço podem ser adicionados após o cadastro inicial.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -188,7 +188,7 @@ export function ClientFormDialog({
             />
 
             <FormItem>
-                <FormLabel>Documentos</FormLabel>
+                <FormLabel>Documentos (Opcional)</FormLabel>
                 <FormControl>
                     <div className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-6 text-center">
                         <UploadCloud className="h-10 w-10 text-muted-foreground" />
@@ -273,3 +273,5 @@ export function ClientFormDialog({
     </Dialog>
   );
 }
+
+    

@@ -119,11 +119,22 @@ const initialClientes = [
     "nome": "Maria Silva",
     "cpfCnpj": "111.222.333-44",
     "tipo": "PF",
-    "contatos": {
-      "email": "maria.silva@example.com",
-      "telefone": "(11) 98765-4321",
-      "whatsapp": "(11) 98765-4321"
-    },
+    "contatos": [
+      { "id": "email1", "tipo": "email", "valor": "maria.silva@example.com", "label": "Pessoal" },
+      { "id": "tel1", "tipo": "telefone", "valor": "(11) 98765-4321", "label": "Celular" }
+    ],
+    "enderecos": [
+      {
+        "id": "end1",
+        "logradouro": "Rua das Flores",
+        "numero": "123",
+        "bairro": "Centro",
+        "cidade": "São Paulo",
+        "estado": "SP",
+        "cep": "01000-000",
+        "label": "Residencial"
+      }
+    ],
     "observacoes": [
       "Cliente prefere contato por WhatsApp após as 18h.",
       "Excelente histórico de relacionamento com o cartório."
@@ -137,8 +148,7 @@ const initialClientes = [
         { "label": "Estado Civil", "value": "solteira" },
         { "label": "Profissão", "value": "administradora" },
         { "label": "RG", "value": "11.222.333-4 SSP/SP" },
-        { "label": "CPF", "value": "111.222.333-44" },
-        { "label": "Endereço", "value": "Rua das Flores, nº 123, Bairro Centro, São Paulo-SP, CEP 01000-000" }
+        { "label": "CPF", "value": "111.222.333-44" }
     ]
   },
    {
@@ -146,17 +156,18 @@ const initialClientes = [
     "nome": "João Santos",
     "cpfCnpj": "555.666.777-88",
     "tipo": "PF",
+    "contatos": [
+        { "id": "email2", "tipo": "email", "valor": "joao.santos@corp.com", "label": "Comercial" }
+    ],
+    "enderecos": [],
+    "observacoes": [],
     "documentos": [],
-    "contatos": {
-      "email": "joao.santos@corp.com"
-    },
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileira" },
         { "label": "Estado Civil", "value": "casado" },
         { "label": "Profissão", "value": "autônomo" },
         { "label": "RG", "value": "55.666.777-8 SSP/SP" },
-        { "label": "CPF", "value": "555.666.777-88" },
-        { "label": "Endereço", "value": "Avenida Principal, nº 456, Bairro Sul, Campinas-SP, CEP 13000-000" }
+        { "label": "CPF", "value": "555.666.777-88" }
     ]
   },
   {
@@ -164,21 +175,30 @@ const initialClientes = [
     "nome": "Pedro Costa",
     "cpfCnpj": "999.888.777-66",
     "tipo": "PF",
-    "documentos": []
+    "documentos": [],
+    "contatos": [],
+    "enderecos": [],
+    "observacoes": []
   },
   {
     "id": "cliente-12312312312",
     "nome": "Ana Pereira",
     "cpfCnpj": "123.123.123-12",
     "tipo": "PF",
-    "documentos": []
+    "documentos": [],
+    "contatos": [],
+    "enderecos": [],
+    "observacoes": []
   },
   {
     "id": "cliente-45645645645",
     "nome": "Carlos Nobrega",
     "cpfCnpj": "456.456.456-45",
     "tipo": "PF",
-    "documentos": []
+    "documentos": [],
+    "contatos": [],
+    "enderecos": [],
+    "observacoes": []
   }
 ];
 
@@ -192,13 +212,15 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v13');
+    const isPopulated = localStorage.getItem('actnexus_populated_v14');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v13', 'true');
+        localStorage.setItem('actnexus_populated_v14', 'true');
     }
 }
+
+    

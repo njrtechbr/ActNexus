@@ -100,20 +100,34 @@ export interface CampoAdicionalCliente {
     value: string;
 }
 
-export interface ContatosCliente {
-    email?: string;
-    telefone?: string;
-    whatsapp?: string;
+export interface Contato {
+    id: string;
+    tipo: 'email' | 'telefone' | 'whatsapp';
+    valor: string;
+    label?: string; // e.g., 'Pessoal', 'Comercial'
 }
+
+export interface Endereco {
+    id: string;
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+    label?: string; // e.g., 'Residencial', 'Comercial'
+}
+
 
 export interface Cliente {
     id: string;
     nome: string;
     cpfCnpj: string;
     tipo: 'PF' | 'PJ';
-    documentos: DocumentoCliente[];
+    documentos?: DocumentoCliente[];
     dadosAdicionais?: CampoAdicionalCliente[];
-    contatos?: ContatosCliente;
+    contatos?: Contato[];
+    enderecos?: Endereco[];
     observacoes?: string[];
 }
 
@@ -273,7 +287,15 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
-    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}`, dadosAdicionais: [] };
+    const novoCliente: Cliente = { 
+        ...clienteData, 
+        id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}`, 
+        dadosAdicionais: [],
+        contatos: [],
+        enderecos: [],
+        observacoes: [],
+        documentos: clienteData.documentos || []
+    };
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
@@ -359,3 +381,5 @@ export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> 
     tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
     saveToStorage('actnexus_tipos_livro', tipos);
 };
+
+    
