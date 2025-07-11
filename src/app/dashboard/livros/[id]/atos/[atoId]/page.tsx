@@ -12,32 +12,28 @@ import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
 
 const MarkdownRenderer = ({ content }: { content: string }) => {
-  const isAllUpperCase = (str: string) => str === str.toUpperCase() && str !== str.toLowerCase();
-
+  // A simple parser that handles titles (all-caps with a colon) and paragraphs.
   const blocks = content.split('\n\n');
 
   return (
     <Card className="bg-muted/50">
-      <CardContent className="p-6 font-sans text-sm space-y-4">
+      <CardContent className="p-6 font-serif text-base text-justify space-y-4">
         {blocks.map((block, index) => {
           const lines = block.split('\n');
-          const firstLine = lines[0];
-
-          // Renderizar títulos (ex: "OBJETO E PODERES:")
-          if (lines.length === 1 && isAllUpperCase(firstLine.replace(':', '')) && firstLine.endsWith(':')) {
+          // Check if the block is a title (e.g., "OBJETO E PODERES:")
+          if (lines.length === 1 && lines[0] === lines[0].toUpperCase() && lines[0].endsWith(':')) {
             return (
               <div key={index}>
-                <h3 className="text-base font-semibold tracking-tight text-foreground mb-2 mt-4">{firstLine}</h3>
+                <h3 className="text-lg font-sans font-semibold tracking-tight text-foreground mb-2 mt-4 text-left">{lines[0]}</h3>
                 <Separator/>
               </div>
             );
           }
-
-          // Renderizar blocos de parágrafo
+          // Render as a paragraph block
           return (
             <div key={index} className="space-y-2">
               {lines.map((line, lineIndex) => (
-                <p key={lineIndex} className="leading-relaxed text-foreground">
+                <p key={lineIndex} className="leading-relaxed text-foreground indent-8">
                   {line}
                 </p>
               ))}
@@ -141,7 +137,7 @@ export default function DetalhesAtoPage() {
                             <div key={index} className="text-sm p-4 rounded-md border bg-background">
                                <p className='text-foreground'>{av.texto}</p>
                                <div className="flex justify-between text-xs text-muted-foreground mt-3 pt-3 border-t">
-                                 <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbacao), 'dd/MM/yyyy') : 'N/A'}</span>
+                                 <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbac_o), 'dd/MM/yyyy') : 'N/A'}</span>
                                  <span>Registro: {av.dataRegistro ? format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}</span>
                                </div>
                             </div>

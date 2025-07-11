@@ -10,7 +10,6 @@ const initialLivros = [
     "dataAbertura": "2025-01-02",
     "dataFechamento": "2025-01-30",
     "urlPdfOriginal": "livro_notas_001_2025.pdf",
-    "conteudoMarkdown": ""
   },
   {
     "id": "livro-002",
@@ -22,7 +21,6 @@ const initialLivros = [
     "dataAbertura": "2025-02-01",
     "dataFechamento": "2025-02-28",
     "urlPdfOriginal": "livro_procuracao_002_2025.pdf",
-    "conteudoMarkdown": ""
   },
   {
     "id": "livro-003",
@@ -34,7 +32,6 @@ const initialLivros = [
     "dataAbertura": "2024-12-01",
     "dataFechamento": "2024-12-28",
     "urlPdfOriginal": "livro_escritura_003_2024.pdf",
-    "conteudoMarkdown": ""
   }
 ];
 
@@ -161,13 +158,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v5');
+    const isPopulated = localStorage.getItem('actnexus_populated_v6');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v5', 'true');
+        localStorage.setItem('actnexus_populated_v6', 'true');
     }
 }
