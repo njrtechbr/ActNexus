@@ -1,4 +1,5 @@
 
+
 // Simula a latência da rede
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -92,6 +93,7 @@ export interface Ato {
 export interface DocumentoCliente {
     nome: string;
     url: string;
+    dataValidade?: string; // YYYY-MM-DD
 }
 
 export interface CampoAdicionalCliente {

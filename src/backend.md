@@ -182,7 +182,11 @@ A URL base para os endpoints pode ser `/api`.
         "cpfCnpj": "string",
         "tipo": "string (PF ou PJ)",
         "documentos": [
-          { "nome": "string", "url": "string" }
+          { 
+            "nome": "string", 
+            "url": "string",
+            "dataValidade": "string (YYYY-MM-DD, opcional)"
+          }
         ],
         "dadosAdicionais": [
           { "label": "string", "value": "string" }
@@ -195,7 +199,7 @@ A URL base para os endpoints pode ser `/api`.
 
 -   **Descrição**: Cria um novo cliente.
 -   **Autorização**: `admin`.
--   **Payload**: `Omit<Cliente, 'id'>`.
+-   **Payload**: `Omit<Cliente, 'id'>`. A propriedade `documentos` deve aceitar o novo campo `dataValidade`.
 -   **Resposta (201 Created)**: O objeto `Cliente` criado.
 
 #### **`GET /clientes/:id`**
@@ -212,14 +216,21 @@ A URL base para os endpoints pode ser `/api`.
 
 #### **`PATCH /clientes/:id`**
 
--   **Descrição**: Atualiza um cliente, principalmente para adicionar/sincronizar `dadosAdicionais` extraídos pela IA.
--   **Regra de Negócio**: O backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
+-   **Descrição**: Atualiza um cliente, principalmente para adicionar/sincronizar `dadosAdicionais` extraídos pela IA ou para gerenciar documentos.
+-   **Regra de Negócio**: O backend deve fazer a gestão para não criar `labels` duplicadas em `dadosAdicionais`, atualizando o `value` se a `label` já existir.
 -   **Autorização**: Pode ser chamado por um processo interno do sistema (após extração da IA) ou por um `admin`.
 -   **Payload**:
     ```json
     {
-      "campos": [
+      "campos": [ // Opcional, para dados adicionais
         { "label": "string", "value": "string" }
+      ],
+      "documentos": [ // Opcional, para gerenciar todos os documentos
+         { 
+            "nome": "string", 
+            "url": "string",
+            "dataValidade": "string (YYYY-MM-DD, opcional)"
+          }
       ]
     }
     ```

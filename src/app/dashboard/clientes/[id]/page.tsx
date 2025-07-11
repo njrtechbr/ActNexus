@@ -1,19 +1,42 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getClienteById, getAtosByClienteId, type Cliente, type Ato } from '@/services/apiClientLocal';
+import { getClienteById, getAtosByClienteId, type Cliente, type Ato, type DocumentoCliente } from '@/services/apiClientLocal';
 import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { QualificationGeneratorDialog } from '@/components/dashboard/qualification-generator-dialog';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { format, isBefore, isWithinInterval, addDays, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+
+const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "default" | "secondary" | "destructive", icon: React.ElementType} => {
+    if (!doc.dataValidade) {
+        return { text: "Válido", variant: "secondary", icon: CheckCircle };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    const validityDate = parseISO(doc.dataValidade);
+
+    if (isBefore(validityDate, today)) {
+        return { text: "Expirado", variant: "destructive", icon: XCircle };
+    }
+    
+    if (isWithinInterval(validityDate, { start: today, end: addDays(today, 30) })) {
+        return { text: "Vence em breve", variant: "default", icon: CalendarClock };
+    }
+
+    return { text: "Válido", variant: "secondary", icon: CheckCircle };
+};
 
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
@@ -146,16 +169,35 @@ export default function DetalhesClientePage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Documentos</CardTitle>
+                                <CardDescription>Documentos anexados e suas validades.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {cliente.documentos.length > 0 ? (
-                                    <ul className="space-y-2 text-sm">
-                                        {cliente.documentos.map(doc => (
-                                            <li key={doc.nome} className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                                <span>{doc.nome}</span>
-                                            </li>
-                                        ))}
+                                    <ul className="space-y-3">
+                                        {cliente.documentos.map(doc => {
+                                            const status = getDocumentStatus(doc);
+                                            return (
+                                                <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
+                                                    <div className="flex items-start gap-3">
+                                                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                                        <div className="flex flex-col">
+                                                          <span className="font-medium">{doc.nome}</span>
+                                                            {doc.dataValidade ? (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground">Sem data de validade</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
+                                                        <status.icon className="h-3 w-3"/>
+                                                        {status.text}
+                                                    </Badge>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 ) : (
                                     <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>

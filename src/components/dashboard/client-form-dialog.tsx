@@ -1,11 +1,14 @@
 
+
 "use client";
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Loader2, UploadCloud, File as FileIcon, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Loader2, UploadCloud, File as FileIcon, X, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,17 +28,23 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { createCliente, type DocumentoCliente } from '@/services/apiClientLocal';
+import { createCliente } from '@/services/apiClientLocal';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+
+const documentoSchema = z.object({
+  nome: z.string(),
+  url: z.string(),
+  dataValidade: z.date().optional(),
+});
 
 const formSchema = z.object({
   nome: z.string().min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' }),
   cpfCnpj: z.string().min(11, { message: 'CPF/CNPJ inválido.' }),
   tipo: z.enum(['PF', 'PJ'], { required_error: 'Selecione o tipo de cliente.' }),
-  documentos: z.array(z.object({
-    nome: z.string(),
-    url: z.string(),
-  })).optional(),
+  documentos: z.array(documentoSchema).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -64,28 +73,34 @@ export function ClientFormDialog({
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "documentos",
+  });
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const newDocs: DocumentoCliente[] = Array.from(files).map(file => ({
+      const newDocs = Array.from(files).map(file => ({
         nome: file.name,
         url: `/docs/simulado/${file.name}`, // Simula um caminho
       }));
-      const currentDocs = form.getValues('documentos') || [];
-      form.setValue('documentos', [...currentDocs, ...newDocs]);
+      append(newDocs);
     }
-  };
-
-  const removeDocument = (index: number) => {
-    const currentDocs = form.getValues('documentos') || [];
-    const updatedDocs = currentDocs.filter((_, i) => i !== index);
-    form.setValue('documentos', updatedDocs);
   };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      const clienteData = { ...data, documentos: data.documentos || [] };
+      // Formata as datas antes de enviar
+      const clienteData = {
+        ...data,
+        documentos: data.documentos?.map(doc => ({
+            ...doc,
+            dataValidade: doc.dataValidade ? format(doc.dataValidade, 'yyyy-MM-dd') : undefined,
+        })) || [],
+      };
+
       await createCliente(clienteData);
       onClientCreated();
       form.reset();
@@ -101,14 +116,12 @@ export function ClientFormDialog({
     }
   };
 
-  const documentos = form.watch('documentos') || [];
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
         if (!open) form.reset();
         setIsOpen(open);
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Cliente</DialogTitle>
           <DialogDescription>
@@ -116,7 +129,7 @@ export function ClientFormDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto pr-4">
             <FormField
               control={form.control}
               name="nome"
@@ -189,27 +202,65 @@ export function ClientFormDialog({
                     </div>
                 </FormControl>
             </FormItem>
-
-            {documentos.length > 0 && (
+            
+            {fields.length > 0 && (
                 <div className="space-y-2">
                     <p className="text-sm font-medium">Arquivos Anexados:</p>
-                    <ul className="space-y-2">
-                        {documentos.map((doc, index) => (
-                            <li key={index} className="flex items-center justify-between rounded-md border bg-muted/50 p-2 text-sm">
-                                <div className='flex items-center gap-2 overflow-hidden'>
+                    <ul className="space-y-3">
+                        {fields.map((field, index) => (
+                           <li key={field.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-md border bg-muted/50 p-3 text-sm gap-3">
+                                <div className='flex items-center gap-2 overflow-hidden w-full sm:w-auto'>
                                     <FileIcon className="h-4 w-4 flex-shrink-0" />
-                                    <span className='truncate'>{doc.nome}</span>
+                                    <span className='truncate font-medium' title={field.nome}>{field.nome}</span>
                                 </div>
-                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeDocument(index)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </li>
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <FormField
+                                        control={form.control}
+                                        name={`documentos.${index}.dataValidade`}
+                                        render={({ field }) => (
+                                        <FormItem className="flex-1">
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                    >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? (
+                                                        format(field.value, "dd/MM/yyyy")
+                                                    ) : (
+                                                        <span>Validade (opcional)</span>
+                                                    )}
+                                                    </Button>
+                                                </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    initialFocus
+                                                />
+                                                </PopoverContent>
+                                            </Popover>
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0" onClick={() => remove(index)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                           </li>
                         ))}
                     </ul>
                 </div>
             )}
             
-             <DialogFooter>
+             <DialogFooter className="sticky bottom-0 bg-background pt-4 z-10">
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
