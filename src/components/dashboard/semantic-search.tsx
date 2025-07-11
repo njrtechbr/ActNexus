@@ -26,20 +26,7 @@ export function SemanticSearch() {
     setHasSearched(true);
     try {
       const result = await semanticSearchAction({ query });
-      
-      // The AI flow might not return results for generic queries.
-      // To improve the demo experience, we'll add mock results if the AI returns none.
-      if (result.results && result.results.length > 0) {
-        setResults(result.results);
-      } else {
-        setResults([
-          { documentName: 'Acordo Pré-nupcial - Silva & Costa', documentDescription: 'Acordo detalhando a divisão de bens para João da Silva e Maria Costa.', relevanceScore: 0.92 },
-          { documentName: 'Escritura de Compra e Venda de Imóvel - Propriedade Almeida', documentDescription: 'Transferência de propriedade do imóvel de Carlos Almeida para Beatriz Souza.', relevanceScore: 0.85 },
-          { documentName: 'Procuração - Fernandes', documentDescription: 'Documento legal que concede poderes de representação do Sr. Fernandes ao seu advogado.', relevanceScore: 0.78 },
-          { documentName: 'Último Testamento e Vontade da Sra. Oliveira', documentDescription: 'Detalha a distribuição de bens da falecida Sra. Oliveira.', relevanceScore: 0.71 },
-        ].filter(r => r.documentName.toLowerCase().includes(query.toLowerCase()) || r.documentDescription.toLowerCase().includes(query.toLowerCase())));
-      }
-
+      setResults(result.results || []);
     } catch (error) {
       console.error("A pesquisa falhou:", error);
       toast({
