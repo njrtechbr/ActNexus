@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Book,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -20,6 +21,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
+  { href: "/dashboard/livros", label: "Livros", icon: Book },
 ];
 
 export default function DashboardLayout({
@@ -41,7 +43,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
