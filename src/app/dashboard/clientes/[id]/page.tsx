@@ -75,7 +75,7 @@ const enderecoSchema = z.object({
 const documentoSchema = z.object({
   nome: z.string(),
   url: z.string(),
-  dataValidade: z.date().transform(val => val.toISOString()).optional(),
+  dataValidade: z.date().optional(),
 });
 
 
@@ -203,7 +203,7 @@ export default function DetalhesClientePage() {
         if (files) {
             const newDocs = Array.from(files).map(file => ({
                 nome: file.name,
-                url: `/docs/simulado/${file.name}`, // Simula um caminho
+                url: `/docs/simulado/${file.name}`,
             }));
             appendDoc(newDocs as any);
         }
@@ -219,7 +219,7 @@ export default function DetalhesClientePage() {
                 observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean) || [],
                 documentos: data.documentos?.map(doc => ({
                     ...doc,
-                    dataValidade: doc.dataValidade ? format(parseISO(doc.dataValidade), 'yyyy-MM-dd') : undefined,
+                    dataValidade: doc.dataValidade ? format(doc.dataValidade, 'yyyy-MM-dd') : undefined,
                 })) || [],
             };
             await updateCliente(cliente.id, clienteData);
@@ -254,6 +254,8 @@ export default function DetalhesClientePage() {
     if (!cliente) {
         return <div className="text-center p-8">Cliente não encontrado.</div>;
     }
+
+    const docList = isEditing ? docFields : cliente.documentos || [];
 
     return (
         <>
@@ -321,7 +323,7 @@ export default function DetalhesClientePage() {
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="dados">Dados Principais</TabsTrigger>
                         <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
-                        <TabsTrigger value="documentos">Documentos ({isEditing ? docFields.length : (cliente.documentos?.length || 0)})</TabsTrigger>
+                        <TabsTrigger value="documentos">Documentos ({docList.length})</TabsTrigger>
                     </TabsList>
                     
                     {/* DADOS PRINCIPAIS */}
@@ -541,17 +543,20 @@ export default function DetalhesClientePage() {
                                     </FormItem>
                                 )}
 
-                                {docFields.length > 0 ? (
+                                {docList.length > 0 ? (
                                     <ul className="space-y-3">
-                                        {docFields.map((doc, index) => (
-                                            <li key={doc.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
+                                        {docList.map((doc, index) => {
+                                            const docDate = (doc as any).dataValidade;
+                                            const dateToFormat = docDate instanceof Date ? docDate : (typeof docDate === 'string' ? parseISO(docDate) : null);
+                                            return (
+                                            <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
                                                 <div className="flex items-start gap-3 w-full sm:w-auto">
                                                     <FileIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                                     <div className="flex flex-col overflow-hidden">
                                                         <span className="font-medium truncate">{doc.nome}</span>
-                                                        {!isEditing && doc.dataValidade && (
+                                                        {!isEditing && dateToFormat && (
                                                             <span className="text-xs text-muted-foreground">
-                                                                Validade: {format(parseISO(doc.dataValidade as unknown as string), 'dd/MM/yyyy')}
+                                                                Validade: {format(dateToFormat, 'dd/MM/yyyy')}
                                                             </span>
                                                         )}
                                                     </div>
@@ -576,7 +581,7 @@ export default function DetalhesClientePage() {
                                                                         >
                                                                         <CalendarIcon className="mr-2 h-4 w-4" />
                                                                         {field.value ? (
-                                                                            format(field.value as unknown as Date, "dd/MM/yyyy")
+                                                                            format(field.value, "dd/MM/yyyy")
                                                                         ) : (
                                                                             <span>Validade</span>
                                                                         )}
@@ -586,7 +591,7 @@ export default function DetalhesClientePage() {
                                                                     <PopoverContent className="w-auto p-0">
                                                                     <Calendar
                                                                         mode="single"
-                                                                        selected={field.value as unknown as Date}
+                                                                        selected={field.value}
                                                                         onSelect={field.onChange}
                                                                         initialFocus
                                                                     />
@@ -600,13 +605,13 @@ export default function DetalhesClientePage() {
                                                         </Button>
                                                     </div>
                                                 ) : (
-                                                    <Badge variant={getDocumentStatus(doc as any).variant} className="gap-1.5 whitespace-nowrap">
+                                                    <Badge variant={getDocumentStatus(doc as DocumentoCliente).variant} className="gap-1.5 whitespace-nowrap">
                                                         <status.icon className="h-3 w-3"/>
-                                                        {getDocumentStatus(doc as any).text}
+                                                        {getDocumentStatus(doc as DocumentoCliente).text}
                                                     </Badge>
                                                 )}
                                             </li>
-                                        ))}
+                                        )})}
                                     </ul>
                                 ) : (
                                     !isEditing && <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
@@ -628,5 +633,3 @@ export default function DetalhesClientePage() {
         </>
     );
 }
-
-    
