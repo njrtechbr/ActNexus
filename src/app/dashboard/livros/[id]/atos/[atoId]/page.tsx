@@ -137,7 +137,7 @@ export default function DetalhesAtoPage() {
                             <div key={index} className="text-sm p-4 rounded-md border bg-background">
                                <p className='text-foreground'>{av.texto}</p>
                                <div className="flex justify-between text-xs text-muted-foreground mt-3 pt-3 border-t">
-                                 <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbac_o), 'dd/MM/yyyy') : 'N/A'}</span>
+                                 <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbacao), 'dd/MM/yyyy') : 'N/A'}</span>
                                  <span>Registro: {av.dataRegistro ? format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}</span>
                                </div>
                             </div>
