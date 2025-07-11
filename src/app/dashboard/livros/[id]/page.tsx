@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Search, PlusCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Search, PlusCircle, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ValidationDialog } from '@/components/dashboard/validation-dialog';
@@ -31,6 +31,7 @@ export default function DetalhesLivroPage() {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedAto, setSelectedAto] = useState<Ato | null>(null);
+    const [atoToEdit, setAtoToEdit] = useState<Ato | null>(null);
     const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
     const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -77,19 +78,30 @@ export default function DetalhesLivroPage() {
         loadData();
     }, [loadData]);
 
-    const handleAtoCreated = () => {
+    const handleAtoSaved = () => {
         setIsAtoFormOpen(false);
+        setAtoToEdit(null);
         toast({
             title: 'Sucesso!',
-            description: 'Novo ato cadastrado no livro.',
+            description: `Ato ${atoToEdit ? 'atualizado' : 'cadastrado'} com sucesso.`,
         });
-        loadData(); // Recarrega a lista de atos e dados do livro
+        loadData(); 
     }
 
     const handleValidationClick = (ato: Ato) => {
         setSelectedAto(ato);
         setIsValidationDialogOpen(true);
     };
+
+    const handleEditClick = (ato: Ato) => {
+        setAtoToEdit(ato);
+        setIsAtoFormOpen(true);
+    };
+
+    const handleNewAtoClick = () => {
+        setAtoToEdit(null);
+        setIsAtoFormOpen(true);
+    }
 
     const filteredAtos = useMemo(() => {
         if (!searchTerm) {
@@ -129,7 +141,7 @@ export default function DetalhesLivroPage() {
                         </div>
                     </div>
                     {user?.role === 'admin' && (
-                        <Button onClick={() => setIsAtoFormOpen(true)}>
+                        <Button onClick={handleNewAtoClick}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Novo Ato
                         </Button>
@@ -163,7 +175,7 @@ export default function DetalhesLivroPage() {
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Data</TableHead>
                                         <TableHead>Partes Envolvidas</TableHead>
-                                        <TableHead className="w-[100px]"></TableHead>
+                                        <TableHead className="w-[100px] text-right">Ações</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -179,6 +191,12 @@ export default function DetalhesLivroPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right">
+                                                    {user?.role === 'admin' && (
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(ato)}>
+                                                            <Edit className="h-4 w-4" />
+                                                            <span className="sr-only">Editar Ato</span>
+                                                        </Button>
+                                                    )}
                                                     <Button variant="ghost" size="icon" onClick={() => handleValidationClick(ato)}>
                                                         <FileText className="h-4 w-4" />
                                                         <span className="sr-only">Validar Ato</span>
@@ -210,9 +228,10 @@ export default function DetalhesLivroPage() {
                 <AtoFormDialog 
                     isOpen={isAtoFormOpen}
                     setIsOpen={setIsAtoFormOpen}
-                    onAtoCreated={handleAtoCreated}
+                    onAtoSaved={handleAtoSaved}
                     livro={livro}
                     clientes={clientes}
+                    atoToEdit={atoToEdit}
                 />
             )}
         </>

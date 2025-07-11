@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { createAto, type Livro, type Cliente } from '@/services/apiClientLocal';
+import { createAto, updateAto, type Livro, type Cliente, type Ato } from '@/services/apiClientLocal';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '../ui/badge';
@@ -36,6 +36,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 
 const formSchema = z.object({
+  id: z.string().optional(),
   numeroAto: z.coerce.number().min(1, 'O número do ato é obrigatório.'),
   tipoAto: z.string().min(3, 'O tipo do ato é obrigatório.'),
   dataAto: z.date({ required_error: 'A data do ato é obrigatória.' }),
@@ -47,30 +48,50 @@ type FormData = z.infer<typeof formSchema>;
 interface AtoFormDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onAtoCreated: () => void;
+  onAtoSaved: () => void;
   livro: Livro;
   clientes: Cliente[];
+  atoToEdit: Ato | null;
 }
 
 export function AtoFormDialog({
   isOpen,
   setIsOpen,
-  onAtoCreated,
+  onAtoSaved,
   livro,
   clientes,
+  atoToEdit,
 }: AtoFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openPartes, setOpenPartes] = useState(false);
   const { toast } = useToast();
+  const isEditing = !!atoToEdit;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      numeroAto: livro.totalAtos + 1,
-      tipoAto: '',
-      partes: [],
-    },
   });
+
+  useEffect(() => {
+    if (isOpen) {
+        if (isEditing) {
+            form.reset({
+                id: atoToEdit.id,
+                numeroAto: atoToEdit.numeroAto,
+                tipoAto: atoToEdit.tipoAto,
+                dataAto: new Date(atoToEdit.dataAto),
+                partes: atoToEdit.partes,
+            });
+        } else {
+            form.reset({
+                numeroAto: livro.totalAtos + 1,
+                tipoAto: '',
+                dataAto: undefined,
+                partes: [],
+            });
+        }
+    }
+  }, [isOpen, isEditing, atoToEdit, livro, form]);
+
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -79,20 +100,22 @@ export function AtoFormDialog({
         ...data, 
         livroId: livro.id,
         dataAto: format(data.dataAto, 'yyyy-MM-dd')
-      }; 
-      await createAto(atoData);
-      onAtoCreated();
-      form.reset({
-        numeroAto: livro.totalAtos + 2, // Incrementa para o proximo
-        tipoAto: '',
-        partes: []
-      });
+      };
+
+      if (isEditing && atoToEdit) {
+         await updateAto(atoToEdit.id, atoData);
+      } else {
+         await createAto(atoData);
+      }
+      
+      onAtoSaved();
+
     } catch (error) {
-        console.error("Falha ao criar ato:", error);
+        console.error("Falha ao salvar ato:", error);
         toast({
             variant: "destructive",
             title: "Erro ao Salvar",
-            description: "Não foi possível criar o ato. Tente novamente.",
+            description: `Não foi possível ${isEditing ? 'atualizar' : 'criar'} o ato. Tente novamente.`,
         });
     } finally {
       setIsSubmitting(false);
@@ -115,21 +138,12 @@ export function AtoFormDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open) {
-            form.reset({
-                numeroAto: livro.totalAtos + 1,
-                tipoAto: '',
-                partes: []
-            });
-        }
-        setIsOpen(open);
-    }}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Novo Ato para o Livro {livro.numero}/{livro.ano}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar Ato' : `Novo Ato para o Livro ${livro.numero}/${livro.ano}`}</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para registrar um novo ato notarial.
+            {isEditing ? `Modifique os dados do ato Nº ${atoToEdit.numeroAto}.` : 'Preencha os dados abaixo para registrar um novo ato notarial.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -267,7 +281,7 @@ export function AtoFormDialog({
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Salvar Ato
+                    {isEditing ? 'Salvar Alterações' : 'Salvar Ato'}
                 </Button>
             </DialogFooter>
           </form>
@@ -276,4 +290,3 @@ export function AtoFormDialog({
     </Dialog>
   );
 }
-

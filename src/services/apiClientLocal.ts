@@ -109,6 +109,23 @@ export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtra
     return novoAto;
 }
 
+export const updateAto = async (atoId: string, atoData: Partial<Ato>): Promise<Ato | null> => {
+    await delay(600);
+    console.log(`MOCK API: Atualizando ato ${atoId}...`);
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    const atoIndex = todosAtos.findIndex(a => a.id === atoId);
+
+    if (atoIndex === -1) {
+        console.error("Ato não encontrado para atualização.");
+        return null;
+    }
+
+    const atoAtualizado = { ...todosAtos[atoIndex], ...atoData };
+    todosAtos[atoIndex] = atoAtualizado;
+    saveToStorage('actnexus_atos', todosAtos);
+    return atoAtualizado;
+}
+
 
 export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     await delay(300);
