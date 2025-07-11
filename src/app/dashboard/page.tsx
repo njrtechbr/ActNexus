@@ -1,14 +1,62 @@
-import {
-  FileText,
-  FileCheck2,
-  FileSearch2,
-  FileClock,
-} from "lucide-react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Book, FileText, Users, FileCheck2 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { SemanticSearch } from "@/components/dashboard/semantic-search";
 import { PdfUpload } from "@/components/dashboard/pdf-upload";
+import { getLivros, getAtosByLivroId, getClientes, type Livro, type Ato, type Cliente } from "@/services/apiClientLocal";
+import { populateInitialData } from "@/data/initial-data";
+import Loading from "./loading";
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    livros: 0,
+    atos: 0,
+    clientes: 0,
+    atosValidados: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    populateInitialData();
+
+    async function loadStats() {
+      try {
+        const [livrosData, clientesData] = await Promise.all([
+          getLivros(),
+          getClientes(),
+        ]);
+
+        let totalAtos = 0;
+        let atosValidados = 0;
+
+        for (const livro of livrosData) {
+            const atosDoLivro = await getAtosByLivroId(livro.id);
+            totalAtos += atosDoLivro.length;
+            atosValidados += atosDoLivro.filter(ato => ato.dadosExtraidos).length;
+        }
+
+        setStats({
+          livros: livrosData.length,
+          atos: totalAtos,
+          clientes: clientesData.length,
+          atosValidados: atosValidados
+        });
+      } catch (error) {
+        console.error("Falha ao carregar estatísticas do dashboard:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadStats();
+  }, []);
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -19,28 +67,28 @@ export default function DashboardPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Documentos Enviados"
-          value="1,234"
+          title="Livros Cadastrados"
+          value={stats.livros.toString()}
+          icon={Book}
+          change={`${stats.atos} atos registrados`}
+        />
+        <MetricCard
+          title="Atos Registrados"
+          value={stats.atos.toString()}
           icon={FileText}
-          change="+20.1% do último mês"
+          change={`${stats.atosValidados} validados`}
         />
-        <MetricCard
-          title="Documentos Validados"
-          value="1,050"
+         <MetricCard
+          title="Atos Validados"
+          value={stats.atosValidados.toString()}
           icon={FileCheck2}
-          change="+18.5% do último mês"
+          change={`${( (stats.atos > 0 ? stats.atosValidados / stats.atos : 0) * 100).toFixed(0)}% do total`}
         />
         <MetricCard
-          title="Validação Pendente"
-          value="184"
-          icon={FileClock}
-          change="-5.2% do último mês"
-        />
-        <MetricCard
-          title="Consultas de Pesquisa"
-          value="573"
-          icon={FileSearch2}
-          change="+12 desde a última hora"
+          title="Clientes Ativos"
+          value={stats.clientes.toString()}
+          icon={Users}
+          change="Clientes na base"
         />
       </div>
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
