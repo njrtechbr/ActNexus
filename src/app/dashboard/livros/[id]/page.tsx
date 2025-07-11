@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -241,7 +242,7 @@ export default function DetalhesLivroPage() {
                                                             <span className="sr-only">Averbar Folha</span>
                                                         </Button>
                                                     )}
-                                                     {user?.role !== 'admin' && (
+                                                     {user?.role !== 'admin' && !canAverbate && (
                                                          <Button variant="ghost" size="icon" disabled>
                                                             <MessageSquareQuote className="h-4 w-4" />
                                                             <span className="sr-only">Averbar Folha</span>
