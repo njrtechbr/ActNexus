@@ -1,5 +1,4 @@
 
-
 // Simula a latência da rede
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -101,6 +100,12 @@ export interface CampoAdicionalCliente {
     value: string;
 }
 
+export interface ContatosCliente {
+    email?: string;
+    telefone?: string;
+    whatsapp?: string;
+}
+
 export interface Cliente {
     id: string;
     nome: string;
@@ -108,6 +113,8 @@ export interface Cliente {
     tipo: 'PF' | 'PJ';
     documentos: DocumentoCliente[];
     dadosAdicionais?: CampoAdicionalCliente[];
+    contatos?: ContatosCliente;
+    observacoes?: string[];
 }
 
 // -- FUNÇÕES EXPORTADAS --
@@ -272,12 +279,8 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     return novoCliente;
 }
 
-type UpdateClientePayload = {
-    nome?: string;
-    cpfCnpj?: string;
-    tipo?: 'PF' | 'PJ';
-    documentos?: DocumentoCliente[];
-    campos?: CampoAdicionalCliente[];
+type UpdateClientePayload = Partial<Omit<Cliente, 'id'>> & {
+    campos?: CampoAdicionalCliente[]; // Legacy name for merging additional data
 };
 
 export const updateCliente = async (clienteId: string, payload: UpdateClientePayload): Promise<Cliente | null> => {
@@ -293,37 +296,32 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
 
     const clienteAtual = clientes[clienteIndex];
 
-    // Atualiza campos básicos
-    if (payload.nome) clienteAtual.nome = payload.nome;
-    if (payload.cpfCnpj) clienteAtual.cpfCnpj = payload.cpfCnpj;
-    if (payload.tipo) clienteAtual.tipo = payload.tipo;
-    
-    // Substitui a lista de documentos completamente se fornecida
-    if (payload.documentos) {
-        clienteAtual.documentos = payload.documentos;
-    }
+    // Merge payload fields into the current client data
+    const updatedCliente = { ...clienteAtual, ...payload };
 
-    // Mescla dados adicionais
+    // Special handling for merging 'campos' into 'dadosAdicionais'
     if (payload.campos) {
-        if (!clienteAtual.dadosAdicionais) {
-            clienteAtual.dadosAdicionais = [];
+        if (!updatedCliente.dadosAdicionais) {
+            updatedCliente.dadosAdicionais = [];
         }
 
         payload.campos.forEach(campo => {
-            const campoExistenteIndex = clienteAtual.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
+            const campoExistenteIndex = updatedCliente.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
             if (campoExistenteIndex > -1) {
-                // Atualiza o valor se o campo já existir
-                clienteAtual.dadosAdicionais![campoExistenteIndex] = campo; 
+                // Update the value if the field already exists
+                updatedCliente.dadosAdicionais![campoExistenteIndex] = campo; 
             } else {
-                // Adiciona novo campo
-                clienteAtual.dadosAdicionais!.push(campo); 
+                // Add new field
+                updatedCliente.dadosAdicionais!.push(campo); 
             }
         });
+        // Remove the 'campos' property after merging
+        delete (updatedCliente as any).campos;
     }
     
-    clientes[clienteIndex] = clienteAtual;
+    clientes[clienteIndex] = updatedCliente;
     saveToStorage('actnexus_clientes', clientes);
-    return clienteAtual;
+    return updatedCliente;
 }
 
 

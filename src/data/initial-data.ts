@@ -119,8 +119,17 @@ const initialClientes = [
     "nome": "Maria Silva",
     "cpfCnpj": "111.222.333-44",
     "tipo": "PF",
+    "contatos": {
+      "email": "maria.silva@example.com",
+      "telefone": "(11) 98765-4321",
+      "whatsapp": "(11) 98765-4321"
+    },
+    "observacoes": [
+      "Cliente prefere contato por WhatsApp após as 18h.",
+      "Excelente histórico de relacionamento com o cartório."
+    ],
     "documentos": [
-      { "nome": "RG", "url": "/docs/rg_maria.pdf" },
+      { "nome": "RG", "url": "/docs/rg_maria.pdf", "dataValidade": "2030-05-20" },
       { "nome": "Comprovante de Endereço", "url": "/docs/comp_end_maria.pdf" }
     ],
     "dadosAdicionais": [
@@ -138,6 +147,9 @@ const initialClientes = [
     "cpfCnpj": "555.666.777-88",
     "tipo": "PF",
     "documentos": [],
+    "contatos": {
+      "email": "joao.santos@corp.com"
+    },
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileira" },
         { "label": "Estado Civil", "value": "casado" },
@@ -180,13 +192,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v12');
+    const isPopulated = localStorage.getItem('actnexus_populated_v13');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v12', 'true');
+        localStorage.setItem('actnexus_populated_v13', 'true');
     }
 }

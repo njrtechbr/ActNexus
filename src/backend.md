@@ -182,6 +182,12 @@ A URL base para os endpoints pode ser `/api`.
         "nome": "string",
         "cpfCnpj": "string",
         "tipo": "string (PF ou PJ)",
+        "contatos": {
+          "email": "string",
+          "telefone": "string",
+          "whatsapp": "string"
+        },
+        "observacoes": ["string"],
         "documentos": [
           { 
             "nome": "string", 
@@ -200,7 +206,7 @@ A URL base para os endpoints pode ser `/api`.
 
 -   **Descrição**: Cria um novo cliente.
 -   **Autorização**: `admin`.
--   **Payload**: `Omit<Cliente, 'id'>`. A propriedade `documentos` deve aceitar o novo campo `dataValidade`.
+-   **Payload**: `Omit<Cliente, 'id'>`.
 -   **Resposta (201 Created)**: O objeto `Cliente` criado.
 
 #### **`GET /clientes/:id`**
@@ -217,7 +223,7 @@ A URL base para os endpoints pode ser `/api`.
 
 #### **`PATCH /clientes/:id`**
 
--   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos, gerenciar a lista de documentos ou sincronizar `dadosAdicionais` extraídos pela IA.
+-   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos, gerenciar a lista de documentos, contatos, observações, ou sincronizar `dadosAdicionais` extraídos pela IA.
 -   **Regra de Negócio**: Ao mesclar `dadosAdicionais` (campos), o backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
 -   **Autorização**: `admin` para edições manuais. Pode também ser chamado por um processo interno do sistema (após extração da IA).
 -   **Payload (parcial, todos os campos são opcionais)**:
@@ -226,6 +232,8 @@ A URL base para os endpoints pode ser `/api`.
       "nome": "string",
       "cpfCnpj": "string",
       "tipo": "string (PF ou PJ)",
+      "contatos": { /* ... */ },
+      "observacoes": ["string"],
       "documentos": [ // Para gerenciar a lista completa de documentos
          { 
             "nome": "string", 

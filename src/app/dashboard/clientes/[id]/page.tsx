@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,7 +7,7 @@ import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,9 +15,9 @@ import { useToast } from '@/hooks/use-toast';
 import { QualificationGeneratorDialog } from '@/components/dashboard/qualification-generator-dialog';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { format, isBefore, isWithinInterval, addDays, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { ClientEditDialog } from '@/components/dashboard/client-edit-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface UserProfile {
     role: string;
@@ -41,6 +40,19 @@ const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "defa
     }
 
     return { text: "Válido", variant: "secondary", icon: CheckCircle };
+};
+
+const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value?: string }) => {
+    if (!value) return null;
+    return (
+        <div className="flex items-center gap-3 text-sm">
+            <Icon className="h-4 w-4 text-muted-foreground" />
+            <div>
+                <p className="text-muted-foreground">{label}</p>
+                <p className="font-semibold">{value}</p>
+            </div>
+        </div>
+    );
 };
 
 export default function DetalhesClientePage() {
@@ -200,39 +212,14 @@ export default function DetalhesClientePage() {
                     <div className="space-y-6 lg:col-span-1">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Documentos</CardTitle>
-                                <CardDescription>Documentos anexados e suas validades.</CardDescription>
+                                <CardTitle>Informações de Contato</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                {cliente.documentos && cliente.documentos.length > 0 ? (
-                                    <ul className="space-y-3">
-                                        {cliente.documentos.map(doc => {
-                                            const status = getDocumentStatus(doc);
-                                            return (
-                                                <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
-                                                    <div className="flex items-start gap-3">
-                                                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                                        <div className="flex flex-col">
-                                                          <span className="font-medium">{doc.nome}</span>
-                                                            {doc.dataValidade ? (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-xs text-muted-foreground">Sem data de validade</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
-                                                        <status.icon className="h-3 w-3"/>
-                                                        {status.text}
-                                                    </Badge>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">Nenhum documento cadastrado.</p>
+                            <CardContent className="space-y-4">
+                                <InfoItem icon={Mail} label="E-mail" value={cliente.contatos?.email} />
+                                <InfoItem icon={Phone} label="Telefone" value={cliente.contatos?.telefone} />
+                                <InfoItem icon={MessageSquare} label="WhatsApp" value={cliente.contatos?.whatsapp} />
+                                {(!cliente.contatos?.email && !cliente.contatos?.telefone && !cliente.contatos?.whatsapp) && (
+                                    <p className="text-sm text-muted-foreground">Nenhuma informação de contato cadastrada.</p>
                                 )}
                             </CardContent>
                         </Card>
@@ -248,13 +235,13 @@ export default function DetalhesClientePage() {
                                             </CardTitle>
                                             <CardDescription>Campos salvos a partir de atos.</CardDescription>
                                         </div>
-                                        <Button variant="secondary" onClick={() => setIsQualificationDialogOpen(true)}>
+                                        <Button variant="secondary" size="sm" onClick={() => setIsQualificationDialogOpen(true)}>
                                             <FileSignature className="mr-2 h-4 w-4"/>
                                             Gerar Qualificação
                                         </Button>
                                     </div>
                                 </CardHeader>
-                                <CardContent className="space-y-1 text-sm">
+                                <CardContent className="space-y-1 text-sm max-h-60 overflow-y-auto">
                                     {cliente.dadosAdicionais.map(item => (
                                         <div key={item.label} className="group flex justify-between items-center rounded-md p-2 -mx-2 hover:bg-muted/50">
                                             <div>
@@ -269,48 +256,116 @@ export default function DetalhesClientePage() {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {cliente.observacoes && cliente.observacoes.length > 0 && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Notebook className="h-5 w-5"/>
+                                        Observações
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm max-h-60 overflow-y-auto">
+                                    {cliente.observacoes.map((obs, index) => (
+                                        <div key={index} className="border-l-2 border-primary pl-3">
+                                            <p className="text-foreground">{obs}</p>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
 
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle>Folhas Vinculadas (Atos)</CardTitle>
-                            <CardDescription>
-                                Total de {atos.length} atos encontrados para este cliente.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Livro</TableHead>
-                                            <TableHead>Folha Nº</TableHead>
-                                            <TableHead>Tipo</TableHead>
-                                            <TableHead>Data</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {atos.length > 0 ? (
-                                            atos.map((ato) => (
-                                                <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
-                                                    <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
-                                                    <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
-                                                    <TableCell>{ato.tipoAto}</TableCell>
-                                                    <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
-                                                </TableRow>
-                                            ))
+                    <div className="lg:col-span-2">
+                        <Tabs defaultValue="atos">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
+                                <TabsTrigger value="documentos">Documentos ({cliente.documentos.length})</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="atos">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Histórico de Atos</CardTitle>
+                                        <CardDescription>
+                                            Total de {atos.length} atos encontrados para este cliente.
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="rounded-md border">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Livro</TableHead>
+                                                        <TableHead>Folha Nº</TableHead>
+                                                        <TableHead>Tipo</TableHead>
+                                                        <TableHead>Data</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {atos.length > 0 ? (
+                                                        atos.map((ato) => (
+                                                            <TableRow key={ato.id} onClick={() => router.push(`/dashboard/livros/${ato.livroId}`)} className="cursor-pointer">
+                                                                <TableCell className="font-medium">{ato.livroId.replace('livro-', '')}</TableCell>
+                                                                <TableCell>{ato.numeroAto.toString().padStart(3, '0')}</TableCell>
+                                                                <TableCell>{ato.tipoAto}</TableCell>
+                                                                <TableCell>{new Date(ato.dataAto).toLocaleDateString()}</TableCell>
+                                                            </TableRow>
+                                                        ))
+                                                    ) : (
+                                                        <TableRow>
+                                                            <TableCell colSpan={4} className="h-24 text-center">
+                                                                Nenhum ato vinculado a este cliente.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                            <TabsContent value="documentos">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Documentos Anexados</CardTitle>
+                                        <CardDescription>Documentos do cliente e suas validades.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {cliente.documentos && cliente.documentos.length > 0 ? (
+                                            <ul className="space-y-3">
+                                                {cliente.documentos.map(doc => {
+                                                    const status = getDocumentStatus(doc);
+                                                    return (
+                                                        <li key={doc.nome} className="flex items-center justify-between gap-2 text-sm border-b pb-3 last:border-b-0 last:pb-0">
+                                                            <div className="flex items-start gap-3">
+                                                                <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                                                <div className="flex flex-col">
+                                                                <span className="font-medium">{doc.nome}</span>
+                                                                    {doc.dataValidade ? (
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            Validade: {format(parseISO(doc.dataValidade), 'dd/MM/yyyy')}
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-xs text-muted-foreground">Sem data de validade</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
+                                                                <status.icon className="h-3 w-3"/>
+                                                                {status.text}
+                                                            </Badge>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
                                         ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="h-24 text-center">
-                                                    Nenhum ato vinculado a este cliente.
-                                                </TableCell>
-                                            </TableRow>
+                                            <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
                                         )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
                 </div>
             </div>
             {cliente && (
