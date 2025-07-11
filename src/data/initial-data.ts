@@ -38,7 +38,8 @@ const initialAtos = [
     "dadosExtraidos": {
       "outorgante": { "nome": "Maria Silva", "cpf": "111.222.333-44" },
       "outorgado": { "nome": "João Santos", "cpf": "555.666.777-88" }
-    }
+    },
+    "observacoes": "Averbação: Em 20/01/2025, foi adicionado um novo endereço para o outorgante."
   },
   {
     "id": "ato-001-002",
@@ -48,7 +49,8 @@ const initialAtos = [
     "dataAto": "2025-01-20",
     "partes": ["Pedro Costa", "Ana Pereira"],
     "urlPdf": "/path/to/dummy.pdf",
-    "dadosExtraidos": null
+    "dadosExtraidos": null,
+    "observacoes": ""
   },
   {
     "id": "ato-002-001",
@@ -58,7 +60,8 @@ const initialAtos = [
     "dataAto": "2025-02-10",
     "partes": ["Carlos Nobrega"],
     "urlPdf": "/path/to/dummy.pdf",
-    "dadosExtraidos": null
+    "dadosExtraidos": null,
+    "observacoes": ""
   }
 ];
 

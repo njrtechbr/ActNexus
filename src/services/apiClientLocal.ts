@@ -43,6 +43,7 @@ export interface Ato {
     partes: string[];
     urlPdf: string;
     dadosExtraidos: Record<string, any> | null;
+    observacoes?: string;
 }
 
 export interface DocumentoCliente {
@@ -89,6 +90,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData:
         livroId: novoLivro.id,
         urlPdf: "/path/to/dummy.pdf",
         dadosExtraidos: null,
+        observacoes: '',
     }));
 
     livros.push(novoLivro);
@@ -109,7 +111,7 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
 
-export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtraidos'>): Promise<Ato> => {
+export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtraidos' | 'observacoes'>): Promise<Ato> => {
     await delay(800);
     console.log("MOCK API: Criando novo ato...");
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
@@ -117,7 +119,8 @@ export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtra
         ...atoData, 
         id: `ato-${atoData.livroId}-${atoData.numeroAto}-${Date.now()}`,
         urlPdf: "/path/to/dummy.pdf",
-        dadosExtraidos: null
+        dadosExtraidos: null,
+        observacoes: '',
     };
     todosAtos.push(novoAto);
     saveToStorage('actnexus_atos', todosAtos);
@@ -143,8 +146,13 @@ export const updateAto = async (atoId: string, atoData: Partial<Ato>): Promise<A
         return null;
     }
 
-    const atoAtualizado = { ...todosAtos[atoIndex], ...atoData };
+    // Garante que apenas o campo de observações seja atualizado.
+    const atoAtualizado = { 
+        ...todosAtos[atoIndex], 
+        observacoes: atoData.observacoes 
+    };
     todosAtos[atoIndex] = atoAtualizado;
+
     saveToStorage('actnexus_atos', todosAtos);
     return atoAtualizado;
 }
@@ -188,7 +196,14 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
 
 
 // Configurações
-const defaultTiposDeLivro = ["Notas", "Procuração", "Escritura", "Testamento"];
+const defaultTiposDeLivro = [
+    "Livro de Notas",
+    "Livro de Procurações",
+    "Livro de Testamentos",
+    "Livro de Protocolo",
+    "Livro de Controle de Depósito Prévio",
+    "Livro Diário Auxiliar da Receita e da Despesa"
+];
 
 export const getTiposDeLivro = async (): Promise<string[]> => {
     await delay(200);
