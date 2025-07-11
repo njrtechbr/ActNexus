@@ -3,12 +3,16 @@
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // Funções para simular a API usando localStorage
-const getFromStorage = (key: string) => {
+const getFromStorage = (key: string, defaultValue: any[] = []) => {
   if (typeof window === 'undefined') {
-    return [];
+    return defaultValue;
   }
   const item = localStorage.getItem(key);
-  return item ? JSON.parse(item) : [];
+  try {
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    return defaultValue;
+  }
 };
 
 const saveToStorage = (key: string, data: any) => {
@@ -56,6 +60,7 @@ export interface Cliente {
 
 // -- FUNÇÕES EXPORTADAS --
 
+// Livros
 export const getLivros = async (): Promise<Livro[]> => {
   await delay(500);
   console.log("MOCK API: Buscando livros...");
@@ -95,6 +100,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData:
     return novoLivro;
 }
 
+// Atos
 export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   await delay(300);
   console.log(`MOCK API: Buscando atos para o livro ${livroId}...`);
@@ -155,6 +161,7 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     return todosAtos.filter((ato: any) => ato.partes.includes(cliente.nome));
 }
 
+// Clientes
 export const getClientes = async (): Promise<Cliente[]> => {
     await delay(400);
     console.log("MOCK API: Buscando clientes...");
@@ -178,3 +185,32 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
 }
+
+
+// Configurações
+const defaultTiposDeLivro = ["Notas", "Procuração", "Escritura", "Testamento"];
+
+export const getTiposDeLivro = async (): Promise<string[]> => {
+    await delay(200);
+    console.log("MOCK API: Buscando tipos de livro...");
+    return getFromStorage('actnexus_tipos_livro', defaultTiposDeLivro);
+};
+
+export const addTipoDeLivro = async (novoTipo: string): Promise<void> => {
+    await delay(300);
+    console.log(`MOCK API: Adicionando tipo de livro "${novoTipo}"...`);
+    const tipos = await getTiposDeLivro();
+    if (tipos.some(t => t.toLowerCase() === novoTipo.toLowerCase())) {
+        throw new Error("Este tipo de livro já existe.");
+    }
+    tipos.push(novoTipo);
+    saveToStorage('actnexus_tipos_livro', tipos);
+};
+
+export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> => {
+    await delay(300);
+    console.log(`MOCK API: Removendo tipo de livro "${tipoParaRemover}"...`);
+    let tipos = await getTiposDeLivro();
+    tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
+    saveToStorage('actnexus_tipos_livro', tipos);
+};

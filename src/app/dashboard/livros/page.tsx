@@ -19,7 +19,7 @@ import Loading from '../loading';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { LivroUpload } from '@/components/dashboard/livro-upload';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function LivrosPage() {
     const [livros, setLivros] = useState<Livro[]>([]);
@@ -30,6 +30,8 @@ export default function LivrosPage() {
     const loadLivros = useCallback(async () => {
         setIsLoading(true);
         try {
+            // Garante que os dados de configuração também sejam populados
+            populateInitialData();
             const data = await getLivros();
             setLivros(data);
         } catch (error) {
@@ -45,7 +47,6 @@ export default function LivrosPage() {
     }, [toast]);
     
     useEffect(() => {
-        populateInitialData();
         loadLivros();
     }, [loadLivros]);
 
@@ -89,6 +90,9 @@ export default function LivrosPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Livros Cadastrados</CardTitle>
+                        <CardDescription>
+                            Total de {livros.length} livros no acervo.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-md border">
@@ -125,7 +129,7 @@ export default function LivrosPage() {
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={6} className="h-24 text-center">
-                                                Nenhum livro encontrado.
+                                                Nenhum livro encontrado. Cadastre um novo livro via PDF.
                                             </TableCell>
                                         </TableRow>
                                     )}

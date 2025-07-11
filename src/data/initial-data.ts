@@ -1,11 +1,12 @@
-export const initialLivros = [
+
+const initialLivros = [
   {
     "id": "livro-001",
     "numero": 1,
     "ano": 2025,
     "tipo": "Notas",
     "status": "Concluído",
-    "totalAtos": 150
+    "totalAtos": 2
   },
   {
     "id": "livro-002",
@@ -13,7 +14,7 @@ export const initialLivros = [
     "ano": 2025,
     "tipo": "Procuração",
     "status": "Processando",
-    "totalAtos": 200
+    "totalAtos": 1
   },
   {
     "id": "livro-003",
@@ -21,11 +22,11 @@ export const initialLivros = [
     "ano": 2024,
     "tipo": "Escritura",
     "status": "Arquivado",
-    "totalAtos": 300
+    "totalAtos": 0
   }
 ];
 
-export const initialAtos = [
+const initialAtos = [
   {
     "id": "ato-001-001",
     "livroId": "livro-001",
@@ -61,7 +62,7 @@ export const initialAtos = [
   }
 ];
 
-export const initialClientes = [
+const initialClientes = [
   {
     "id": "cliente-11122233344",
     "nome": "Maria Silva",
@@ -71,17 +72,47 @@ export const initialClientes = [
       { "nome": "RG", "url": "/docs/rg_maria.pdf" },
       { "nome": "Comprovante de Endereço", "url": "/docs/comp_end_maria.pdf" }
     ]
+  },
+   {
+    "id": "cliente-55566677788",
+    "nome": "João Santos",
+    "cpfCnpj": "555.666.777-88",
+    "tipo": "PF",
+    "documentos": []
+  },
+  {
+    "id": "cliente-99988877766",
+    "nome": "Pedro Costa",
+    "cpfCnpj": "999.888.777-66",
+    "tipo": "PF",
+    "documentos": []
+  },
+  {
+    "id": "cliente-12312312312",
+    "nome": "Ana Pereira",
+    "cpfCnpj": "123.123.123-12",
+    "tipo": "PF",
+    "documentos": []
+  },
+  {
+    "id": "cliente-45645645645",
+    "nome": "Carlos Nobrega",
+    "cpfCnpj": "456.456.456-45",
+    "tipo": "PF",
+    "documentos": []
   }
 ];
 
+const initialTiposLivro = ["Notas", "Procuração", "Escritura", "Testamento"];
+
 export function populateInitialData() {
-    if (!localStorage.getItem('actnexus_livros')) {
+    const isPopulated = localStorage.getItem('actnexus_populated_v2');
+
+    if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
-    }
-    if (!localStorage.getItem('actnexus_atos')) {
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
-    }
-    if (!localStorage.getItem('actnexus_clientes')) {
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
+        localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
+        localStorage.setItem('actnexus_populated_v2', 'true');
     }
 }
