@@ -4,12 +4,12 @@
  * @fileOverview A Genkit flow for processing a notarial book PDF.
  *
  * This file defines a flow that takes the text content of a book, extracts its metadata
- * (number, year, type) and all its individual acts, and transforms it into a structured
+ * (number, year, type, dates) and all its individual acts, and transforms it into a structured
  * Markdown format for easy system ingestion.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 // Input Schema: The text extracted from the PDF
 const ProcessLivroPdfInputSchema = z.object({
@@ -44,6 +44,8 @@ numero: [Número do Livro]
 ano: [Ano do Livro]
 tipo: [Tipo do Livro, ex: Notas, Procuração, Escritura]
 status: Processando
+dataAbertura: [Data de Abertura no formato AAAA-MM-DD]
+dataFechamento: [Data de Fechamento no formato AAAA-MM-DD, se houver]
 ---
 
 # Livro [Número do Livro]/[Ano do Livro]
@@ -66,7 +68,7 @@ status: Processando
 
 ... (repita para todos os atos encontrados no texto)
 
-Analise o texto de entrada para extrair todas as informações necessárias. O status do livro deve ser sempre "Processando".
+Analise o texto de entrada para extrair todas as informações necessárias, incluindo as datas de abertura e fechamento do livro. O status do livro deve ser sempre "Processando". Se a data de fechamento não for encontrada, omita o campo 'dataFechamento'.
 
 Texto de Entrada:
 {{{pdfText}}}

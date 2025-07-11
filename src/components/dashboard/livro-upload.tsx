@@ -57,6 +57,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
     // Em um aplicativo real, você extrairia o texto do PDF aqui.
     // Para esta demonstração, usamos o nome do arquivo para gerar um texto de exemplo dinâmico.
     const mockDocumentText = `
+      Termo de Abertura: Este livro foi aberto em 02 de Janeiro de 2025.
       Cabeçalho do Livro Oficial de Notas
       LIVRO NÚMERO: 15, ANO: 2025
 
@@ -74,6 +75,8 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
       Tipo: Testamento Particular
       Data de Registro: 2025-02-10
       Envolvidos: Carlos Nobrega
+
+      Termo de Encerramento: O presente livro foi encerrado em 28 de Fevereiro de 2025.
     `;
 
     try {
@@ -107,6 +110,9 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
             if (line.startsWith('ano:')) metadata.ano = parseInt(line.split(':')[1].trim());
             if (line.startsWith('tipo:')) metadata.tipo = line.split(':')[1].trim();
             if (line.startsWith('status:')) metadata.status = line.split(':')[1].trim();
+            if (line.startsWith('dataAbertura:')) metadata.dataAbertura = line.split(/:(.*)/s)[1].trim();
+            if (line.startsWith('dataFechamento:')) metadata.dataFechamento = line.split(/:(.*)/s)[1].trim();
+
 
             if (line.startsWith('### Ato')) {
                 if (currentAto) atos.push(currentAto);
@@ -124,6 +130,8 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
             ano: metadata.ano,
             tipo: metadata.tipo || "Não especificado",
             status: metadata.status,
+            dataAbertura: metadata.dataAbertura,
+            dataFechamento: metadata.dataFechamento,
             totalAtos: atos.length,
             conteudoMarkdown: markdownContent,
         };

@@ -14,16 +14,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Search, PlusCircle, Edit } from 'lucide-react';
+import { ArrowLeft, FileText, Search, PlusCircle, Edit, Calendar, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ValidationDialog } from '@/components/dashboard/validation-dialog';
 import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface UserProfile {
     role: string;
 }
+
+const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Concluído':
+        return 'default';
+      case 'Processando':
+        return 'secondary';
+      case 'Arquivado':
+        return 'outline';
+      default:
+        return 'default';
+    }
+};
 
 export default function DetalhesLivroPage() {
     const [livro, setLivro] = useState<Livro | null>(null);
@@ -125,7 +141,7 @@ export default function DetalhesLivroPage() {
     return (
         <>
             <div className="space-y-6">
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => router.back()}>
                             <ArrowLeft className="h-4 w-4" />
@@ -135,9 +151,22 @@ export default function DetalhesLivroPage() {
                             <h1 className="font-headline text-3xl font-bold tracking-tight">
                                 Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano} - {livro.tipo}
                             </h1>
-                            <p className="text-muted-foreground">
-                                Visualize e gerencie as folhas (atos) registradas neste livro.
-                            </p>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-1">
+                                <Badge variant={getStatusVariant(livro.status)} className="gap-1.5">
+                                    <CheckCircle className="h-3 w-3"/>
+                                    {livro.status}
+                                </Badge>
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar className="h-4 w-4" />
+                                    Abertura: {format(parseISO(livro.dataAbertura), "dd/MM/yyyy")}
+                                </div>
+                                {livro.dataFechamento && (
+                                     <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-4 w-4" />
+                                        Fechamento: {format(parseISO(livro.dataFechamento), "dd/MM/yyyy")}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                     {user?.role === 'admin' && (

@@ -31,6 +31,8 @@ export interface Livro {
     tipo: string;
     status: string;
     totalAtos: number;
+    dataAbertura: string; // YYYY-MM-DD
+    dataFechamento?: string; // YYYY-MM-DD, optional
     conteudoMarkdown?: string;
 }
 

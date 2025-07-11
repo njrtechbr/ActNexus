@@ -6,7 +6,9 @@ const initialLivros = [
     "ano": 2025,
     "tipo": "Notas",
     "status": "Concluído",
-    "totalAtos": 2
+    "totalAtos": 2,
+    "dataAbertura": "2025-01-02",
+    "dataFechamento": "2025-01-30"
   },
   {
     "id": "livro-002",
@@ -14,7 +16,8 @@ const initialLivros = [
     "ano": 2025,
     "tipo": "Procuração",
     "status": "Processando",
-    "totalAtos": 1
+    "totalAtos": 1,
+    "dataAbertura": "2025-02-01"
   },
   {
     "id": "livro-003",
@@ -22,7 +25,9 @@ const initialLivros = [
     "ano": 2024,
     "tipo": "Escritura",
     "status": "Arquivado",
-    "totalAtos": 0
+    "totalAtos": 0,
+    "dataAbertura": "2024-12-01",
+    "dataFechamento": "2024-12-28"
   }
 ];
 
