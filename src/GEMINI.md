@@ -80,6 +80,9 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 - **Inteligência Artificial (Fluxo de Validação)**:
   - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google.
   - **Validação de Atos**: Ao clicar em um ato na listagem, um diálogo é aberto e o fluxo de IA `automatedValidation` é acionado para verificar os dados do ato (simulando a extração de texto de um PDF). O resultado é exibido para o usuário.
+- **Gerenciamento de Formulários**:
+  - **React Hook Form**: Para gerenciamento de estado de formulários.
+  - **Zod**: Para validação de esquemas de dados.
 
 ## 4. Estrutura do Projeto
 
@@ -96,7 +99,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog)
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast)
 └── lib/               # Funções utilitárias e actions
