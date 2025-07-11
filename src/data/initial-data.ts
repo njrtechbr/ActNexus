@@ -136,8 +136,18 @@ const initialClientes = [
       }
     ],
     "observacoes": [
-      "Cliente prefere contato por WhatsApp após as 18h.",
-      "Excelente histórico de relacionamento com o cartório."
+      {
+        "texto": "Cliente prefere contato por WhatsApp após as 18h.",
+        "autor": "Admin Dev",
+        "data": "2024-07-29T18:00:00Z",
+        "tipo": "manual"
+      },
+      {
+        "texto": "Excelente histórico de relacionamento com o cartório.",
+        "autor": "Admin Dev",
+        "data": "2024-07-28T14:30:00Z",
+        "tipo": "manual"
+      }
     ],
     "documentos": [
       { "nome": "RG", "url": "/docs/rg_maria.pdf", "dataValidade": "2030-05-20" },
@@ -149,6 +159,10 @@ const initialClientes = [
         { "label": "Profissão", "value": "administradora" },
         { "label": "RG", "value": "11.222.333-4 SSP/SP" },
         { "label": "CPF", "value": "111.222.333-44" }
+    ],
+    "eventos": [
+        { "data": "2024-07-29T10:00:00Z", "autor": "Sistema", "descricao": "Cliente cadastrado no sistema." },
+        { "data": "2024-07-30T11:00:00Z", "autor": "Admin Dev", "descricao": "Dados de qualificação foram sincronizados." }
     ]
   },
    {
@@ -168,7 +182,8 @@ const initialClientes = [
         { "label": "Profissão", "value": "autônomo" },
         { "label": "RG", "value": "55.666.777-8 SSP/SP" },
         { "label": "CPF", "value": "555.666.777-88" }
-    ]
+    ],
+    "eventos": []
   },
   {
     "id": "cliente-99988877766",
@@ -178,7 +193,9 @@ const initialClientes = [
     "documentos": [],
     "contatos": [],
     "enderecos": [],
-    "observacoes": []
+    "observacoes": [],
+    "dadosAdicionais": [],
+    "eventos": []
   },
   {
     "id": "cliente-12312312312",
@@ -188,7 +205,9 @@ const initialClientes = [
     "documentos": [],
     "contatos": [],
     "enderecos": [],
-    "observacoes": []
+    "observacoes": [],
+    "dadosAdicionais": [],
+    "eventos": []
   },
   {
     "id": "cliente-45645645645",
@@ -198,7 +217,9 @@ const initialClientes = [
     "documentos": [],
     "contatos": [],
     "enderecos": [],
-    "observacoes": []
+    "observacoes": [],
+    "dadosAdicionais": [],
+    "eventos": []
   }
 ];
 
@@ -212,15 +233,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v14');
+    const isPopulated = localStorage.getItem('actnexus_populated_v15');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v14', 'true');
+        localStorage.setItem('actnexus_populated_v15', 'true');
     }
 }
-
-    

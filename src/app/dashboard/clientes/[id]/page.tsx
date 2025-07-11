@@ -45,6 +45,10 @@ const getDocumentStatus = (doc: { dataValidade?: string | Date | null }): {text:
     
     const validityDate = typeof doc.dataValidade === 'string' ? parseISO(doc.dataValidade) : doc.dataValidade;
 
+    if (!validityDate || isNaN(validityDate.getTime())) {
+         return { text: "Data inválida", variant: "destructive", icon: XCircle };
+    }
+
     if (isBefore(validityDate, today)) {
         return { text: "Expirado", variant: "destructive", icon: XCircle };
     }
@@ -81,11 +85,17 @@ const documentoSchema = z.object({
   dataValidade: z.date().optional().nullable(),
 });
 
+const observacaoSchema = z.object({
+    texto: z.string().min(1, "O texto não pode ser vazio"),
+    autor: z.string(),
+    data: z.string(),
+    tipo: z.enum(['ia', 'manual'])
+});
 
 const formSchema = z.object({
   contatos: z.array(contatoSchema).optional(),
   enderecos: z.array(enderecoSchema).optional(),
-  observacoes: z.array(z.object({ value: z.string() })).optional(),
+  observacoes: z.array(observacaoSchema).optional(),
   documentos: z.array(documentoSchema).optional(),
 });
 
@@ -99,7 +109,6 @@ export default function DetalhesClientePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSummarizing, setIsSummarizing] = useState(false);
-    const [summary, setSummary] = useState<string | null>(null);
     const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
     const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
@@ -129,7 +138,7 @@ export default function DetalhesClientePage() {
         form.reset({
             contatos: clienteData.contatos || [],
             enderecos: clienteData.enderecos || [],
-            observacoes: clienteData.observacoes?.map(obs => ({ value: obs })) || [],
+            observacoes: clienteData.observacoes || [],
             documentos: clienteData.documentos?.map(doc => ({
                 ...doc,
                 dataValidade: doc.dataValidade ? parseISO(doc.dataValidade) : null,
@@ -188,14 +197,14 @@ export default function DetalhesClientePage() {
                 tipo: 'ia'
             };
             
-            await updateCliente(cliente.id, { observacoes: [...(cliente.observacoes || []), newObservation] });
+            await updateCliente(cliente.id, { observacoes: [...(cliente.observacoes || []), newObservation] }, user.name);
 
             toast({
                 title: 'Resumo Gerado e Salvo!',
                 description: 'O resumo da IA foi adicionado como uma nova observação.',
             });
             
-            await loadData(); // Recarrega os dados para mostrar a nova observação
+            await loadData();
 
         } catch (error) {
             console.error("Falha ao gerar resumo:", error);
@@ -249,12 +258,18 @@ export default function DetalhesClientePage() {
         try {
             const clienteData = {
                 ...data,
-                observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean).map(texto => ({
-                    texto,
-                    autor: user.name,
-                    data: new Date().toISOString(),
-                    tipo: 'manual'
-                })) || [],
+                observacoes: data.observacoes?.map(obs => {
+                    // Garante que novas observações tenham autor e data
+                    if (!obs.autor) {
+                        return {
+                            ...obs,
+                            autor: user.name,
+                            data: new Date().toISOString(),
+                            tipo: 'manual' as const,
+                        };
+                    }
+                    return obs;
+                }) || [],
                 documentos: data.documentos?.map(doc => ({
                     ...doc,
                     dataValidade: doc.dataValidade ? format(doc.dataValidade, 'yyyy-MM-dd') : undefined,
@@ -347,16 +362,6 @@ export default function DetalhesClientePage() {
                     </div>
                 </div>
 
-                {summary && (
-                    <Alert>
-                        <Sparkles className="h-4 w-4" />
-                        <AlertTitle>Resumo do Cliente</AlertTitle>
-                        <AlertDescription>
-                        {summary}
-                        </AlertDescription>
-                    </Alert>
-                )}
-
                 <Tabs defaultValue="dados">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="dados">Dados Principais</TabsTrigger>
@@ -447,7 +452,7 @@ export default function DetalhesClientePage() {
                                     {isEditing ? (
                                         <>
                                             {obsFields.map((field, index) => (
-                                                <FormField key={field.id} control={form.control} name={`observacoes.${index}.value`} render={({ field }) => (
+                                                <FormField key={field.id} control={form.control} name={`observacoes.${index}.texto`} render={({ field }) => (
                                                     <FormItem>
                                                     <div className="flex items-center gap-2">
                                                         <Textarea {...field} placeholder={`Observação #${index + 1}`} />
@@ -456,11 +461,11 @@ export default function DetalhesClientePage() {
                                                     </FormItem>
                                                 )} />
                                             ))}
-                                            <Button type="button" variant="outline" size="sm" onClick={() => appendObs({ value: "" })}><PlusCircle className="mr-2 h-4 w-4" />Observação</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendObs({ texto: "", autor: "", data: "", tipo: 'manual' })}><PlusCircle className="mr-2 h-4 w-4" />Observação</Button>
                                         </>
                                     ) : (
                                          cliente.observacoes && cliente.observacoes.length > 0 ? (
-                                            cliente.observacoes.map((obs, index) => (
+                                            [...cliente.observacoes].reverse().map((obs, index) => (
                                                 <div key={index} className="border-l-2 pl-3 group relative">
                                                     {obs.tipo === 'ia' && <Sparkles className="h-3.5 w-3.5 absolute -left-2 top-0 text-primary" title="Gerado por IA"/>}
                                                     <p className="text-foreground whitespace-pre-wrap">{obs.texto}</p>
@@ -589,9 +594,8 @@ export default function DetalhesClientePage() {
                                 {docList.length > 0 ? (
                                     <ul className="space-y-3">
                                         {docList.map((doc, index) => {
-                                            const docDate = (doc as any).dataValidade;
-                                            const dateToFormat = docDate instanceof Date ? docDate : (typeof docDate === 'string' ? parseISO(docDate) : null);
                                             const status = getDocumentStatus(doc as {dataValidade?: string | Date | null});
+                                            const dateToFormat = (doc as any).dataValidade;
                                             return (
                                             <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
                                                  <div className="flex items-start gap-3 w-full sm:w-auto overflow-hidden">

@@ -118,6 +118,18 @@ export interface Endereco {
     label?: string; // e.g., 'Residencial', 'Comercial'
 }
 
+export interface Observacao {
+    texto: string;
+    autor: string;
+    data: string; // ISO String
+    tipo: 'ia' | 'manual';
+}
+
+export interface Evento {
+    data: string; // ISO String
+    autor: string;
+    descricao: string;
+}
 
 export interface Cliente {
     id: string;
@@ -128,7 +140,8 @@ export interface Cliente {
     dadosAdicionais?: CampoAdicionalCliente[];
     contatos?: Contato[];
     enderecos?: Endereco[];
-    observacoes?: string[];
+    observacoes?: Observacao[];
+    eventos?: Evento[];
 }
 
 // -- FUNÇÕES EXPORTADAS --
@@ -294,7 +307,14 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
         contatos: [],
         enderecos: [],
         observacoes: [],
-        documentos: clienteData.documentos || []
+        documentos: clienteData.documentos || [],
+        eventos: [
+            {
+                data: new Date().toISOString(),
+                autor: "Sistema",
+                descricao: "Cliente cadastrado no sistema."
+            }
+        ],
     };
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
@@ -305,7 +325,39 @@ type UpdateClientePayload = Partial<Omit<Cliente, 'id'>> & {
     campos?: CampoAdicionalCliente[]; // Legacy name for merging additional data
 };
 
-export const updateCliente = async (clienteId: string, payload: UpdateClientePayload): Promise<Cliente | null> => {
+const generateEvents = (oldData: Cliente, newData: Cliente, autor: string): Evento[] => {
+    const eventos: Evento[] = [];
+    const now = new Date().toISOString();
+
+    const oldContatos = oldData.contatos?.map(c => c.valor) || [];
+    const newContatos = newData.contatos?.map(c => c.valor) || [];
+    if (JSON.stringify(oldContatos) !== JSON.stringify(newContatos)) eventos.push({ data: now, autor, descricao: "Informações de contato foram atualizadas." });
+
+    const oldEnderecos = oldData.enderecos?.map(e => `${e.logradouro}, ${e.numero}`) || [];
+    const newEnderecos = newData.enderecos?.map(e => `${e.logradouro}, ${e.numero}`) || [];
+    if (JSON.stringify(oldEnderecos) !== JSON.stringify(newEnderecos)) eventos.push({ data: now, autor, descricao: "Endereços foram atualizados." });
+
+    const oldDocumentos = oldData.documentos?.map(d => d.nome) || [];
+    const newDocumentos = newData.documentos?.map(d => d.nome) || [];
+    if (JSON.stringify(oldDocumentos) !== JSON.stringify(newDocumentos)) eventos.push({ data: now, autor, descricao: "Documentos foram atualizados." });
+
+    const oldObservacoes = oldData.observacoes?.map(o => o.texto) || [];
+    const newObservacoes = newData.observacoes?.map(o => o.texto) || [];
+    if (newObservacoes.length > oldObservacoes.length) {
+        const addedObs = newObservacoes.filter(obs => !oldObservacoes.includes(obs));
+        addedObs.forEach(obsText => {
+             const obs = newData.observacoes?.find(o => o.texto === obsText);
+             const eventDesc = obs?.tipo === 'ia' ? "Observação foi adicionada pela IA." : "Uma nova observação foi adicionada.";
+             eventos.push({ data: now, autor: obs?.autor || autor, descricao: eventDesc });
+        });
+    }
+
+    if (JSON.stringify(oldData.dadosAdicionais) !== JSON.stringify(newData.dadosAdicionais)) eventos.push({ data: now, autor, descricao: "Dados de qualificação foram sincronizados." });
+
+    return eventos;
+};
+
+export const updateCliente = async (clienteId: string, payload: UpdateClientePayload, autor: string): Promise<Cliente | null> => {
     await delay(400);
     console.log(`MOCK API: Atualizando cliente ${clienteId}...`);
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
@@ -316,7 +368,8 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
         return null;
     }
 
-    let clienteAtual = clientes[clienteIndex];
+    const clienteAnterior = { ...clientes[clienteIndex] };
+    let clienteAtual = { ...clienteAnterior };
 
     // Merge payload fields into the current client data, ensuring arrays are replaced not merged
     clienteAtual = {
@@ -333,16 +386,20 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
         payload.campos.forEach(campo => {
             const campoExistenteIndex = clienteAtual.dadosAdicionais!.findIndex(c => c.label.toLowerCase() === campo.label.toLowerCase());
             if (campoExistenteIndex > -1) {
-                // Update the value if the field already exists
                 clienteAtual.dadosAdicionais![campoExistenteIndex] = campo; 
             } else {
-                // Add new field
                 clienteAtual.dadosAdicionais!.push(campo); 
             }
         });
-        // Remove the 'campos' property after merging
         delete (clienteAtual as any).campos;
     }
+    
+    // Gerar e adicionar eventos
+    const novosEventos = generateEvents(clienteAnterior, clienteAtual, autor);
+    if (!clienteAtual.eventos) {
+        clienteAtual.eventos = [];
+    }
+    clienteAtual.eventos.push(...novosEventos);
     
     clientes[clienteIndex] = clienteAtual;
     saveToStorage('actnexus_clientes', clientes);
@@ -384,5 +441,3 @@ export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> 
     tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
     saveToStorage('actnexus_tipos_livro', tipos);
 };
-
-    
