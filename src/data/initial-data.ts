@@ -54,7 +54,37 @@ const initialAtos = [
         "dataRegistro": "2025-01-20T10:00:00.000Z"
       }
     ],
-    "conteudoMarkdown": "### Ato 1\n- **Tipo:** Procuração\n- **Data:** 2025-01-15\n- **Partes:**\n  - Maria Silva\n  - João Santos"
+    "conteudoMarkdown": `INSTRUMENTO PARTICULAR DE PROCURAÇÃO
+
+OUTORGANTE: MARIA SILVA, nacionalidade brasileira, estado civil solteira, profissão administradora, portadora da carteira de identidade (RG) nº 11.222.333-4 SSP/SP e inscrita no CPF/MF sob o nº 111.222.333-44, residente e domiciliada na Rua das Flores, nº 123, Bairro Centro, na cidade de São Paulo, Estado de São Paulo, CEP 01000-000.
+
+OUTORGADO: JOÃO SANTOS, nacionalidade brasileira, estado civil casado, profissão autônomo, portador da carteira de identidade (RG) nº 55.666.777-8 SSP/SP e inscrito no CPF/MF sob o nº 555.666.777-88, residente e domiciliado na Avenida Principal, nº 456, Bairro Sul, na cidade de Campinas, Estado de São Paulo, CEP 13000-000.
+
+OBJETO E PODERES:
+Pelo presente instrumento, a OUTORGANTE nomeia e constitui seu bastante procurador o OUTORGADO, a quem confere amplos, gerais e ilimitados poderes para o fim específico de promover a transferência de propriedade do veículo de sua posse e propriedade, com as seguintes características:
+
+VEÍCULO: Automóvel
+MARCA: Fiat
+MODELO: Cronos Drive 1.3
+ANO DE FABRICAÇÃO/MODELO: 2022/2023
+COR: Prata
+PLACA: BRA2E19
+CHASSI: 9BD19712P0G123456
+RENAVAM: 01234567890
+
+Para tanto, poderá o OUTORGADO representar a OUTORGANTE perante o Departamento de Trânsito (DETRAN) de qualquer estado da federação, e suas respectivas repartições (CIRETRAN), bem como junto a qualquer outro órgão ou entidade pública ou privada, podendo para tanto assinar o Certificado de Registro de Veículo (CRV/ATPV-e), requerer a emissão de segunda via de documentos, pagar taxas, impostos, multas e demais débitos que incidam sobre o referido veículo, receber o valor da venda, dar e receber quitação, assinar recibos, requerer e assinar todos os documentos necessários, preencher formulários, substabelecer esta a outrem, com ou sem reserva de iguais poderes, e praticar todos os demais atos necessários ao fiel e cabal cumprimento do presente mandato.
+
+PRAZO DE VALIDADE:
+A presente procuração terá validade de 90 (noventa) dias a contar da data de sua assinatura.
+
+LOCAL E DATA:
+São Paulo, 15 de janeiro de 2025.
+
+_________________________________________
+MARIA SILVA
+(Outorgante)
+
+Observação: Este é um documento fictício gerado como exemplo para teste de sistema. As informações aqui contidas, como nomes, documentos e dados do veículo, são simuladas e não possuem validade jurídica.`
   },
   {
     "id": "ato-001-002",
