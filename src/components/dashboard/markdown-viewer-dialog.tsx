@@ -9,31 +9,31 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import type { Livro } from '@/services/apiClientLocal';
+import type { Ato } from '@/services/apiClientLocal';
 
 interface MarkdownViewerDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   markdownContent: string;
-  livro: Livro | null;
+  ato: Ato | null;
 }
 
 export function MarkdownViewerDialog({
   isOpen,
   setIsOpen,
   markdownContent,
-  livro,
+  ato,
 }: MarkdownViewerDialogProps) {
-  if (!livro) return null;
+  if (!ato) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Conteúdo Processado (Markdown)</DialogTitle>
+          <DialogTitle>Conteúdo do Ato (Markdown)</DialogTitle>
           <DialogDescription>
-            Este é o conteúdo estruturado que a IA extraiu do arquivo PDF do Livro{' '}
-            {livro.numero}/{livro.ano}.
+            Este é o conteúdo estruturado que a IA extraiu para a Folha{' '}
+            {ato.numeroAto.toString().padStart(3, '0')} do Livro {ato.livroId.replace('livro-', '')}.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">

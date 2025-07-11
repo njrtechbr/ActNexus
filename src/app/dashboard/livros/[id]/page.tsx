@@ -44,6 +44,7 @@ export default function DetalhesLivroPage() {
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [atoToEdit, setAtoToEdit] = useState<Ato | null>(null);
+    const [atoToViewMarkdown, setAtoToViewMarkdown] = useState<Ato | null>(null);
     const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
     const [isMarkdownViewerOpen, setIsMarkdownViewerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -98,9 +99,14 @@ export default function DetalhesLivroPage() {
         loadData(); 
     }
 
-    const handleEditClick = (ato: Ato) => {
+    const handleAverbacaoClick = (ato: Ato) => {
         setAtoToEdit(ato);
         setIsAtoFormOpen(true);
+    };
+
+    const handleMarkdownClick = (ato: Ato) => {
+        setAtoToViewMarkdown(ato);
+        setIsMarkdownViewerOpen(true);
     };
     
     const handlePdfDownload = () => {
@@ -165,12 +171,6 @@ export default function DetalhesLivroPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                         {livro.conteudoMarkdown && (
-                            <Button variant="outline" onClick={() => setIsMarkdownViewerOpen(true)}>
-                                <FileCode className="mr-2 h-4 w-4" />
-                                Ver Markdown
-                            </Button>
-                        )}
                          {livro.urlPdfOriginal && (
                             <Button variant="outline" onClick={handlePdfDownload}>
                                 <FileDown className="mr-2 h-4 w-4" />
@@ -208,7 +208,7 @@ export default function DetalhesLivroPage() {
                                         <TableHead>Data</TableHead>
                                         <TableHead>Partes Envolvidas</TableHead>
                                         <TableHead className="w-[120px]">Averbações</TableHead>
-                                        <TableHead className="w-[80px] text-right">Ações</TableHead>
+                                        <TableHead className="w-[120px] text-right">Ações</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -228,9 +228,15 @@ export default function DetalhesLivroPage() {
                                                         {ato.averbacoes?.length || 0}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-right space-x-1">
+                                                     {ato.conteudoMarkdown && (
+                                                        <Button variant="ghost" size="icon" onClick={() => handleMarkdownClick(ato)}>
+                                                            <FileCode className="h-4 w-4" />
+                                                            <span className="sr-only">Ver Markdown do Ato</span>
+                                                        </Button>
+                                                     )}
                                                     {user?.role === 'admin' && canAverbate && (
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(ato)}>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleAverbacaoClick(ato)}>
                                                             <MessageSquareQuote className="h-4 w-4" />
                                                             <span className="sr-only">Averbar Folha</span>
                                                         </Button>
@@ -258,22 +264,19 @@ export default function DetalhesLivroPage() {
                 </Card>
             </div>
 
-            {livro && (
-                <AtoFormDialog 
-                    isOpen={isAtoFormOpen}
-                    setIsOpen={setIsAtoFormOpen}
-                    onAtoSaved={handleAtoSaved}
-                    atoToEdit={atoToEdit}
-                />
-            )}
-             {livro && (
-                <MarkdownViewerDialog
-                    isOpen={isMarkdownViewerOpen}
-                    setIsOpen={setIsMarkdownViewerOpen}
-                    markdownContent={livro.conteudoMarkdown || ''}
-                    livro={livro}
-                />
-            )}
+            <AtoFormDialog 
+                isOpen={isAtoFormOpen}
+                setIsOpen={setIsAtoFormOpen}
+                onAtoSaved={handleAtoSaved}
+                atoToEdit={atoToEdit}
+            />
+            
+            <MarkdownViewerDialog
+                isOpen={isMarkdownViewerOpen}
+                setIsOpen={setIsMarkdownViewerOpen}
+                markdownContent={atoToViewMarkdown?.conteudoMarkdown || ''}
+                ato={atoToViewMarkdown}
+            />
         </>
     );
 }

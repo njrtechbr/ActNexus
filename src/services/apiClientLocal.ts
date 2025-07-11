@@ -33,7 +33,6 @@ export interface Livro {
     totalAtos: number;
     dataAbertura: string; // YYYY-MM-DD
     dataFechamento?: string; // YYYY-MM-DD, optional
-    conteudoMarkdown?: string;
     urlPdfOriginal?: string;
 }
 
@@ -52,6 +51,7 @@ export interface Ato {
     partes: string[];
     urlPdf: string;
     averbacoes: Averbacao[];
+    conteudoMarkdown?: string;
 }
 
 export interface DocumentoCliente {
