@@ -9,7 +9,35 @@ const initialLivros = [
     "totalAtos": 2,
     "dataAbertura": "2025-01-02",
     "dataFechamento": "2025-01-30",
-    "urlPdfOriginal": "livro_notas_001_2025.pdf"
+    "urlPdfOriginal": "livro_notas_001_2025.pdf",
+    "conteudoMarkdown": `
+---
+numero: 1
+ano: 2025
+tipo: Notas
+status: Concluído
+dataAbertura: 2025-01-02
+dataFechamento: 2025-01-30
+---
+
+# Livro 1/2025
+
+## Atos Registrados
+
+### Ato 1
+- **Tipo:** Procuração
+- **Data:** 2025-01-15
+- **Partes:**
+  - Maria Silva
+  - João Santos
+
+### Ato 2
+- **Tipo:** Escritura de Compra e Venda
+- **Data:** 2025-01-20
+- **Partes:**
+  - Pedro Costa
+  - Ana Pereira
+`
   },
   {
     "id": "livro-002",
@@ -20,7 +48,27 @@ const initialLivros = [
     "totalAtos": 1,
     "dataAbertura": "2025-02-01",
     "dataFechamento": "2025-02-28",
-    "urlPdfOriginal": "livro_procuracao_002_2025.pdf"
+    "urlPdfOriginal": "livro_procuracao_002_2025.pdf",
+    "conteudoMarkdown": `
+---
+numero: 2
+ano: 2025
+tipo: Procuração
+status: Concluído
+dataAbertura: 2025-02-01
+dataFechamento: 2025-02-28
+---
+
+# Livro 2/2025
+
+## Atos Registrados
+
+### Ato 1
+- **Tipo:** Testamento
+- **Data:** 2025-02-10
+- **Partes:**
+  - Carlos Nobrega
+`
   },
   {
     "id": "livro-003",
@@ -30,7 +78,24 @@ const initialLivros = [
     "status": "Arquivado",
     "totalAtos": 0,
     "dataAbertura": "2024-12-01",
-    "dataFechamento": "2024-12-28"
+    "dataFechamento": "2024-12-28",
+    "urlPdfOriginal": "livro_escritura_003_2024.pdf",
+    "conteudoMarkdown": `
+---
+numero: 3
+ano: 2024
+tipo: Escritura
+status: Arquivado
+dataAbertura: 2024-12-01
+dataFechamento: 2024-12-28
+---
+
+# Livro 3/2024
+
+## Atos Registrados
+
+(Nenhum ato registrado neste livro)
+`
   }
 ];
 
@@ -134,5 +199,3 @@ export function populateInitialData() {
         localStorage.setItem('actnexus_populated_v3', 'true');
     }
 }
-
-    

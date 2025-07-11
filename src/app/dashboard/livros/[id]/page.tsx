@@ -14,13 +14,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Search, Calendar, CheckCircle, FileDown, MessageSquareQuote } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, CheckCircle, FileDown, MessageSquareQuote, FileCode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
+import { MarkdownViewerDialog } from '@/components/dashboard/markdown-viewer-dialog';
 
 interface UserProfile {
     role: string;
@@ -45,6 +46,7 @@ export default function DetalhesLivroPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [atoToEdit, setAtoToEdit] = useState<Ato | null>(null);
     const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
+    const [isMarkdownViewerOpen, setIsMarkdownViewerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
@@ -164,6 +166,12 @@ export default function DetalhesLivroPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                         {livro.conteudoMarkdown && (
+                            <Button variant="outline" onClick={() => setIsMarkdownViewerOpen(true)}>
+                                <FileCode className="mr-2 h-4 w-4" />
+                                Ver Markdown
+                            </Button>
+                        )}
                          {livro.urlPdfOriginal && (
                             <Button variant="outline" onClick={handlePdfDownload}>
                                 <FileDown className="mr-2 h-4 w-4" />
@@ -257,6 +265,14 @@ export default function DetalhesLivroPage() {
                     setIsOpen={setIsAtoFormOpen}
                     onAtoSaved={handleAtoSaved}
                     atoToEdit={atoToEdit}
+                />
+            )}
+             {livro && (
+                <MarkdownViewerDialog
+                    isOpen={isMarkdownViewerOpen}
+                    setIsOpen={setIsMarkdownViewerOpen}
+                    markdownContent={livro.conteudoMarkdown || ''}
+                    livro={livro}
                 />
             )}
         </>
