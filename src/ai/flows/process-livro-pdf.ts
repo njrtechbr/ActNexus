@@ -4,7 +4,7 @@
  * @fileOverview A Genkit flow for processing a notarial book PDF.
  *
  * This file defines a flow that takes the text content of a book, extracts its metadata
- * (number, year) and all its individual acts, and transforms it into a structured
+ * (number, year, type) and all its individual acts, and transforms it into a structured
  * Markdown format for easy system ingestion.
  */
 
@@ -42,6 +42,7 @@ O formato de saída DEVE seguir estritamente a seguinte estrutura:
 ---
 numero: [Número do Livro]
 ano: [Ano do Livro]
+tipo: [Tipo do Livro, ex: Notas, Procuração, Escritura]
 status: Processando
 ---
 

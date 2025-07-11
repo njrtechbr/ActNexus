@@ -57,7 +57,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
     // Em um aplicativo real, você extrairia o texto do PDF aqui.
     // Para esta demonstração, usamos o nome do arquivo para gerar um texto de exemplo dinâmico.
     const mockDocumentText = `
-      Cabeçalho do Livro Oficial
+      Cabeçalho do Livro Oficial de Notas
       LIVRO NÚMERO: 15, ANO: 2025
 
       Ato 1:
@@ -105,6 +105,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
         lines.forEach(line => {
             if (line.startsWith('numero:')) metadata.numero = parseInt(line.split(':')[1].trim());
             if (line.startsWith('ano:')) metadata.ano = parseInt(line.split(':')[1].trim());
+            if (line.startsWith('tipo:')) metadata.tipo = line.split(':')[1].trim();
             if (line.startsWith('status:')) metadata.status = line.split(':')[1].trim();
 
             if (line.startsWith('### Ato')) {
@@ -121,6 +122,7 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
         const livroData = {
             numero: metadata.numero,
             ano: metadata.ano,
+            tipo: metadata.tipo || "Não especificado",
             status: metadata.status,
             totalAtos: atos.length,
             conteudoMarkdown: markdownContent,

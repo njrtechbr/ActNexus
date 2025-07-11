@@ -24,6 +24,7 @@ export interface Livro {
     id: string;
     numero: number;
     ano: number;
+    tipo: string;
     status: string;
     totalAtos: number;
     conteudoMarkdown?: string;

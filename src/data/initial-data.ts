@@ -3,6 +3,7 @@ export const initialLivros = [
     "id": "livro-001",
     "numero": 1,
     "ano": 2025,
+    "tipo": "Notas",
     "status": "Concluído",
     "totalAtos": 150
   },
@@ -10,6 +11,7 @@ export const initialLivros = [
     "id": "livro-002",
     "numero": 2,
     "ano": 2025,
+    "tipo": "Procuração",
     "status": "Processando",
     "totalAtos": 200
   },
@@ -17,6 +19,7 @@ export const initialLivros = [
     "id": "livro-003",
     "numero": 3,
     "ano": 2024,
+    "tipo": "Escritura",
     "status": "Arquivado",
     "totalAtos": 300
   }

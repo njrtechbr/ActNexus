@@ -97,6 +97,7 @@ export default function LivrosPage() {
                                     <TableRow>
                                         <TableHead className="w-[100px]">Número</TableHead>
                                         <TableHead className="w-[100px]">Ano</TableHead>
+                                        <TableHead>Tipo</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="text-right">Total de Folhas</TableHead>
                                         <TableHead className="w-[100px]"></TableHead>
@@ -108,6 +109,7 @@ export default function LivrosPage() {
                                             <TableRow key={livro.id}>
                                                 <TableCell className="font-medium">{livro.numero.toString().padStart(3, '0')}</TableCell>
                                                 <TableCell>{livro.ano}</TableCell>
+                                                <TableCell>{livro.tipo}</TableCell>
                                                 <TableCell>
                                                 <Badge variant={getStatusVariant(livro.status) as any}>{livro.status}</Badge>
                                                 </TableCell>
@@ -122,7 +124,7 @@ export default function LivrosPage() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
+                                            <TableCell colSpan={6} className="h-24 text-center">
                                                 Nenhum livro encontrado.
                                             </TableCell>
                                         </TableRow>
