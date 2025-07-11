@@ -470,7 +470,7 @@ export default function DetalhesClientePage() {
                                                     {obs.tipo === 'ia' && <Sparkles className="h-3.5 w-3.5 absolute -left-2 top-0 text-primary" title="Gerado por IA"/>}
                                                     <p className="text-foreground whitespace-pre-wrap">{obs.texto}</p>
                                                     <p className='text-xs text-muted-foreground mt-1'>
-                                                        - {obs.autor}, {format(parseISO(obs.data), "'em' dd/MM/yy 'às' HH:mm")}
+                                                        - {obs.autor}, {obs.data ? format(parseISO(obs.data), "'em' dd/MM/yy 'às' HH:mm") : 'Data não registrada'}
                                                     </p>
                                                 </div>
                                             ))
@@ -682,16 +682,18 @@ export default function DetalhesClientePage() {
                             <CardContent>
                                 <div className="space-y-4">
                                 {(cliente.eventos && cliente.eventos.length > 0) ? (
-                                    [...cliente.eventos].reverse().map(evento => (
-                                        <div key={evento.data} className="flex items-start gap-4">
+                                    [...cliente.eventos].reverse().map((evento, index) => (
+                                        <div key={index} className="flex items-start gap-4">
                                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                                                 <UserCheck className="h-4 w-4 text-muted-foreground" />
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium">{evento.descricao}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    por {evento.autor} em {format(parseISO(evento.data), 'dd/MM/yyyy HH:mm:ss')}
-                                                </p>
+                                                {evento.data && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        por {evento.autor} em {format(parseISO(evento.data), 'dd/MM/yyyy HH:mm:ss')}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     ))
@@ -716,4 +718,3 @@ export default function DetalhesClientePage() {
         </>
     );
 }
-
