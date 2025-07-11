@@ -5,15 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getClienteById, getAtosByClienteId, updateCliente, type Cliente, type Ato, type DocumentoCliente } from '@/services/apiClientLocal';
+import { getClienteById, getAtosByClienteId, updateCliente, type Cliente, type Ato, type Evento } from '@/services/apiClientLocal';
 import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save, UploadCloud, File as FileIcon, Eye, Download, Printer } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save, UploadCloud, File as FileIcon, Eye, Download, Printer, History, UserCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { QualificationGeneratorDialog } from '@/components/dashboard/qualification-generator-dialog';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
@@ -29,10 +28,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 interface UserProfile {
     role: string;
+    name: string;
 }
 
 const getDocumentStatus = (doc: { dataValidade?: string | Date | null }): {text: string; variant: "default" | "secondary" | "destructive", icon: React.ElementType} => {
@@ -171,15 +172,31 @@ export default function DetalhesClientePage() {
     }, [loadData]);
 
     const handleSummarize = async () => {
-        if (!cliente || !atos) return;
+        if (!cliente || !atos || !user) return;
         setIsSummarizing(true);
-        setSummary(null);
         try {
+            const atoHistory = atos.map(a => ({ type: a.tipoAto, date: a.dataAto }));
             const result = await summarizeClientHistory({
-                clientName: cliente.nome,
-                acts: atos.map(a => ({ type: a.tipoAto, date: a.dataAto })),
+                ...cliente,
+                atos: atoHistory,
             });
-            setSummary(result.summary);
+
+            const newObservation = {
+                texto: result.summary,
+                autor: user.name,
+                data: new Date().toISOString(),
+                tipo: 'ia'
+            };
+            
+            await updateCliente(cliente.id, { observacoes: [...(cliente.observacoes || []), newObservation] });
+
+            toast({
+                title: 'Resumo Gerado e Salvo!',
+                description: 'O resumo da IA foi adicionado como uma nova observação.',
+            });
+            
+            await loadData(); // Recarrega os dados para mostrar a nova observação
+
         } catch (error) {
             console.error("Falha ao gerar resumo:", error);
             toast({
@@ -227,18 +244,23 @@ export default function DetalhesClientePage() {
 
 
     const onSubmit = async (data: FormData) => {
-        if (!cliente) return;
+        if (!cliente || !user) return;
         setIsSubmitting(true);
         try {
             const clienteData = {
                 ...data,
-                observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean) || [],
+                observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean).map(texto => ({
+                    texto,
+                    autor: user.name,
+                    data: new Date().toISOString(),
+                    tipo: 'manual'
+                })) || [],
                 documentos: data.documentos?.map(doc => ({
                     ...doc,
                     dataValidade: doc.dataValidade ? format(doc.dataValidade, 'yyyy-MM-dd') : undefined,
                 })) || [],
             };
-            await updateCliente(cliente.id, clienteData);
+            await updateCliente(cliente.id, clienteData, user.name);
             toast({ title: 'Sucesso!', description: 'Dados do cliente atualizados.' });
             setIsEditing(false);
             await loadData();
@@ -314,7 +336,7 @@ export default function DetalhesClientePage() {
                                 </Button>
                             </>
                         )}
-                        <Button onClick={handleSummarize} disabled={isSummarizing} type="button">
+                        <Button onClick={handleSummarize} disabled={isSummarizing || isEditing} type="button">
                             {isSummarizing ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
@@ -336,10 +358,11 @@ export default function DetalhesClientePage() {
                 )}
 
                 <Tabs defaultValue="dados">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="dados">Dados Principais</TabsTrigger>
                         <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
                         <TabsTrigger value="documentos">Documentos ({docList.length})</TabsTrigger>
+                         <TabsTrigger value="eventos">Eventos ({cliente.eventos?.length || 0})</TabsTrigger>
                     </TabsList>
                     
                     {/* DADOS PRINCIPAIS */}
@@ -438,8 +461,12 @@ export default function DetalhesClientePage() {
                                     ) : (
                                          cliente.observacoes && cliente.observacoes.length > 0 ? (
                                             cliente.observacoes.map((obs, index) => (
-                                                <div key={index} className="border-l-2 border-primary pl-3">
-                                                    <p className="text-foreground whitespace-pre-wrap">{obs}</p>
+                                                <div key={index} className="border-l-2 pl-3 group relative">
+                                                    {obs.tipo === 'ia' && <Sparkles className="h-3.5 w-3.5 absolute -left-2 top-0 text-primary" title="Gerado por IA"/>}
+                                                    <p className="text-foreground whitespace-pre-wrap">{obs.texto}</p>
+                                                    <p className='text-xs text-muted-foreground mt-1'>
+                                                        - {obs.autor}, {format(parseISO(obs.data), "'em' dd/MM/yy 'às' HH:mm")}
+                                                    </p>
                                                 </div>
                                             ))
                                         ) : <p className="text-muted-foreground">Nenhuma observação.</p>
@@ -570,7 +597,7 @@ export default function DetalhesClientePage() {
                                                  <div className="flex items-start gap-3 w-full sm:w-auto overflow-hidden">
                                                     <FileIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                                     <div className="flex flex-col overflow-hidden">
-                                                        <span className="font-medium truncate">{doc.nome}</span>
+                                                        <span className="font-medium truncate cursor-pointer hover:underline" onClick={() => !isEditing && handleDocumentAction(doc, 'view')}>{doc.nome}</span>
                                                         {!isEditing && dateToFormat && (
                                                             <span className="text-xs text-muted-foreground">
                                                                 Validade: {format(dateToFormat, 'dd/MM/yyyy')}
@@ -627,7 +654,6 @@ export default function DetalhesClientePage() {
                                                             <status.icon className="h-3 w-3"/>
                                                             {status.text}
                                                         </Badge>
-                                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'view')}><Eye className="h-4 w-4" /></Button>
                                                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'download')}><Download className="h-4 w-4" /></Button>
                                                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDocumentAction(doc, 'print')}><Printer className="h-4 w-4" /></Button>
                                                     </div>
@@ -638,6 +664,37 @@ export default function DetalhesClientePage() {
                                 ) : (
                                     !isEditing && <p className="text-sm text-muted-foreground p-10 text-center">Nenhum documento cadastrado.</p>
                                 )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* EVENTOS */}
+                    <TabsContent value="eventos">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2"><History className="h-5 w-5"/> Histórico de Eventos</CardTitle>
+                                <CardDescription>Registro de todas as alterações e atividades do cliente.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                {(cliente.eventos && cliente.eventos.length > 0) ? (
+                                    [...cliente.eventos].reverse().map(evento => (
+                                        <div key={evento.data} className="flex items-start gap-4">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                                                <UserCheck className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">{evento.descricao}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    por {evento.autor} em {format(parseISO(evento.data), 'dd/MM/yyyy HH:mm:ss')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-center text-muted-foreground p-8">Nenhum evento registrado.</p>
+                                )}
+                                </div>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -654,10 +711,4 @@ export default function DetalhesClientePage() {
             )}
         </>
     );
-
-    
 }
-
-    
-
-    
