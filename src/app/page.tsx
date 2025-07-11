@@ -30,13 +30,18 @@ export default function LoginPage() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // Mock authentication for different roles
-    if (
-      (values.email === "admin@actnexus.com" || values.email === "employee@actnexus.com") &&
-      values.password === "password"
-    ) {
+    let userRole = null;
+    if (values.email === "admin@actnexus.com" && values.password === "password") {
+        userRole = { name: "Admin", email: values.email, role: "admin" };
+    } else if (values.email === "employee@actnexus.com" && values.password === "password") {
+        userRole = { name: "Funcionário", email: values.email, role: "employee" };
+    }
+
+    if (userRole) {
+      localStorage.setItem('actnexus_user', JSON.stringify(userRole));
       toast({
         title: "Login bem-sucedido",
-        description: "Redirecionando para o seu painel...",
+        description: `Bem-vindo, ${userRole.name}! Redirecionando...`,
       });
       router.push("/dashboard");
     } else {

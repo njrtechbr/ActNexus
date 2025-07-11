@@ -19,13 +19,24 @@ import { useRouter } from 'next/navigation';
 import { LivroFormDialog } from '@/components/dashboard/livro-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 
+interface UserProfile {
+    role: string;
+}
 
 export default function LivrosPage() {
     const [livros, setLivros] = useState<Livro[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [user, setUser] = useState<UserProfile | null>(null);
     const router = useRouter();
     const { toast } = useToast();
+
+    useEffect(() => {
+        const userData = localStorage.getItem("actnexus_user");
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
 
     const loadLivros = useCallback(async () => {
         setIsLoading(true);
@@ -86,10 +97,12 @@ export default function LivrosPage() {
                             Gerencie os livros e seus respectivos atos notariais.
                         </p>
                     </div>
-                    <Button onClick={() => setIsFormOpen(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Novo Livro
-                    </Button>
+                    {user?.role === 'admin' && (
+                        <Button onClick={() => setIsFormOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Novo Livro
+                        </Button>
+                    )}
                 </div>
 
                 <div className="rounded-md border">

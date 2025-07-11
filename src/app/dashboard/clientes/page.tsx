@@ -13,13 +13,25 @@ import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface UserProfile {
+    role: string;
+}
+
 export default function ClientesPage() {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [user, setUser] = useState<UserProfile | null>(null);
     const { toast } = useToast();
     const router = useRouter();
+
+    useEffect(() => {
+        const userData = localStorage.getItem("actnexus_user");
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
@@ -40,7 +52,7 @@ export default function ClientesPage() {
 
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
 
     const handleClientCreated = () => {
         setIsFormOpen(false);
@@ -71,10 +83,12 @@ export default function ClientesPage() {
                             Adicione, consulte e gerencie os clientes do cartório.
                         </p>
                     </div>
-                    <Button onClick={() => setIsFormOpen(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Novo Cliente
-                    </Button>
+                     {user?.role === 'admin' && (
+                        <Button onClick={() => setIsFormOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Novo Cliente
+                        </Button>
+                     )}
                 </div>
 
                 <Card>
