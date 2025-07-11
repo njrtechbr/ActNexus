@@ -11,6 +11,8 @@ import {
 import type { Ato } from '@/services/apiClientLocal';
 import { Card, CardContent } from '../ui/card';
 import React from 'react';
+import { Separator } from '../ui/separator';
+import { format, parseISO } from 'date-fns';
 
 // Componente para renderizar o Markdown
 const MarkdownRenderer = ({ content }: { content: string }) => {
@@ -27,7 +29,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
     } else if (line.trim().startsWith('- **')) {
       const parts = line.trim().substring(2).split(':');
       const key = parts[0].replace(/\*\*/g, '').trim();
-      const value = parts.slice(1).join(':').replace(/\*\*/g, '').trim(); // Remove asteriscos do valor
+      const value = parts.slice(1).join(':').replace(/\*\*/g, '').trim(); 
 
       if (value) {
         isList = false;
@@ -50,7 +52,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
           </ul>
         );
       }
-    } else if (line.trim().startsWith('- ')) {
+    } else if (line.trim().startsWith('  - ')) {
       if (isList && elements.length > 0) {
         const lastElement = elements[elements.length - 1] as React.ReactElement;
         if (lastElement.type === 'ul') {
@@ -103,8 +105,28 @@ export function MarkdownViewerDialog({
             {ato.numeroAto.toString().padStart(3, '0')} do Livro {ato.livroId.replace('livro-', '')}.
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4 max-h-[70vh] overflow-y-auto pr-4">
+        <div className="mt-4 max-h-[70vh] overflow-y-auto pr-4 space-y-6">
           <MarkdownRenderer content={markdownContent} />
+          
+          {ato.averbacoes && ato.averbacoes.length > 0 && (
+             <div className="space-y-4">
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground">Averbações Registradas</h4>
+                    <Separator />
+                </div>
+                <div className="space-y-4">
+                    {ato.averbacoes.map((av, index) => (
+                        <div key={index} className="text-sm p-3 rounded-md border bg-background">
+                           <p className='text-foreground'>{av.texto}</p>
+                           <div className="flex justify-between text-xs text-muted-foreground mt-2 pt-2 border-t">
+                             <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbacao), 'dd/MM/yyyy') : 'N/A'}</span>
+                             <span>Registro: {av.dataRegistro ? format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}</span>
+                           </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
