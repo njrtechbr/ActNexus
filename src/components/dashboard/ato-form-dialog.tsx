@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from "date-fns";
-import { Loader2, MessageSquareQuote } from 'lucide-react';
+import { format, parseISO } from "date-fns";
+import { ptBR } from 'date-fns/locale';
+import { Loader2, MessageSquareQuote, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,14 +26,23 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { updateAto, type Ato } from '@/services/apiClientLocal';
+import { updateAto, type Ato, type Averbacao } from '@/services/apiClientLocal';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
-
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
-  novaAverbacao: z.string().min(10, { message: 'A averbação deve ter pelo menos 10 caracteres.' }),
+  texto: z.string().min(10, { message: 'A averbação deve ter pelo menos 10 caracteres.' }),
+  dataAverbacao: z.date({
+    required_error: "A data da averbação é obrigatória.",
+  }),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -56,7 +66,7 @@ export function AtoFormDialog({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        novaAverbacao: "",
+        texto: "",
     }
   });
 
@@ -72,7 +82,12 @@ export function AtoFormDialog({
 
     setIsSubmitting(true);
     try {
-      await updateAto(atoToEdit.id, { averbacao: data.novaAverbacao });
+        const novaAverbacao: Averbacao = {
+            ...data,
+            dataAverbacao: format(data.dataAverbacao, "yyyy-MM-dd"),
+            dataRegistro: new Date().toISOString(),
+        }
+      await updateAto(atoToEdit.id, novaAverbacao);
       onAtoSaved();
     } catch (error) {
         console.error("Falha ao salvar averbação:", error);
@@ -125,11 +140,15 @@ export function AtoFormDialog({
         {atoToEdit?.averbacoes && atoToEdit.averbacoes.length > 0 && (
             <div className='space-y-2'>
                 <Label>Averbações Existentes</Label>
-                <div className="max-h-24 overflow-y-auto space-y-2 rounded-md border p-3 bg-muted/50">
+                <div className="max-h-32 overflow-y-auto space-y-2 rounded-md border p-3 bg-muted/50">
                     {atoToEdit.averbacoes.map((av, index) => (
-                        <p key={index} className="text-xs border-b pb-1 mb-1">
-                          <span className='font-semibold'>AV.{index+1}:</span> {av}
-                        </p>
+                        <div key={index} className="text-xs border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
+                           <p><span className='font-semibold'>AV.{index+1}:</span> {av.texto}</p>
+                           <div className="flex justify-between text-muted-foreground mt-1">
+                             <span>Data do Fato: {format(parseISO(av.dataAverbacao), 'dd/MM/yyyy')}</span>
+                             <span>Registro: {format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm")}</span>
+                           </div>
+                        </div>
                     ))}
                 </div>
             </div>
@@ -139,9 +158,9 @@ export function AtoFormDialog({
         {/* Formulário para nova averbação */}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+              <FormField
                 control={form.control}
-                name="novaAverbacao"
+                name="texto"
                 render={({ field }) => (
                     <FormItem>
                     <FormLabel>Adicionar Nova Averbação</FormLabel>
@@ -155,6 +174,47 @@ export function AtoFormDialog({
                     <FormMessage />
                     </FormItem>
                 )}
+            />
+            <FormField
+              control={form.control}
+              name="dataAverbacao"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Data da Averbação</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP", { locale: ptBR })
+                          ) : (
+                            <span>Selecione a data</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             
              <DialogFooter>

@@ -37,6 +37,12 @@ export interface Livro {
     urlPdfOriginal?: string;
 }
 
+export interface Averbacao {
+    texto: string;
+    dataAverbacao: string; // YYYY-MM-DD - Data do fato, informada pelo usuário
+    dataRegistro: string; // ISO String - Data em que foi salva no sistema, gerada automaticamente
+}
+
 export interface Ato {
     id: string;
     livroId: string;
@@ -45,7 +51,7 @@ export interface Ato {
     dataAto: string; // Formato YYYY-MM-DD
     partes: string[];
     urlPdf: string;
-    averbacoes: string[];
+    averbacoes: Averbacao[];
 }
 
 export interface DocumentoCliente {
@@ -112,7 +118,7 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
 
-export const updateAto = async (atoId: string, data: { averbacao: string }): Promise<Ato | null> => {
+export const updateAto = async (atoId: string, novaAverbacao: Averbacao): Promise<Ato | null> => {
     await delay(600);
     console.log(`MOCK API: Adicionando averbação ao ato ${atoId}...`);
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
@@ -127,7 +133,7 @@ export const updateAto = async (atoId: string, data: { averbacao: string }): Pro
     if (!atoAtual.averbacoes) {
         atoAtual.averbacoes = [];
     }
-    atoAtual.averbacoes.push(data.averbacao);
+    atoAtual.averbacoes.push(novaAverbacao);
     
     todosAtos[atoIndex] = atoAtual;
 

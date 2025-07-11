@@ -44,7 +44,11 @@ const initialAtos = [
     "partes": ["Maria Silva", "João Santos"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [
-      "Em 20/01/2025, foi adicionado um novo endereço para o outorgante."
+      { 
+        "texto": "Em 20/01/2025, foi adicionado um novo endereço para o outorgante.",
+        "dataAverbacao": "2025-01-20",
+        "dataRegistro": "2025-01-20T10:00:00.000Z"
+      }
     ]
   },
   {
