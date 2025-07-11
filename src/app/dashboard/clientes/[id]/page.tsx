@@ -61,7 +61,7 @@ export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSummarizing, setIsSummarizing] = useState(isSummarizing);
+    const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState<string | null>(null);
     const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
     const [isClientEditDialogOpen, setIsClientEditDialogOpen] = useState(false);
