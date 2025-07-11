@@ -24,6 +24,22 @@ const saveToStorage = (key: string, data: any) => {
 
 // -- INTERFACES DE DADOS --
 
+export interface AiUsageLog {
+    id: string;
+    timestamp: string;
+    flowName: string;
+    model: string;
+    latencyMs: number;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    inputCost: number;
+    outputCost: number;
+    totalCost: number;
+    prompt: string;
+    response: string;
+}
+
 export interface Livro {
     id: string;
     numero: number;
@@ -93,6 +109,27 @@ export interface Cliente {
 }
 
 // -- FUNÇÕES EXPORTADAS --
+
+// AI Usage
+export const getAiUsageLogs = async (): Promise<AiUsageLog[]> => {
+    await delay(300);
+    console.log("MOCK API: Buscando logs de uso de IA...");
+    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs');
+    return logs.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+};
+
+export const logAiUsage = async (logData: Omit<AiUsageLog, 'id'>): Promise<void> => {
+    // Nao simular delay para não atrasar a resposta da IA
+    console.log("MOCK API: Registrando uso de IA...");
+    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs');
+    const newLog: AiUsageLog = {
+        ...logData,
+        id: `log-${Date.now()}-${Math.random()}`,
+    };
+    logs.push(newLog);
+    saveToStorage('actnexus_ai_usage_logs', logs);
+};
+
 
 // Livros
 export const getLivros = async (): Promise<Livro[]> => {

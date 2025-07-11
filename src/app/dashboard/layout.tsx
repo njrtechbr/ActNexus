@@ -8,6 +8,7 @@ import {
   Book,
   Users,
   Settings,
+  BrainCircuit,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -34,6 +35,7 @@ const menuItems = [
 ];
 
 const adminMenuItems = [
+    { href: "/dashboard/auditoria-ia", label: "Auditoria IA", icon: BrainCircuit },
     { href: "/dashboard/configuracoes", label: "Configurações", icon: Settings },
 ];
 
