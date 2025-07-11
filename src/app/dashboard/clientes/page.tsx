@@ -1,26 +1,32 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getClientes, type Cliente } from '@/services/apiClientLocal';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, User, Building, Eye } from 'lucide-react';
+import { PlusCircle, User, Building, Eye, Search } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
 import { ClientFormDialog } from '@/components/dashboard/client-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ClientesPage() {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
     const { toast } = useToast();
     const router = useRouter();
 
     const loadData = useCallback(async () => {
         try {
-            setIsLoading(true);
+            // Nao mostrar o loading se ja tiver dados
+            if (clientes.length === 0) {
+                setIsLoading(true);
+            }
             const data = await getClientes();
             setClientes(data);
         } catch (error) {
@@ -33,11 +39,11 @@ export default function ClientesPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, [toast, clientes.length]);
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+    }, []); // Executado apenas uma vez
 
     const handleClientCreated = () => {
         setIsFormOpen(false);
@@ -47,6 +53,16 @@ export default function ClientesPage() {
         });
         loadData(); // Recarrega a lista de clientes
     }
+
+    const filteredClientes = useMemo(() => {
+        if (!searchTerm) {
+            return clientes;
+        }
+        return clientes.filter(cliente =>
+            cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            cliente.cpfCnpj.replace(/[^\d]/g, '').includes(searchTerm.replace(/[^\d]/g, ''))
+        );
+    }, [clientes, searchTerm]);
 
     if (isLoading && clientes.length === 0) {
         return <Loading />;
@@ -68,66 +84,88 @@ export default function ClientesPage() {
                     </Button>
                 </div>
 
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-12"></TableHead>
-                                <TableHead>Nome / Razão Social</TableHead>
-                                <TableHead>CPF / CNPJ</TableHead>
-                                <TableHead className="w-[100px]">Tipo</TableHead>
-                                <TableHead className="w-[100px] text-right">Docs</TableHead>
-                                <TableHead className="w-[100px]"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading && (
-                                <TableRow>
-                                    <TableCell colSpan={6}>
-                                        <div className="flex justify-center p-4">
-                                           <Loading />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {!isLoading && clientes.length > 0 ? (
-                                clientes.map((cliente) => (
-                                    <TableRow key={cliente.id}>
-                                        <TableCell>
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                                                {cliente.tipo === 'PF' ? <User className="h-4 w-4 text-muted-foreground" /> : <Building className="h-4 w-4 text-muted-foreground" />}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="font-medium">{cliente.nome}</TableCell>
-                                        <TableCell>{cliente.cpfCnpj}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={cliente.tipo === 'PF' ? 'secondary' : 'outline'}>{cliente.tipo}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">{cliente.documentos.length}</TableCell>
-                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/clientes/${cliente.id}`)}>
-                                                <Eye className="h-4 w-4" />
-                                                <span className="sr-only">Visualizar Cliente</span>
-                                            </Button>
-                                        </TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Clientes Cadastrados</CardTitle>
+                        <CardDescription>
+                            Total de {filteredClientes.length} de {clientes.length} clientes encontrados.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="mb-4">
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar por nome ou CPF/CNPJ..."
+                                    className="pl-8"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-12"></TableHead>
+                                        <TableHead>Nome / Razão Social</TableHead>
+                                        <TableHead>CPF / CNPJ</TableHead>
+                                        <TableHead className="w-[100px]">Tipo</TableHead>
+                                        <TableHead className="w-[100px] text-right">Docs</TableHead>
+                                        <TableHead className="w-[100px]"></TableHead>
                                     </TableRow>
-                                ))
-                            ) : null}
-                            {!isLoading && clientes.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center">
-                                        Nenhum cliente encontrado.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                                </TableHeader>
+                                <TableBody>
+                                    {isLoading && (
+                                        <TableRow>
+                                            <TableCell colSpan={6}>
+                                                <div className="flex justify-center p-4">
+                                                    <Loading />
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                    {!isLoading && filteredClientes.length > 0 ? (
+                                        filteredClientes.map((cliente) => (
+                                            <TableRow key={cliente.id}>
+                                                <TableCell>
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                                                        {cliente.tipo === 'PF' ? <User className="h-4 w-4 text-muted-foreground" /> : <Building className="h-4 w-4 text-muted-foreground" />}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="font-medium">{cliente.nome}</TableCell>
+                                                <TableCell>{cliente.cpfCnpj}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={cliente.tipo === 'PF' ? 'secondary' : 'outline'}>{cliente.tipo}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">{cliente.documentos.length}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/clientes/${cliente.id}`)}>
+                                                        <Eye className="h-4 w-4" />
+                                                        <span className="sr-only">Visualizar Cliente</span>
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : null}
+                                    {!isLoading && filteredClientes.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="h-24 text-center">
+                                                Nenhum cliente encontrado.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-            <ClientFormDialog 
-                isOpen={isFormOpen} 
-                setIsOpen={setIsFormOpen} 
-                onClientCreated={handleClientCreated} 
+            <ClientFormDialog
+                isOpen={isFormOpen}
+                setIsOpen={setIsFormOpen}
+                onClientCreated={handleClientCreated}
             />
         </>
     );
