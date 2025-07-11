@@ -146,7 +146,7 @@ export default function DetalhesClientePage() {
 
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Atos Vinculados</CardTitle>
+                        <CardTitle>Folhas Vinculadas (Atos)</CardTitle>
                         <CardDescription>
                             Total de {atos.length} atos encontrados para este cliente.
                         </CardDescription>
@@ -157,7 +157,7 @@ export default function DetalhesClientePage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Livro</TableHead>
-                                        <TableHead>Ato Nº</TableHead>
+                                        <TableHead>Folha Nº</TableHead>
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Data</TableHead>
                                     </TableRow>

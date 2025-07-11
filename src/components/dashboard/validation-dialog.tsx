@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -64,9 +65,9 @@ export function ValidationDialog({ isOpen, setIsOpen, ato }: ValidationDialogPro
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Validação do Ato Nº {ato?.numeroAto.toString().padStart(3, '0')}</DialogTitle>
+                    <DialogTitle>Validação da Folha Nº {ato?.numeroAto.toString().padStart(3, '0')}</DialogTitle>
                     <DialogDescription>
-                        Analisando o conteúdo do ato de "{ato?.tipoAto}" para validação.
+                        Analisando o conteúdo da folha (ato) de "{ato?.tipoAto}" para validação.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">

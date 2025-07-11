@@ -37,7 +37,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 
 const formSchema = z.object({
   id: z.string().optional(),
-  numeroAto: z.coerce.number().min(1, 'O número do ato é obrigatório.'),
+  numeroAto: z.coerce.number().min(1, 'O número da folha (ato) é obrigatório.'),
   tipoAto: z.string().min(3, 'O tipo do ato é obrigatório.'),
   dataAto: z.date({ required_error: 'A data do ato é obrigatória.' }),
   partes: z.array(z.string()).min(1, 'Selecione pelo menos uma parte.'),
@@ -141,9 +141,9 @@ export function AtoFormDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Editar Ato' : `Novo Ato para o Livro ${livro.numero}/${livro.ano}`}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Editar Folha (Ato)' : `Nova Folha (Ato) para o Livro ${livro.numero}/${livro.ano}`}</DialogTitle>
           <DialogDescription>
-            {isEditing ? `Modifique os dados do ato Nº ${atoToEdit.numeroAto}.` : 'Preencha os dados abaixo para registrar um novo ato notarial.'}
+            {isEditing ? `Modifique os dados da folha Nº ${atoToEdit.numeroAto}.` : 'Preencha os dados abaixo para registrar uma nova folha (ato) no livro.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -154,7 +154,7 @@ export function AtoFormDialog({
                     name="numeroAto"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Número do Ato</FormLabel>
+                        <FormLabel>Número da Folha (Ato)</FormLabel>
                         <FormControl>
                             <Input type="number" {...field} />
                         </FormControl>
@@ -281,7 +281,7 @@ export function AtoFormDialog({
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancelar</Button>
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {isEditing ? 'Salvar Alterações' : 'Salvar Ato'}
+                    {isEditing ? 'Salvar Alterações' : 'Salvar Folha'}
                 </Button>
             </DialogFooter>
           </form>

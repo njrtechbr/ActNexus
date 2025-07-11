@@ -83,7 +83,7 @@ export default function DetalhesLivroPage() {
         setAtoToEdit(null);
         toast({
             title: 'Sucesso!',
-            description: `Ato ${atoToEdit ? 'atualizado' : 'cadastrado'} com sucesso.`,
+            description: `Folha (Ato) ${atoToEdit ? 'atualizada' : 'cadastrada'} com sucesso.`,
         });
         loadData(); 
     }
@@ -136,23 +136,23 @@ export default function DetalhesLivroPage() {
                                 Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano}
                             </h1>
                             <p className="text-muted-foreground">
-                                Visualize e gerencie os atos registrados neste livro.
+                                Visualize e gerencie as folhas (atos) registradas neste livro.
                             </p>
                         </div>
                     </div>
                     {user?.role === 'admin' && (
                         <Button onClick={handleNewAtoClick}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Novo Ato
+                            Nova Folha (Ato)
                         </Button>
                     )}
                 </div>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Atos Registrados</CardTitle>
+                        <CardTitle>Folhas do Livro (Atos)</CardTitle>
                         <CardDescription>
-                            Total de {filteredAtos.length} de {livro.totalAtos} atos encontrados neste livro.
+                            Total de {filteredAtos.length} de {livro.totalAtos} folhas encontradas neste livro.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -171,7 +171,7 @@ export default function DetalhesLivroPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[100px]">Ato Nº</TableHead>
+                                        <TableHead className="w-[100px]">Folha Nº</TableHead>
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Data</TableHead>
                                         <TableHead>Partes Envolvidas</TableHead>
@@ -194,12 +194,12 @@ export default function DetalhesLivroPage() {
                                                     {user?.role === 'admin' && (
                                                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(ato)}>
                                                             <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">Editar Ato</span>
+                                                            <span className="sr-only">Editar Folha</span>
                                                         </Button>
                                                     )}
                                                     <Button variant="ghost" size="icon" onClick={() => handleValidationClick(ato)}>
                                                         <FileText className="h-4 w-4" />
-                                                        <span className="sr-only">Validar Ato</span>
+                                                        <span className="sr-only">Validar Folha</span>
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -207,7 +207,7 @@ export default function DetalhesLivroPage() {
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={5} className="h-24 text-center">
-                                                Nenhum ato encontrado com os critérios de busca.
+                                                Nenhuma folha encontrada com os critérios de busca.
                                             </TableCell>
                                         </TableRow>
                                     )}
