@@ -12,32 +12,47 @@ import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
 
 const MarkdownRenderer = ({ content }: { content: string }) => {
-  // A simple parser that handles titles (all-caps with a colon) and paragraphs.
-  const blocks = content.split('\n\n');
+  if (!content) {
+    return null;
+  }
+
+  // Remove the initial metadata block for rendering the main content
+  const mainContent = content.split('INSTRUMENTO PARTICULAR DE PROCURAÇÃO');
+  const blocks = (mainContent.length > 1 ? 'INSTRUMENTO PARTICULAR DE PROCURAÇÃO' + mainContent[1] : mainContent[0]).split('\n\n');
 
   return (
     <Card className="bg-muted/50">
       <CardContent className="p-6 font-serif text-base text-justify space-y-4">
         {blocks.map((block, index) => {
-          const lines = block.split('\n');
-          // Check if the block is a title (e.g., "OBJETO E PODERES:")
-          if (lines.length === 1 && lines[0] === lines[0].toUpperCase() && lines[0].endsWith(':')) {
+          const trimmedBlock = block.trim();
+          if (!trimmedBlock) return null;
+
+          const lines = trimmedBlock.split('\n');
+          
+          // Check if the block is a centered signature block
+          if (trimmedBlock.startsWith('_________________________________________')) {
+              return (
+                <div key={index} className="text-center pt-8">
+                    {lines.map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}
+                </div>
+              );
+          }
+
+          // Check if the block is a title (all-caps)
+          if (lines.length === 1 && trimmedBlock === trimmedBlock.toUpperCase() && trimmedBlock.endsWith(':')) {
             return (
               <div key={index}>
-                <h3 className="text-lg font-sans font-semibold tracking-tight text-foreground mb-2 mt-4 text-left">{lines[0]}</h3>
+                <h3 className="text-lg font-sans font-semibold tracking-tight text-foreground mb-2 mt-4 text-left">{trimmedBlock}</h3>
                 <Separator/>
               </div>
             );
           }
-          // Render as a paragraph block
+
+          // Render as a normal paragraph block
           return (
-            <div key={index} className="space-y-2">
-              {lines.map((line, lineIndex) => (
-                <p key={lineIndex} className="leading-relaxed text-foreground indent-8">
-                  {line}
-                </p>
-              ))}
-            </div>
+             <p key={index} className="leading-relaxed text-foreground indent-8 text-justify">
+                {trimmedBlock}
+            </p>
           );
         })}
       </CardContent>
