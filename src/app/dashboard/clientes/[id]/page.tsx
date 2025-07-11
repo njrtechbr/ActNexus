@@ -3,20 +3,26 @@
 
 import { useState, useEffect } from 'react';
 import { getClienteById, getAtosByClienteId, type Cliente, type Ato } from '@/services/apiClientLocal';
+import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSummarizing, setIsSummarizing] = useState(false);
+    const [summary, setSummary] = useState<string | null>(null);
     const params = useParams();
     const router = useRouter();
+    const { toast } = useToast();
     const clienteId = params.id as string;
 
     useEffect(() => {
@@ -45,6 +51,28 @@ export default function DetalhesClientePage() {
         loadData();
     }, [clienteId, router]);
 
+    const handleSummarize = async () => {
+        if (!cliente || !atos) return;
+        setIsSummarizing(true);
+        setSummary(null);
+        try {
+            const result = await summarizeClientHistory({
+                clientName: cliente.nome,
+                acts: atos.map(a => ({ type: a.tipoAto, date: a.dataAto })),
+            });
+            setSummary(result.summary);
+        } catch (error) {
+            console.error("Falha ao gerar resumo:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Erro de IA',
+                description: 'Não foi possível gerar o resumo do cliente.',
+            });
+        } finally {
+            setIsSummarizing(false);
+        }
+    };
+
     if (isLoading) {
         return <Loading />;
     }
@@ -55,25 +83,45 @@ export default function DetalhesClientePage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                 <Button variant="outline" size="icon" onClick={() => router.back()}>
-                    <ArrowLeft className="h-4 w-4" />
-                    <span className="sr-only">Voltar</span>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                 <div className="flex items-center gap-4">
+                    <Button variant="outline" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only">Voltar</span>
+                    </Button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                            {cliente.tipo === 'PF' ? <User className="h-6 w-6 text-muted-foreground" /> : <Building className="h-6 w-6 text-muted-foreground" />}
+                        </div>
+                        <div>
+                            <h1 className="font-headline text-3xl font-bold tracking-tight">
+                                {cliente.nome}
+                            </h1>
+                            <p className="text-muted-foreground">
+                            {cliente.cpfCnpj}
+                            </p>
+                        </div>
+                    </div>
+                 </div>
+                 <Button onClick={handleSummarize} disabled={isSummarizing}>
+                    {isSummarizing ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Resumir com IA
                 </Button>
-                <div className="flex items-center gap-4">
-                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                        {cliente.tipo === 'PF' ? <User className="h-6 w-6 text-muted-foreground" /> : <Building className="h-6 w-6 text-muted-foreground" />}
-                    </div>
-                    <div>
-                        <h1 className="font-headline text-3xl font-bold tracking-tight">
-                            {cliente.nome}
-                        </h1>
-                        <p className="text-muted-foreground">
-                           {cliente.cpfCnpj}
-                        </p>
-                    </div>
-                </div>
             </div>
+
+            {summary && (
+                 <Alert>
+                    <Sparkles className="h-4 w-4" />
+                    <AlertTitle>Resumo do Cliente</AlertTitle>
+                    <AlertDescription>
+                       {summary}
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <div className="grid gap-6 md:grid-cols-3">
                 <Card className="md:col-span-1">
