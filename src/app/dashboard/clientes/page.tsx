@@ -3,18 +3,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getClientes, type Cliente } from '@/services/apiClientLocal';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, User, Building } from 'lucide-react';
+import { PlusCircle, User, Building, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
 import { ClientFormDialog } from '@/components/dashboard/client-form-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 export default function ClientesPage() {
     const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const loadData = useCallback(async () => {
         try {
@@ -74,13 +76,14 @@ export default function ClientesPage() {
                                 <TableHead>Nome / Razão Social</TableHead>
                                 <TableHead>CPF / CNPJ</TableHead>
                                 <TableHead className="w-[100px]">Tipo</TableHead>
-                                <TableHead className="w-[100px] text-right">Documentos</TableHead>
+                                <TableHead className="w-[100px] text-right">Docs</TableHead>
+                                <TableHead className="w-[100px]"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading && (
                                 <TableRow>
-                                    <TableCell colSpan={5}>
+                                    <TableCell colSpan={6}>
                                         <div className="flex justify-center p-4">
                                            <Loading />
                                         </div>
@@ -101,12 +104,18 @@ export default function ClientesPage() {
                                             <Badge variant={cliente.tipo === 'PF' ? 'secondary' : 'outline'}>{cliente.tipo}</Badge>
                                         </TableCell>
                                         <TableCell className="text-right">{cliente.documentos.length}</TableCell>
+                                         <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/clientes/${cliente.id}`)}>
+                                                <Eye className="h-4 w-4" />
+                                                <span className="sr-only">Visualizar Cliente</span>
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : null}
                             {!isLoading && clientes.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
+                                    <TableCell colSpan={6} className="h-24 text-center">
                                         Nenhum cliente encontrado.
                                     </TableCell>
                                 </TableRow>

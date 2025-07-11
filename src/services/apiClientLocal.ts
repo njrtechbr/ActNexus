@@ -73,20 +73,36 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   return todosAtos.filter((ato: any) => ato.livroId === livroId);
 };
 
+export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
+    await delay(300);
+    console.log(`MOCK API: Buscando atos para o cliente ${clienteId}...`);
+    const cliente = await getClienteById(clienteId);
+    if (!cliente) return [];
+    
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    // Filtra atos onde o nome do cliente aparece na lista de partes
+    return todosAtos.filter((ato: any) => ato.partes.includes(cliente.nome));
+}
+
 export const getClientes = async (): Promise<Cliente[]> => {
     await delay(400);
     console.log("MOCK API: Buscando clientes...");
     return getFromStorage('actnexus_clientes');
 };
 
-export const createCliente = async (clienteData: any) => {
+export const getClienteById = async (clienteId: string): Promise<Cliente | null> => {
+    await delay(200);
+    console.log(`MOCK API: Buscando cliente pelo ID ${clienteId}...`);
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    return clientes.find(c => c.id === clienteId) || null;
+}
+
+export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<Cliente> => {
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
-    const clientes = getFromStorage('actnexus_clientes');
-    const novoCliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj}` };
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj}` };
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
 }
-
-// ... criar outras funções como: getClienteById, uploadDeAto, etc.
