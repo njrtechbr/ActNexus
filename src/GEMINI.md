@@ -8,12 +8,12 @@ O **ActNexus** é uma plataforma moderna projetada para otimizar o gerenciamento
 
 ## 2. Funcionalidades Principais
 
-- **Autenticação Segura por Perfil**: Tela de login que simula acesso para `admin` e `employee`, com restrições de funcionalidade baseadas no perfil (ex: apenas admins podem criar/editar).
+- **Autenticação Segura por Perfil**: Tela de login que simula acesso para `admin` e `employee`, com restrições de funcionalidade baseadas no perfil (ex: apenas admins podem adicionar averbações ou gerenciar configurações).
 - **Dashboard Intuitivo com Métricas e Gráficos**: Apresenta métricas chave (dinâmicas, baseadas nos dados do `localStorage`) e um gráfico de "Atos por Mês" para visualização de tendências.
 - **Gestão de Livros e Atos**:
   - **Cadastro de Livro via PDF com IA**: Em vez de um formulário manual, o usuário faz o upload de um PDF. A IA processa o documento, extrai o número do livro, ano e todos os atos contidos nele, e os cadastra no sistema de uma só vez.
   - **Extração Detalhada da Qualificação com IA**: Após o cadastro, a IA analisa o conteúdo de cada ato e extrai a qualificação completa de todas as partes envolvidas (CPF, endereço, profissão, etc.).
-  - **CRUD para Atos**: Funcionalidades de Criar, Ler e Atualizar para atos notariais, com formulários em diálogos e controle de acesso por perfil.
+  - **CRUD para Atos**: Funcionalidades de Criar, Ler e Atualizar (via averbações) para atos notariais, com formulários em diálogos e controle de acesso por perfil.
 - **Gestão de Clientes**:
   - **CRUD para Clientes**: Funcionalidades para gerenciar os clientes do cartório.
   - **Sincronização Automática com IA**: Os dados de qualificação extraídos dos atos são automaticamente salvos nos perfis dos clientes correspondentes, enriquecendo a base de dados.
@@ -36,12 +36,13 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
   - **`localStorage`**: Utilizado para persistir os dados da aplicação no navegador.
   - **`src/services/apiClientLocal.ts`**: Centraliza toda a lógica de acesso e manipulação do `localStorage`, simulando uma API real com latência.
 - **Inteligência Artificial**:
-  - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google.
+  - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google. O modelo padrão utilizado em toda a aplicação é o `gemini-1.5-flash-latest`.
   - **Fluxos de IA**:
     - `processLivroPdf`: Processa o texto de um PDF de livro e extrai seus dados e atos.
     - `extractActDetails`: Analisa o conteúdo de um ato e extrai a qualificação completa das partes.
     - `generateQualification`: Gera um parágrafo de qualificação formatado a partir de dados estruturados.
     - `automatedValidation`: Valida dados em um texto simulado de documento.
+    - `semanticSearch`: Realiza buscas em linguagem natural (funcionalidade presente no dashboard).
     - `summarizeClientHistory`: Gera um resumo do histórico de atos de um cliente.
 - **Gerenciamento de Formulários**:
   - **React Hook Form**: Para gerenciamento de estado de formulários.
@@ -58,7 +59,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 │   └── genkit.ts      # Configuração do Genkit com middleware de logging
 ├── app/               # Rotas e páginas do Next.js (App Router)
 │   ├── dashboard/     # Layout e páginas da área logada
-│   └── page.tsx       # Página de login
+│   └── page.tsx       # Página de login/bypass
 ├── components/        # Componentes React reutilizáveis
 │   ├── dashboard/     # Componentes específicos do dashboard (ex: LivroUpload, QualificationGeneratorDialog, AtosPorMesChart)
 │   └── ui/            # Componentes base do ShadCN
@@ -72,6 +73,5 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 
 1. Instale as dependências: `npm install`
 2. Inicie o servidor de desenvolvimento: `npm run dev`
-3. Acesse a aplicação em `http://localhost:9002`. Os dados iniciais serão populados no `localStorage` automaticamente.
-   - **Login Admin**: `admin@actnexus.com` / `password`
-   - **Login Funcionário**: `employee@actnexus.com` / `password`
+3. Acesse a aplicação em `http://localhost:9002`. Os dados iniciais serão populados no `localStorage` automaticamente e você será logado como um usuário `admin` por padrão.
+```
