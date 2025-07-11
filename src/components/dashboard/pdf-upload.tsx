@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -45,12 +46,13 @@ export function PdfUpload() {
     setIsLoading(true);
     setValidationResult(null);
 
-    // In a real app, you'd extract text from the PDF here.
-    // For this demo, we'll use a mock text to simulate extraction.
+    // Em um aplicativo real, você extrairia o texto do PDF aqui.
+    // Para esta demonstração, usamos o nome do arquivo para gerar um texto de exemplo dinâmico.
+    const nameFromFile = file.name.replace('.pdf', '').replace(/_/g, ' ');
     const mockDocumentText = `
-      Este é um documento legal.
-      Nome Completo da Parte: João da Silva
-      Número do CPF: 123.456.789-00
+      Este é um documento legal referente a ${nameFromFile}.
+      O documento envolve as seguintes partes: ${nameFromFile}.
+      CPF da parte principal: 123.456.789-00.
       Este documento confirma o acordo entre as partes.
     `;
 
