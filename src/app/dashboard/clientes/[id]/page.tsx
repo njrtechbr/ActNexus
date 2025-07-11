@@ -2,12 +2,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { getClienteById, getAtosByClienteId, type Cliente, type Ato, type DocumentoCliente } from '@/services/apiClientLocal';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { getClienteById, getAtosByClienteId, updateCliente, type Cliente, type Ato, type DocumentoCliente } from '@/services/apiClientLocal';
 import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin } from 'lucide-react';
+import { ArrowLeft, User, Building, FileText, Sparkles, Loader2, Database, ClipboardCopy, FileSignature, CalendarClock, CheckCircle, XCircle, Pencil, Mail, Phone, MessageSquare, Notebook, MapPin, PlusCircle, Trash2, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,8 +19,11 @@ import { QualificationGeneratorDialog } from '@/components/dashboard/qualificati
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { format, isBefore, isWithinInterval, addDays, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { ClientEditDialog } from '@/components/dashboard/client-edit-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 interface UserProfile {
     role: string;
@@ -42,35 +48,57 @@ const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "defa
     return { text: "Válido", variant: "secondary", icon: CheckCircle };
 };
 
-const InfoCard = ({ icon: Icon, title, children }: { icon: React.ElementType, title: string, children: React.ReactNode }) => (
-    <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-                <Icon className="h-5 w-5" />
-                {title}
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-            {children}
-        </CardContent>
-    </Card>
-);
+const contatoSchema = z.object({
+    id: z.string(),
+    tipo: z.enum(['email', 'telefone', 'whatsapp']),
+    valor: z.string().min(1, { message: "O valor é obrigatório."}),
+    label: z.string().optional(),
+});
+
+const enderecoSchema = z.object({
+    id: z.string(),
+    logradouro: z.string().min(1, "Obrigatório"),
+    numero: z.string().min(1, "Obrigatório"),
+    bairro: z.string().min(1, "Obrigatório"),
+    cidade: z.string().min(1, "Obrigatório"),
+    estado: z.string().min(1, "Obrigatório"),
+    cep: z.string().min(1, "Obrigatório"),
+    label: z.string().optional(),
+});
+
+const formSchema = z.object({
+  contatos: z.array(contatoSchema).optional(),
+  enderecos: z.array(enderecoSchema).optional(),
+  observacoes: z.array(z.object({ value: z.string() })).optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState<string | null>(null);
     const [isQualificationDialogOpen, setIsQualificationDialogOpen] = useState(false);
-    const [isClientEditDialogOpen, setIsClientEditDialogOpen] = useState(false);
     const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
     const { copy } = useCopyToClipboard();
     const clienteId = params.id as string;
+
+    const form = useForm<FormData>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {},
+    });
+
+    const { fields: contatoFields, append: appendContato, remove: removeContato, replace: replaceContatos } = useFieldArray({ control: form.control, name: "contatos" });
+    const { fields: enderecoFields, append: appendEndereco, remove: removeEndereco, replace: replaceEnderecos } = useFieldArray({ control: form.control, name: "enderecos" });
+    const { fields: obsFields, append: appendObs, remove: removeObs, replace: replaceObs } = useFieldArray({ control: form.control, name: "observacoes" });
 
     useEffect(() => {
         const userData = localStorage.getItem("actnexus_user");
@@ -100,12 +128,17 @@ export default function DetalhesClientePage() {
             
             setCliente(clienteData);
             setAtos(atosData);
+            form.reset({
+                contatos: clienteData.contatos || [],
+                enderecos: clienteData.enderecos || [],
+                observacoes: clienteData.observacoes?.map(obs => ({ value: obs })) || [],
+            });
         } catch (error) {
             console.error("Falha ao buscar dados do cliente:", error);
         } finally {
             setIsLoading(false);
         }
-    }, [clienteId, router, toast]);
+    }, [clienteId, router, toast, form]);
 
     useEffect(() => {
         loadData();
@@ -141,15 +174,35 @@ export default function DetalhesClientePage() {
         });
     };
 
-    const handleClientUpdated = () => {
-        setIsClientEditDialogOpen(false);
-        toast({
-            title: 'Sucesso!',
-            description: 'Dados do cliente atualizados.',
-        });
-        loadData();
+    const onSubmit = async (data: FormData) => {
+        if (!cliente) return;
+        setIsSubmitting(true);
+        try {
+            const clienteData = {
+                ...data,
+                observacoes: data.observacoes?.map(obs => obs.value).filter(Boolean) || [],
+            };
+            await updateCliente(cliente.id, clienteData);
+            toast({ title: 'Sucesso!', description: 'Dados do cliente atualizados.' });
+            setIsEditing(false);
+            loadData(); // Recarrega os dados para exibir as informações atualizadas
+        } catch (error) {
+            console.error("Falha ao atualizar cliente:", error);
+            toast({ variant: "destructive", title: "Erro ao Salvar", description: "Não foi possível atualizar o cliente." });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
-    
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        form.reset({
+            contatos: cliente?.contatos || [],
+            enderecos: cliente?.enderecos || [],
+            observacoes: cliente?.observacoes?.map(obs => ({ value: obs })) || [],
+        });
+    }
+
     const contactIcons = {
         email: Mail,
         telefone: Phone,
@@ -166,10 +219,12 @@ export default function DetalhesClientePage() {
 
     return (
         <>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <Button variant="outline" size="icon" onClick={() => router.back()}>
+                        <Button variant="outline" size="icon" onClick={() => router.back()} type="button">
                             <ArrowLeft className="h-4 w-4" />
                             <span className="sr-only">Voltar</span>
                         </Button>
@@ -188,13 +243,22 @@ export default function DetalhesClientePage() {
                         </div>
                     </div>
                     <div className='flex items-center gap-2'>
-                        {user?.role === 'admin' && (
-                            <Button variant="secondary" onClick={() => setIsClientEditDialogOpen(true)}>
+                        {user?.role === 'admin' && !isEditing && (
+                            <Button variant="secondary" onClick={() => setIsEditing(true)} type="button">
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Editar Cliente
                             </Button>
                         )}
-                        <Button onClick={handleSummarize} disabled={isSummarizing}>
+                        {isEditing && (
+                            <>
+                                <Button variant="outline" onClick={handleCancelEdit} type="button">Cancelar</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    Salvar
+                                </Button>
+                            </>
+                        )}
+                        <Button onClick={handleSummarize} disabled={isSummarizing} type="button">
                             {isSummarizing ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
@@ -221,54 +285,114 @@ export default function DetalhesClientePage() {
                         <TabsTrigger value="atos">Folhas Vinculadas ({atos.length})</TabsTrigger>
                         <TabsTrigger value="documentos">Documentos ({cliente.documentos?.length || 0})</TabsTrigger>
                     </TabsList>
+                    
+                    {/* DADOS PRINCIPAIS */}
                     <TabsContent value="dados" className="mt-4">
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            <InfoCard icon={User} title="Contatos">
-                                {cliente.contatos && cliente.contatos.length > 0 ? (
-                                    cliente.contatos.map(contato => {
-                                        const Icon = contactIcons[contato.tipo];
-                                        return (
-                                            <div key={contato.id} className="border-l-2 border-primary pl-3">
-                                                <div className='flex items-center gap-2'>
-                                                    <Icon className="h-4 w-4 text-muted-foreground"/>
-                                                    <p className="font-semibold">{contato.valor}</p>
+                            {/* CONTATOS */}
+                            <Card className="lg:col-span-1">
+                                <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><User className="h-5 w-5" />Contatos</CardTitle></CardHeader>
+                                <CardContent className="space-y-3 text-sm">
+                                    {isEditing ? (
+                                        <>
+                                            {contatoFields.map((field, index) => (
+                                                <div key={field.id} className="flex items-end gap-2 p-2 border rounded-md">
+                                                     <FormField control={form.control} name={`contatos.${index}.tipo`} render={({ field }) => (
+                                                        <FormItem className="w-28"><FormLabel>Tipo</FormLabel>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                                                <SelectContent><SelectItem value="email">Email</SelectItem><SelectItem value="telefone">Telefone</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem></SelectContent>
+                                                            </Select>
+                                                        </FormItem>
+                                                    )}/>
+                                                    <FormField control={form.control} name={`contatos.${index}.valor`} render={({ field }) => (
+                                                        <FormItem className="flex-1"><FormLabel>Valor</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem>
+                                                    )}/>
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeContato(index)}><Trash2 className="h-4 w-4" /></Button>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground capitalize ml-6">{contato.label || contato.tipo}</p>
-                                            </div>
-                                        )
-                                    })
-                                ) : (
-                                    <p className="text-muted-foreground">Nenhum contato cadastrado.</p>
-                                )}
-                            </InfoCard>
+                                            ))}
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendContato({ id: `contato-${Date.now()}`, tipo: 'email', valor: '', label: '' })}><PlusCircle className="mr-2 h-4 w-4" />Contato</Button>
+                                        </>
+                                    ) : (
+                                        cliente.contatos && cliente.contatos.length > 0 ? (
+                                            cliente.contatos.map(contato => {
+                                                const Icon = contactIcons[contato.tipo];
+                                                return (
+                                                    <div key={contato.id} className="border-l-2 border-primary pl-3">
+                                                        <div className='flex items-center gap-2'><Icon className="h-4 w-4 text-muted-foreground"/><p className="font-semibold">{contato.valor}</p></div>
+                                                        <p className="text-xs text-muted-foreground capitalize ml-6">{contato.label || contato.tipo}</p>
+                                                    </div>
+                                                )
+                                            })
+                                        ) : <p className="text-muted-foreground">Nenhum contato cadastrado.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                            <InfoCard icon={MapPin} title="Endereços">
-                                 {cliente.enderecos && cliente.enderecos.length > 0 ? (
-                                    cliente.enderecos.map(end => (
-                                        <div key={end.id} className="border-l-2 border-primary pl-3">
-                                            <p className="font-semibold">{end.logradouro}, {end.numero}</p>
-                                            <p className="text-xs text-muted-foreground">{end.bairro}, {end.cidade} - {end.estado}</p>
-                                            <p className="text-xs text-muted-foreground">CEP: {end.cep}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-muted-foreground">Nenhum endereço cadastrado.</p>
-                                )}
-                            </InfoCard>
+                            {/* ENDEREÇOS */}
+                             <Card className="lg:col-span-1">
+                                <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><MapPin className="h-5 w-5" />Endereços</CardTitle></CardHeader>
+                                <CardContent className="space-y-3 text-sm">
+                                     {isEditing ? (
+                                         <>
+                                            {enderecoFields.map((field, index) => (
+                                                 <div key={field.id} className="space-y-2 p-2 border rounded-md relative">
+                                                    <Button type="button" variant="ghost" size="icon" onClick={() => removeEndereco(index)} className="absolute top-0 right-0 h-7 w-7"><Trash2 className="h-4 w-4" /></Button>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                       <FormField control={form.control} name={`enderecos.${index}.logradouro`} render={({ field }) => (<FormItem><FormLabel>Logradouro</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem>)}/>
+                                                       <FormField control={form.control} name={`enderecos.${index}.numero`} render={({ field }) => (<FormItem><FormLabel>Número</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem>)}/>
+                                                    </div>
+                                                     <FormField control={form.control} name={`enderecos.${index}.bairro`} render={({ field }) => (<FormItem><FormLabel>Bairro</FormLabel><FormControl><Input {...field}/></FormControl><FormMessage/></FormItem>)}/>
+                                                </div>
+                                            ))}
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendEndereco({ id: `end-${Date.now()}`, logradouro: '', numero: '', bairro: '', cidade: '', estado: '', cep: '' })}><PlusCircle className="mr-2 h-4 w-4" />Endereço</Button>
+                                         </>
+                                     ) : (
+                                        cliente.enderecos && cliente.enderecos.length > 0 ? (
+                                            cliente.enderecos.map(end => (
+                                                <div key={end.id} className="border-l-2 border-primary pl-3">
+                                                    <p className="font-semibold">{end.logradouro}, {end.numero}</p>
+                                                    <p className="text-xs text-muted-foreground">{end.bairro}, {end.cidade} - {end.estado}</p>
+                                                    <p className="text-xs text-muted-foreground">CEP: {end.cep}</p>
+                                                </div>
+                                            ))
+                                        ) : <p className="text-muted-foreground">Nenhum endereço cadastrado.</p>
+                                     )}
+                                </CardContent>
+                            </Card>
                             
-                            <InfoCard icon={Notebook} title="Observações">
-                                {cliente.observacoes && cliente.observacoes.length > 0 ? (
-                                    cliente.observacoes.map((obs, index) => (
-                                        <div key={index} className="border-l-2 border-primary pl-3">
-                                            <p className="text-foreground">{obs}</p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-muted-foreground">Nenhuma observação cadastrada.</p>
-                                )}
-                            </InfoCard>
-                            
-                             <div className="lg:col-span-3">
+                            {/* OBSERVAÇÕES */}
+                            <Card className="lg:col-span-1">
+                                <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Notebook className="h-5 w-5" />Observações</CardTitle></CardHeader>
+                                <CardContent className="space-y-3 text-sm">
+                                    {isEditing ? (
+                                        <>
+                                            {obsFields.map((field, index) => (
+                                                <FormField key={field.id} control={form.control} name={`observacoes.${index}.value`} render={({ field }) => (
+                                                    <FormItem>
+                                                    <div className="flex items-center gap-2">
+                                                        <Textarea {...field} placeholder={`Observação #${index + 1}`} />
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => removeObs(index)}><Trash2 className="h-4 w-4" /></Button>
+                                                    </div>
+                                                    </FormItem>
+                                                )} />
+                                            ))}
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendObs({ value: "" })}><PlusCircle className="mr-2 h-4 w-4" />Observação</Button>
+                                        </>
+                                    ) : (
+                                         cliente.observacoes && cliente.observacoes.length > 0 ? (
+                                            cliente.observacoes.map((obs, index) => (
+                                                <div key={index} className="border-l-2 border-primary pl-3">
+                                                    <p className="text-foreground whitespace-pre-wrap">{obs}</p>
+                                                </div>
+                                            ))
+                                        ) : <p className="text-muted-foreground">Nenhuma observação.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* DADOS ADICIONAIS */}
+                            <div className="lg:col-span-3">
                                 <Card>
                                     <CardHeader>
                                         <div className="flex justify-between items-start">
@@ -279,7 +403,7 @@ export default function DetalhesClientePage() {
                                                 </CardTitle>
                                                 <CardDescription>Campos salvos a partir de atos, usados para gerar a qualificação.</CardDescription>
                                             </div>
-                                            <Button variant="secondary" size="sm" onClick={() => setIsQualificationDialogOpen(true)}>
+                                            <Button variant="secondary" size="sm" onClick={() => setIsQualificationDialogOpen(true)} type="button">
                                                 <FileSignature className="mr-2 h-4 w-4"/>
                                                 Gerar Qualificação com IA
                                             </Button>
@@ -294,7 +418,7 @@ export default function DetalhesClientePage() {
                                                         <span className="font-medium text-muted-foreground">{item.label}</span>
                                                         <p className="font-semibold text-foreground max-w-[250px] truncate" title={item.value}>{item.value}</p>
                                                     </div>
-                                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleCopy(item.value, item.label)}>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={() => handleCopy(item.value, item.label)} type="button">
                                                         <ClipboardCopy className="h-4 w-4"/>
                                                     </Button>
                                                 </div>
@@ -308,6 +432,8 @@ export default function DetalhesClientePage() {
                             </div>
                         </div>
                     </TabsContent>
+                    
+                    {/* FOLHAS VINCULADAS */}
                     <TabsContent value="atos">
                         <Card>
                             <CardHeader>
@@ -350,6 +476,8 @@ export default function DetalhesClientePage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+
+                    {/* DOCUMENTOS */}
                     <TabsContent value="documentos">
                         <Card>
                             <CardHeader>
@@ -392,6 +520,8 @@ export default function DetalhesClientePage() {
                     </TabsContent>
                 </Tabs>
             </div>
+            </form>
+            </Form>
             {cliente && (
                 <QualificationGeneratorDialog
                     isOpen={isQualificationDialogOpen}
@@ -399,16 +529,6 @@ export default function DetalhesClientePage() {
                     cliente={cliente}
                 />
             )}
-             {cliente && user?.role === 'admin' && (
-                <ClientEditDialog
-                    isOpen={isClientEditDialogOpen}
-                    setIsOpen={setIsClientEditDialogOpen}
-                    onClientUpdated={handleClientUpdated}
-                    cliente={cliente}
-                />
-            )}
         </>
     );
 }
-
-    
