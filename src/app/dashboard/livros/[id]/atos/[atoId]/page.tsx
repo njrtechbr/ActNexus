@@ -7,7 +7,7 @@ import { getAtoById, getLivroById, updateAto, type Ato, type Livro, getClienteBy
 import { extractActDetails, type ExtractActDetailsOutput } from '@/lib/actions';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, User, Users, Sparkles, Loader2, Save, BadgeInfo } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Sparkles, Loader2, Save, BadgeInfo } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
