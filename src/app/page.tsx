@@ -1,101 +1,32 @@
+
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AppLogo } from "@/components/app-logo";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
-const formSchema = z.object({
-  email: z.string().email({ message: "Endereço de e-mail inválido." }),
-  password: z.string().min(1, { message: "A senha é obrigatória." }),
-});
-
-export default function LoginPage() {
+export default function BypassLoginPage() {
   const router = useRouter();
-  const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock authentication for different roles
-    let userRole = null;
-    if (values.email === "admin@actnexus.com" && values.password === "password") {
-        userRole = { name: "Admin", email: values.email, role: "admin" };
-    } else if (values.email === "employee@actnexus.com" && values.password === "password") {
-        userRole = { name: "Funcionário", email: values.email, role: "employee" };
-    }
-
-    if (userRole) {
-      localStorage.setItem('actnexus_user', JSON.stringify(userRole));
-      toast({
-        title: "Login bem-sucedido",
-        description: `Bem-vindo, ${userRole.name}! Redirecionando...`,
-      });
-      router.push("/dashboard");
-    } else {
-      form.setError("password", { type: "manual", message: "E-mail ou senha inválidos" });
-      form.setError("email", { type: "manual", message: " " });
-    }
-  }
+  useEffect(() => {
+    // Define um usuário admin padrão e redireciona para o dashboard
+    const defaultAdminUser = { name: "Admin Dev", email: "dev@actnexus.com", role: "admin" };
+    localStorage.setItem('actnexus_user', JSON.stringify(defaultAdminUser));
+    
+    // Redireciona para o dashboard
+    router.push("/dashboard");
+  }, [router]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+        <div className="flex flex-col items-center gap-4 text-center">
             <AppLogo />
-          </div>
-          <CardTitle className="font-headline text-2xl">Bem-vindo de Volta</CardTitle>
-          <CardDescription>Insira suas credenciais para acessar sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input placeholder="admin@actnexus.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Entrar
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Iniciando em modo de desenvolvimento...</span>
+            </div>
+        </div>
     </main>
   );
 }

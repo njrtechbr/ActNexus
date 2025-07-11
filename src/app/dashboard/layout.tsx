@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Book,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppLogo } from "@/components/app-logo";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import Loading from "./loading";
 
 interface UserProfile {
     role: string;
@@ -42,20 +43,29 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     const userData = localStorage.getItem("actnexus_user");
     if (userData) {
       setUser(JSON.parse(userData));
+    } else {
+      router.replace("/");
     }
-  }, []);
+    setIsCheckingAuth(false);
+  }, [router]);
 
   const isLinkActive = (path: string, itemHref: string) => {
     if (itemHref === '/dashboard') {
         return path === itemHref;
     }
     return path.startsWith(itemHref);
+  }
+
+  if (isCheckingAuth) {
+    return <Loading />;
   }
 
   return (
