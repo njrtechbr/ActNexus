@@ -40,23 +40,18 @@ const initialAtos = [
     "id": "ato-001-001",
     "livroId": "livro-001",
     "numeroAto": 1,
-    "tipoAto": "Procuração",
+    "tipoAto": "Procuração para Veículo",
     "dataAto": "2025-01-15",
-    "partes": ["Maria Silva", "João Santos"],
+    "partes": ["Maria Silva (Outorgante)", "João Santos (Outorgado)"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [
       { 
         "texto": "Em 20/01/2025, foi adicionado um novo endereço para o outorgante.",
         "dataAverbacao": "2025-01-20",
         "dataRegistro": "2025-01-20T10:00:00.000Z"
-      },
-      {
-        "texto": "teste teste teste",
-        "dataAverbacao": "2025-07-10",
-        "dataRegistro": "2025-07-11T05:11:00.000Z"
       }
     ],
-    "conteudoMarkdown": `Exemplo de Procuração para Transferência de Veículo (Para Fins de Teste)\n\nAto 1\nTipo: Procuração\nData: 2025-01-15\nPartes:\nOutorgante: Maria Silva\nOutorgado: João Santos\n\nINSTRUMENTO PARTICULAR DE PROCURAÇÃO\n\nOUTORGANTE: MARIA SILVA, nacionalidade brasileira, estado civil solteira, profissão administradora, portadora da carteira de identidade (RG) nº 11.222.333-4 SSP/SP e inscrita no CPF/MF sob o nº 111.222.333-44, residente e domiciliada na Rua das Flores, nº 123, Bairro Centro, na cidade de São Paulo, Estado de São Paulo, CEP 01000-000.\n\nOUTORGADO: JOÃO SANTOS, nacionalidade brasileira, estado civil casado, profissão autônomo, portador da carteira de identidade (RG) nº 55.666.777-8 SSP/SP e inscrito no CPF/MF sob o nº 555.666.777-88, residente e domiciliado na Avenida Principal, nº 456, Bairro Sul, na cidade de Campinas, Estado de São Paulo, CEP 13000-000.\n\nOBJETO E PODERES:\n\nPelo presente instrumento, a OUTORGANTE nomeia e constitui seu bastante procurador o OUTORGADO, a quem confere amplos, gerais e ilimitados poderes para o fim específico de promover a transferência de propriedade do veículo de sua posse e propriedade, com as seguintes características:\n\nVEÍCULO: Automóvel\n\nMARCA: Fiat\n\nMODELO: Cronos Drive 1.3\n\nANO DE FABRICAÇÃO/MODELO: 2022/2023\n\nCOR: Prata\n\nPLACA: BRA2E19\n\nCHASSI: 9BD19712P0G123456\n\nRENAVAM: 01234567890\n\nPara tanto, poderá o OUTORGADO representar a OUTORGANTE perante o Departamento de Trânsito (DETRAN) de qualquer estado da federação, e suas respectivas repartições (CIRETRAN), bem como junto a qualquer outro órgão ou entidade pública ou privada, podendo para tanto assinar o Certificado de Registro de Veículo (CRV/ATPV-e), requerer a emissão de segunda via de documentos, pagar taxas, impostos, multas e demais débitos que incidam sobre o referido veículo, receber o valor da venda, dar e receber quitação, assinar recibos, requerer e assinar todos os documentos necessários, preencher formulários, substabelecer esta a outrem, com ou sem reserva de iguais poderes, e praticar todos os demais atos necessários ao fiel e cabal cumprimento do presente mandato.\n\nPRAZO DE VALIDADE:\n\nA presente procuração terá validade de 90 (noventa) dias a contar da data de sua assinatura.\n\nLOCAL E DATA:\n\nSão Paulo, 15 de janeiro de 2025.\n\n\n\n\n_________________________________________\nMARIA SILVA\n(Outorgante)\nObservação: Este é um documento fictício gerado como exemplo para teste de sistema. As informações aqui contidas, como nomes, documentos e dados do veículo, são simuladas e não possuem validade jurídica.`
+    "conteudoMarkdown": "OUTORGANTE: MARIA SILVA, nacionalidade brasileira, estado civil solteira, profissão administradora, portadora da carteira de identidade (RG) nº 11.222.333-4 SSP/SP e inscrita no CPF/MF sob o nº 111.222.333-44, residente e domiciliada na Rua das Flores, nº 123, Bairro Centro, na cidade de São Paulo, Estado de São Paulo, CEP 01000-000.\n\nOUTORGADO: JOÃO SANTOS, nacionalidade brasileira, estado civil casado, profissão autônomo, portador da carteira de identidade (RG) nº 55.666.777-8 SSP/SP e inscrito no CPF/MF sob o nº 555.666.777-88, residente e domiciliado na Avenida Principal, nº 456, Bairro Sul, na cidade de Campinas, Estado de São Paulo, CEP 13000-000.\n\nOBJETO E PODERES: Pelo presente instrumento, a OUTORGANTE nomeia e constitui seu bastante procurador o OUTORGADO, a quem confere amplos, gerais e ilimitados poderes para o fim específico de promover a transferência de propriedade do veículo de sua posse e propriedade, com as seguintes características: VEÍCULO: Automóvel, MARCA: Fiat, MODELO: Cronos Drive 1.3, ANO DE FABRICAÇÃO/MODELO: 2022/2023, COR: Prata, PLACA: BRA2E19, CHASSI: 9BD19712P0G123456, RENAVAM: 01234567890. Para tanto, poderá o OUTORGADO representar a OUTORGANTE perante o Departamento de Trânsito (DETRAN) de qualquer estado da federação, e suas respectivas repartições (CIRETRAN), bem como junto a qualquer outro órgão ou entidade pública ou privada, podendo para tanto assinar o Certificado de Registro de Veículo (CRV/ATPV-e), requerer a emissão de segunda via de documentos, pagar taxas, impostos, multas e demais débitos que incidam sobre o referido veículo, receber o valor da venda, dar e receber quitação, assinar recibos, requerer e assinar todos os documentos necessários, preencher formulários, substabelecer esta a outrem, com ou sem reserva de iguais poderes, e praticar todos os demais atos necessários ao fiel e cabal cumprimento do presente mandato.\n\nPRAZO DE VALIDADE: A presente procuração terá validade de 90 (noventa) dias a contar da data de sua assinatura.\n\nLOCAL E DATA: São Paulo, 15 de janeiro de 2025.\n\n\n\n\n_________________________________________\nMARIA SILVA\n(Outorgante)\n\nObservação: Este é um documento fictício gerado como exemplo para teste de sistema. As informações aqui contidas, como nomes, documentos e dados do veículo, são simuladas e não possuem validade jurídica."
   },
   {
     "id": "ato-001-002",
@@ -67,7 +62,7 @@ const initialAtos = [
     "partes": ["Pedro Costa", "Ana Pereira"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
-    "conteudoMarkdown": "### Ato 2\n- **Tipo:** Escritura de Compra e Venda\n- **Data:** 2025-01-20\n- **Partes:**\n  - Pedro Costa\n  - Ana Pereira"
+    "conteudoMarkdown": "Corpo do texto da escritura de compra e venda. Conteúdo de exemplo."
   },
   {
     "id": "ato-002-001",
@@ -78,14 +73,14 @@ const initialAtos = [
     "partes": ["Carlos Nobrega"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
-    "conteudoMarkdown": "### Ato 1\n- **Tipo:** Testamento\n- **Data:** 2025-02-10\n- **Partes:**\n  - Carlos Nobrega"
+    "conteudoMarkdown": "Corpo do texto do testamento. Conteúdo de exemplo."
   }
 ];
 
 const initialClientes = [
   {
     "id": "cliente-11122233344",
-    "nome": "Maria Silva",
+    "nome": "Maria Silva (Outorgante)",
     "cpfCnpj": "111.222.333-44",
     "tipo": "PF",
     "documentos": [
@@ -95,7 +90,7 @@ const initialClientes = [
   },
    {
     "id": "cliente-55566677788",
-    "nome": "João Santos",
+    "nome": "João Santos (Outorgado)",
     "cpfCnpj": "555.666.777-88",
     "tipo": "PF",
     "documentos": []
@@ -133,13 +128,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v6');
+    const isPopulated = localStorage.getItem('actnexus_populated_v7');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v6', 'true');
+        localStorage.setItem('actnexus_populated_v7', 'true');
     }
 }

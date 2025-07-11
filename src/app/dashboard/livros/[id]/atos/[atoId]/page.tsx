@@ -1,62 +1,60 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getAtoById, getLivroById, type Ato, type Livro } from '@/services/apiClientLocal';
 import Loading from '@/app/dashboard/loading';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, User, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { format, parseISO } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 const MarkdownRenderer = ({ content }: { content: string }) => {
   if (!content) {
     return null;
   }
 
-  // Remove the initial metadata block for rendering the main content
-  const mainContent = content.split('INSTRUMENTO PARTICULAR DE PROCURAÇÃO');
-  const blocks = (mainContent.length > 1 ? 'INSTRUMENTO PARTICULAR DE PROCURAÇÃO' + mainContent[1] : mainContent[0]).split('\n\n');
+  // A IA vai retornar o corpo do texto a partir daqui.
+  const blocks = content.split('\n\n');
 
   return (
-    <Card className="bg-muted/50">
-      <CardContent className="p-6 font-serif text-base text-justify space-y-4">
-        {blocks.map((block, index) => {
-          const trimmedBlock = block.trim();
-          if (!trimmedBlock) return null;
+    <div className="font-serif text-base text-justify space-y-4 text-foreground/90">
+      {blocks.map((block, index) => {
+        const trimmedBlock = block.trim();
+        if (!trimmedBlock) return null;
 
-          const lines = trimmedBlock.split('\n');
-          
-          // Check if the block is a centered signature block
-          if (trimmedBlock.startsWith('_________________________________________')) {
-              return (
-                <div key={index} className="text-center pt-8">
-                    {lines.map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}
-                </div>
-              );
-          }
-
-          // Check if the block is a title (all-caps)
-          if (lines.length === 1 && trimmedBlock === trimmedBlock.toUpperCase() && trimmedBlock.endsWith(':')) {
+        const lines = trimmedBlock.split('\n');
+        
+        // Bloco de assinatura
+        if (trimmedBlock.startsWith('_________________________________________')) {
             return (
-              <div key={index}>
-                <h3 className="text-lg font-sans font-semibold tracking-tight text-foreground mb-2 mt-4 text-left">{trimmedBlock}</h3>
-                <Separator/>
+              <div key={index} className="text-center pt-8">
+                  {lines.map((line, lineIndex) => <p key={lineIndex}>{line}</p>)}
               </div>
             );
-          }
+        }
 
-          // Render as a normal paragraph block
+        // Título (all-caps com :)
+        if (lines.length === 1 && trimmedBlock === trimmedBlock.toUpperCase() && trimmedBlock.endsWith(':')) {
           return (
-             <p key={index} className="leading-relaxed text-foreground indent-8 text-justify">
-                {trimmedBlock}
-            </p>
+            <div key={index}>
+              <h3 className="text-sm font-sans font-bold tracking-wider text-foreground mb-2 mt-4 text-left uppercase">{trimmedBlock.slice(0, -1)}</h3>
+              <Separator/>
+            </div>
           );
-        })}
-      </CardContent>
-    </Card>
+        }
+
+        // Parágrafo normal
+        return (
+           <p key={index} className="leading-relaxed indent-8 text-justify">
+              {trimmedBlock}
+          </p>
+        );
+      })}
+    </div>
   );
 };
 
@@ -93,6 +91,14 @@ export default function DetalhesAtoPage() {
         loadData();
     }, [atoId, livroId, router]);
 
+    const dadosEstruturados = useMemo(() => {
+        if (!ato) return [];
+        return [
+            { label: 'Tipo do Ato', value: ato.tipoAto },
+            { label: 'Data do Ato', value: format(parseISO(ato.dataAto), 'dd/MM/yyyy') },
+        ]
+    }, [ato]);
+
     if (isLoading) {
         return <Loading />;
     }
@@ -120,24 +126,68 @@ export default function DetalhesAtoPage() {
                     </div>
                  </div>
             </div>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>Conteúdo do Ato</CardTitle>
-                    <CardDescription>
-                         Este é o conteúdo estruturado que a IA extraiu para esta folha.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                     {ato.conteudoMarkdown ? (
-                        <MarkdownRenderer content={ato.conteudoMarkdown} />
-                     ) : (
-                        <div className="text-center text-muted-foreground p-8">
-                            Este ato não possui conteúdo Markdown para exibição.
-                        </div>
-                     )}
-                </CardContent>
-            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Coluna de Metadados */}
+                <div className="lg:col-span-1 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Detalhes do Ato</CardTitle>
+                            <CardDescription>Dados extraídos pela IA.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm">
+                            {dadosEstruturados.map(item => (
+                                <div key={item.label} className="flex justify-between border-b pb-2">
+                                    <span className="font-medium text-muted-foreground">{item.label}</span>
+                                    <span className="font-semibold text-foreground">{item.value}</span>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5"/>
+                                Partes Envolvidas
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                           {ato.partes.map((parte, index) => (
+                                <div key={index} className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <span className="font-medium">{parte}</span>
+                                </div>
+                           ))}
+                        </CardContent>
+                    </Card>
+                </div>
+                
+                {/* Coluna de Conteúdo */}
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Conteúdo do Ato</CardTitle>
+                            <CardDescription>
+                                Este é o conteúdo que a IA extraiu para esta folha.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             {ato.conteudoMarkdown ? (
+                                <div className="p-4 border rounded-md bg-muted/30">
+                                    <MarkdownRenderer content={ato.conteudoMarkdown} />
+                                </div>
+                             ) : (
+                                <div className="text-center text-muted-foreground p-8">
+                                    Este ato não possui conteúdo Markdown para exibição.
+                                </div>
+                             )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
 
             {ato.averbacoes && ato.averbacoes.length > 0 && (
                 <Card>
@@ -149,8 +199,9 @@ export default function DetalhesAtoPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {ato.averbacoes.map((av, index) => (
-                            <div key={index} className="text-sm p-4 rounded-md border bg-background">
-                               <p className='text-foreground'>{av.texto}</p>
+                            <div key={index} className="text-sm p-4 rounded-md border bg-background relative">
+                               <Badge variant="secondary" className="absolute -top-2 left-4">AV.{index + 1}</Badge>
+                               <p className='text-foreground pt-2'>{av.texto}</p>
                                <div className="flex justify-between text-xs text-muted-foreground mt-3 pt-3 border-t">
                                  <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbacao), 'dd/MM/yyyy') : 'N/A'}</span>
                                  <span>Registro: {av.dataRegistro ? format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}</span>
