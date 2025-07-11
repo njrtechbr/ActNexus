@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { getAtosByLivroId, type Ato, getLivroById, type Livro } from '@/services/apiClientLocal';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { getAtosByLivroId, type Ato, getLivroById, type Livro, getClientes, type Cliente } from '@/services/apiClientLocal';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import {
@@ -13,47 +14,77 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Search } from 'lucide-react';
+import { ArrowLeft, FileText, Search, PlusCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ValidationDialog } from '@/components/dashboard/validation-dialog';
+import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
+import { useToast } from '@/hooks/use-toast';
+
+interface UserProfile {
+    role: string;
+}
 
 export default function DetalhesLivroPage() {
     const [livro, setLivro] = useState<Livro | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedAto, setSelectedAto] = useState<Ato | null>(null);
     const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
+    const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
     const router = useRouter();
+    const { toast } = useToast();
     const livroId = params.id as string;
 
-    useEffect(() => {
-        if (!livroId) return;
-
-        async function loadData() {
-            try {
-                const [livroData, atosData] = await Promise.all([
-                    getLivroById(livroId),
-                    getAtosByLivroId(livroId)
-                ]);
-
-                if (!livroData) {
-                    router.push('/dashboard/livros');
-                    return;
-                }
-                
-                setLivro(livroData);
-                setAtos(atosData);
-            } catch (error) {
-                console.error("Falha ao buscar dados do livro:", error);
-            } finally {
-                setIsLoading(false);
-            }
+     useEffect(() => {
+        const userData = localStorage.getItem("actnexus_user");
+        if (userData) {
+            setUser(JSON.parse(userData));
         }
-        loadData();
+    }, []);
+
+    const loadData = useCallback(async () => {
+        if (!livroId) return;
+        setIsLoading(true);
+        try {
+            const [livroData, atosData, clientesData] = await Promise.all([
+                getLivroById(livroId),
+                getAtosByLivroId(livroId),
+                getClientes()
+            ]);
+
+            if (!livroData) {
+                router.push('/dashboard/livros');
+                return;
+            }
+            
+            setLivro(livroData);
+            setAtos(atosData);
+            setClientes(clientesData);
+        } catch (error) {
+            console.error("Falha ao buscar dados do livro:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }, [livroId, router]);
+
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleAtoCreated = () => {
+        setIsAtoFormOpen(false);
+        toast({
+            title: 'Sucesso!',
+            description: 'Novo ato cadastrado no livro.',
+        });
+        loadData(); // Recarrega a lista de atos e dados do livro
+    }
 
     const handleValidationClick = (ato: Ato) => {
         setSelectedAto(ato);
@@ -82,26 +113,34 @@ export default function DetalhesLivroPage() {
     return (
         <>
             <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                     <Button variant="outline" size="icon" onClick={() => router.back()}>
-                        <ArrowLeft className="h-4 w-4" />
-                        <span className="sr-only">Voltar</span>
-                    </Button>
-                    <div>
-                        <h1 className="font-headline text-3xl font-bold tracking-tight">
-                            Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano}
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Visualize os atos registrados neste livro.
-                        </p>
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <Button variant="outline" size="icon" onClick={() => router.back()}>
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="sr-only">Voltar</span>
+                        </Button>
+                        <div>
+                            <h1 className="font-headline text-3xl font-bold tracking-tight">
+                                Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano}
+                            </h1>
+                            <p className="text-muted-foreground">
+                                Visualize e gerencie os atos registrados neste livro.
+                            </p>
+                        </div>
                     </div>
+                    {user?.role === 'admin' && (
+                        <Button onClick={() => setIsAtoFormOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Novo Ato
+                        </Button>
+                    )}
                 </div>
 
                 <Card>
                     <CardHeader>
                         <CardTitle>Atos Registrados</CardTitle>
                         <CardDescription>
-                            Total de {filteredAtos.length} de {atos.length} atos encontrados.
+                            Total de {filteredAtos.length} de {livro.totalAtos} atos encontrados neste livro.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -165,6 +204,15 @@ export default function DetalhesLivroPage() {
                     isOpen={isValidationDialogOpen} 
                     setIsOpen={setIsValidationDialogOpen} 
                     ato={selectedAto} 
+                />
+            )}
+            {livro && (
+                <AtoFormDialog 
+                    isOpen={isAtoFormOpen}
+                    setIsOpen={setIsAtoFormOpen}
+                    onAtoCreated={handleAtoCreated}
+                    livro={livro}
+                    clientes={clientes}
                 />
             )}
         </>

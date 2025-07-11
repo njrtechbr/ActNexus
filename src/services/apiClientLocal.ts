@@ -1,3 +1,4 @@
+
 // Simula a latência da rede
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -81,8 +82,33 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   await delay(300);
   console.log(`MOCK API: Buscando atos para o livro ${livroId}...`);
   const todosAtos: Ato[] = getFromStorage('actnexus_atos');
-  return todosAtos.filter((ato: any) => ato.livroId === livroId);
+  const atosDoLivro = todosAtos.filter((ato: any) => ato.livroId === livroId);
+  return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
+
+export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtraidos'>): Promise<Ato> => {
+    await delay(800);
+    console.log("MOCK API: Criando novo ato...");
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    const novoAto: Ato = { 
+        ...atoData, 
+        id: `ato-${atoData.livroId}-${atoData.numeroAto}-${Date.now()}`,
+        urlPdf: "/path/to/dummy.pdf",
+        dadosExtraidos: null
+    };
+    todosAtos.push(novoAto);
+    saveToStorage('actnexus_atos', todosAtos);
+
+    // Atualiza o total de atos no livro
+    const livros: Livro[] = getFromStorage('actnexus_livros');
+    const livroIndex = livros.findIndex(l => l.id === atoData.livroId);
+    if(livroIndex !== -1) {
+        livros[livroIndex].totalAtos += 1;
+        saveToStorage('actnexus_livros', livros);
+    }
+    return novoAto;
+}
+
 
 export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     await delay(300);
@@ -98,7 +124,8 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
 export const getClientes = async (): Promise<Cliente[]> => {
     await delay(400);
     console.log("MOCK API: Buscando clientes...");
-    return getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    return clientes.sort((a, b) => a.nome.localeCompare(b.nome));
 };
 
 export const getClienteById = async (clienteId: string): Promise<Cliente | null> => {
@@ -112,7 +139,7 @@ export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<C
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
-    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj}` };
+    const novoCliente: Cliente = { ...clienteData, id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}` };
     clientes.push(novoCliente);
     saveToStorage('actnexus_clientes', clientes);
     return novoCliente;
