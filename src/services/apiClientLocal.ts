@@ -38,6 +38,19 @@ export interface Ato {
     dadosExtraidos: Record<string, any> | null;
 }
 
+export interface DocumentoCliente {
+    nome: string;
+    url: string;
+}
+
+export interface Cliente {
+    id: string;
+    nome: string;
+    cpfCnpj: string;
+    tipo: 'PF' | 'PJ';
+    documentos: DocumentoCliente[];
+}
+
 // -- FUNÇÕES EXPORTADAS --
 
 export const getLivros = async (): Promise<Livro[]> => {
@@ -58,6 +71,12 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   console.log(`MOCK API: Buscando atos para o livro ${livroId}...`);
   const todosAtos: Ato[] = getFromStorage('actnexus_atos');
   return todosAtos.filter((ato: any) => ato.livroId === livroId);
+};
+
+export const getClientes = async (): Promise<Cliente[]> => {
+    await delay(400);
+    console.log("MOCK API: Buscando clientes...");
+    return getFromStorage('actnexus_clientes');
 };
 
 export const createCliente = async (clienteData: any) => {
