@@ -214,6 +214,13 @@ export default function DetalhesClientePage() {
         event.target.value = '';
     };
 
+    const handleDocumentClick = (doc: { nome: string, url: string }) => {
+        toast({
+            title: "Visualização de Documento",
+            description: `Em uma aplicação real, o documento "${doc.nome}" seria aberto.`,
+        });
+    };
+
     const onSubmit = async (data: FormData) => {
         if (!cliente) return;
         setIsSubmitting(true);
@@ -555,7 +562,15 @@ export default function DetalhesClientePage() {
                                             const status = getDocumentStatus(doc);
                                             return (
                                             <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
-                                                <div className="flex items-start gap-3 w-full sm:w-auto">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => !isEditing && handleDocumentClick(doc)}
+                                                    className={cn(
+                                                        "flex items-start gap-3 w-full sm:w-auto text-left",
+                                                        !isEditing && "hover:text-primary transition-colors cursor-pointer"
+                                                    )}
+                                                    disabled={isEditing}
+                                                >
                                                     <FileIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                                     <div className="flex flex-col overflow-hidden">
                                                         <span className="font-medium truncate">{doc.nome}</span>
@@ -565,7 +580,7 @@ export default function DetalhesClientePage() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                </div>
+                                                </button>
                                                 
                                                 {isEditing ? (
                                                     <div className="flex items-center gap-2 w-full sm:w-auto ml-7 sm:ml-0">
@@ -637,5 +652,8 @@ export default function DetalhesClientePage() {
             )}
         </>
     );
+
+    
+}
 
     
