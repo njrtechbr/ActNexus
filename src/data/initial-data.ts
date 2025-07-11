@@ -9,7 +9,8 @@ const initialLivros = [
     "totalAtos": 2,
     "dataAbertura": "2025-01-02",
     "dataFechamento": "2025-01-30",
-    "urlPdfOriginal": "livro_notas_001_2025.pdf"
+    "urlPdfOriginal": "livro_notas_001_2025.pdf",
+    "conteudoMarkdown": ""
   },
   {
     "id": "livro-002",
@@ -20,7 +21,8 @@ const initialLivros = [
     "totalAtos": 1,
     "dataAbertura": "2025-02-01",
     "dataFechamento": "2025-02-28",
-    "urlPdfOriginal": "livro_procuracao_002_2025.pdf"
+    "urlPdfOriginal": "livro_procuracao_002_2025.pdf",
+    "conteudoMarkdown": ""
   },
   {
     "id": "livro-003",
@@ -31,7 +33,8 @@ const initialLivros = [
     "totalAtos": 0,
     "dataAbertura": "2024-12-01",
     "dataFechamento": "2024-12-28",
-    "urlPdfOriginal": "livro_escritura_003_2024.pdf"
+    "urlPdfOriginal": "livro_escritura_003_2024.pdf",
+    "conteudoMarkdown": ""
   }
 ];
 
@@ -51,13 +54,7 @@ const initialAtos = [
         "dataRegistro": "2025-01-20T10:00:00.000Z"
       }
     ],
-    "conteudoMarkdown": `
-### Ato 1: Procuração
-- **Data:** 2025-01-15
-- **Outorgante:** Maria Silva, CPF 111.222.333-44
-- **Outorgado:** João Santos, CPF 555.666.777-88
-- **Objeto:** Amplos, gerais e ilimitados poderes para representar perante o INSS.
-`
+    "conteudoMarkdown": "### Ato 1\n- **Tipo:** Procuração\n- **Data:** 2025-01-15\n- **Partes:**\n  - Maria Silva\n  - João Santos"
   },
   {
     "id": "ato-001-002",
@@ -68,13 +65,7 @@ const initialAtos = [
     "partes": ["Pedro Costa", "Ana Pereira"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
-    "conteudoMarkdown": `
-### Ato 2: Escritura de Compra e Venda
-- **Data:** 2025-01-20
-- **Vendedor:** Pedro Costa, CPF 999.888.777-66
-- **Comprador:** Ana Pereira, CPF 123.123.123-12
-- **Imóvel:** Apartamento nº 101, na Rua das Flores, 123. Matrícula 45678 do 1º RI.
-`
+    "conteudoMarkdown": "### Ato 2\n- **Tipo:** Escritura de Compra e Venda\n- **Data:** 2025-01-20\n- **Partes:**\n  - Pedro Costa\n  - Ana Pereira"
   },
   {
     "id": "ato-002-001",
@@ -85,12 +76,7 @@ const initialAtos = [
     "partes": ["Carlos Nobrega"],
     "urlPdf": "/path/to/dummy.pdf",
     "averbacoes": [],
-    "conteudoMarkdown": `
-### Ato 1: Testamento
-- **Data:** 2025-02-10
-- **Testador:** Carlos Nobrega, CPF 456.456.456-45
-- **Disposições:** Deixa todos os seus bens para a instituição de caridade XYZ.
-`
+    "conteudoMarkdown": "### Ato 1\n- **Tipo:** Testamento\n- **Data:** 2025-02-10\n- **Partes:**\n  - Carlos Nobrega"
   }
 ];
 
@@ -145,13 +131,13 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v4');
+    const isPopulated = localStorage.getItem('actnexus_populated_v5');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v4', 'true');
+        localStorage.setItem('actnexus_populated_v5', 'true');
     }
 }

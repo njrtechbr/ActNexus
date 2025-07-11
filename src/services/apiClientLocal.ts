@@ -34,6 +34,7 @@ export interface Livro {
     dataAbertura: string; // YYYY-MM-DD
     dataFechamento?: string; // YYYY-MM-DD, optional
     urlPdfOriginal?: string;
+    conteudoMarkdown?: string;
 }
 
 export interface Averbacao {
@@ -98,6 +99,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData:
         livroId: novoLivro.id,
         urlPdf: "/path/to/dummy.pdf",
         averbacoes: [],
+        conteudoMarkdown: ato.conteudoMarkdown // Garante que o markdown do ato seja salvo
     }));
 
     livros.push(novoLivro);

@@ -99,11 +99,11 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
     setUploadState(UploadState.Saving);
     
     try {
-        // Parse the markdown to create livro and atos
         const lines = markdownContent.split('\n');
         const metadata: any = {};
         const atos: any[] = [];
         let currentAto: any = null;
+        let atoMarkdownLines: string[] = [];
 
         lines.forEach(line => {
             if (line.startsWith('numero:')) metadata.numero = parseInt(line.split(':')[1].trim());
@@ -115,15 +115,28 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
 
 
             if (line.startsWith('### Ato')) {
-                if (currentAto) atos.push(currentAto);
+                if (currentAto) {
+                    currentAto.conteudoMarkdown = atoMarkdownLines.join('\n').trim();
+                    atos.push(currentAto);
+                    atoMarkdownLines = [];
+                }
                 currentAto = { numeroAto: parseInt(line.replace('### Ato', '').trim()), partes: [] };
-            } else if (currentAto) {
+            } 
+            
+            if (currentAto) {
                 if (line.startsWith('- **Tipo:**')) currentAto.tipoAto = line.replace('- **Tipo:**', '').trim();
-                if (line.startsWith('- **Data:**')) currentAto.dataAto = line.replace('- **Data:**', '').trim();
-                if (line.startsWith('  - ')) currentAto.partes.push(line.replace('  - ', '').trim());
+                else if (line.startsWith('- **Data:**')) currentAto.dataAto = line.replace('- **Data:**', '').trim();
+                else if (line.startsWith('  - ')) currentAto.partes.push(line.replace('  - ', '').trim());
+                
+                if(line.trim().startsWith('### Ato') || line.trim().startsWith('- ')){
+                    atoMarkdownLines.push(line);
+                }
             }
         });
-        if (currentAto) atos.push(currentAto);
+        if (currentAto) {
+            currentAto.conteudoMarkdown = atoMarkdownLines.join('\n').trim();
+            atos.push(currentAto);
+        }
         
         const livroData = {
             numero: metadata.numero,
@@ -260,5 +273,3 @@ export function LivroUpload({ onLivroProcessed }: { onLivroProcessed: () => void
     </Card>
   );
 }
-
-    
