@@ -47,7 +47,8 @@ const getDocumentStatus = (doc: DocumentoCliente): {text: string; variant: "defa
         return { text: "Expirado", variant: "destructive", icon: XCircle };
     }
     
-    if (isWithinInterval(validityDate, { start: today, end: addDays(today, 30) })) {
+    const intervalEnd = addDays(today, 30);
+    if (isWithinInterval(validityDate, { start: today, end: intervalEnd })) {
         return { text: "Vence em breve", variant: "default", icon: CalendarClock };
     }
 
@@ -548,6 +549,7 @@ export default function DetalhesClientePage() {
                                         {docList.map((doc, index) => {
                                             const docDate = (doc as any).dataValidade;
                                             const dateToFormat = docDate instanceof Date ? docDate : (typeof docDate === 'string' ? parseISO(docDate) : null);
+                                            const status = getDocumentStatus(doc as DocumentoCliente);
                                             return (
                                             <li key={(doc as any).id || index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm border-b pb-3 last:border-b-0 last:pb-0">
                                                 <div className="flex items-start gap-3 w-full sm:w-auto">
@@ -605,9 +607,9 @@ export default function DetalhesClientePage() {
                                                         </Button>
                                                     </div>
                                                 ) : (
-                                                    <Badge variant={getDocumentStatus(doc as DocumentoCliente).variant} className="gap-1.5 whitespace-nowrap">
+                                                    <Badge variant={status.variant} className="gap-1.5 whitespace-nowrap">
                                                         <status.icon className="h-3 w-3"/>
-                                                        {getDocumentStatus(doc as DocumentoCliente).text}
+                                                        {status.text}
                                                     </Badge>
                                                 )}
                                             </li>
