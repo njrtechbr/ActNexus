@@ -35,19 +35,19 @@ const automatedValidationPrompt = ai.definePrompt({
   name: 'automatedValidationPrompt',
   input: {schema: AutomatedValidationInputSchema},
   output: {schema: AutomatedValidationOutputSchema},
-  prompt: `You are an expert legal document validator.
-  Your task is to validate the information extracted from a document.
-  Specifically, you need to determine if the document is valid based on the CPF and name provided in the document text.
-  If the document contains both CPF and Name, extract them.
+  prompt: `Você é um especialista em validação de documentos legais.
+  Sua tarefa é validar as informações extraídas de um documento.
+  Especificamente, você precisa determinar se o documento é válido com base no CPF e no nome fornecidos no texto do documento.
+  Se o documento contiver tanto CPF quanto Nome, extraia-os.
 
-  Document Text: {{{documentText}}}
+  Texto do Documento: {{{documentText}}}
 
-  Respond in JSON format with the following structure:
+  Responda em formato JSON com a seguinte estrutura:
   {
-    "isValid": boolean, // true if the document is valid, false otherwise
-    "validationDetails": string, // Details about the validation, including any errors found
-    "extractedName": string, // The extracted name from the document, if available.
-    "extractedCPF": string, // The extracted CPF from the document, if available.
+    "isValid": boolean, // true se o documento for válido, false caso contrário
+    "validationDetails": string, // Detalhes sobre a validação, incluindo quaisquer erros encontrados
+    "extractedName": string, // O nome extraído do documento, se disponível.
+    "extractedCPF": string, // O CPF extraído do documento, se disponível.
   }
   `,
 });

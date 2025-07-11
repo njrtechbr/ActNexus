@@ -12,8 +12,8 @@ import { AppLogo } from "@/components/app-logo";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  email: z.string().email({ message: "Endereço de e-mail inválido." }),
+  password: z.string().min(1, { message: "A senha é obrigatória." }),
 });
 
 export default function LoginPage() {
@@ -35,12 +35,12 @@ export default function LoginPage() {
       values.password === "password"
     ) {
       toast({
-        title: "Login Successful",
-        description: "Redirecting to your dashboard...",
+        title: "Login bem-sucedido",
+        description: "Redirecionando para o seu painel...",
       });
       router.push("/dashboard");
     } else {
-      form.setError("password", { type: "manual", message: "Invalid email or password" });
+      form.setError("password", { type: "manual", message: "E-mail ou senha inválidos" });
       form.setError("email", { type: "manual", message: " " });
     }
   }
@@ -52,8 +52,8 @@ export default function LoginPage() {
           <div className="mx-auto mb-4">
             <AppLogo />
           </div>
-          <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <CardTitle className="font-headline text-2xl">Bem-vindo de Volta</CardTitle>
+          <CardDescription>Insira suas credenciais para acessar sua conta.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -63,7 +63,7 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>E-mail</FormLabel>
                     <FormControl>
                       <Input placeholder="admin@actnexus.com" {...field} />
                     </FormControl>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Senha</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full">
-                Login
+                Entrar
               </Button>
             </form>
           </Form>

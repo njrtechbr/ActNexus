@@ -68,13 +68,13 @@ export function SearchResultsTable({ results }: { results: Result[] }) {
               <TableRow>
               <TableHead>
                   <Button variant="ghost" onClick={() => requestSort("documentName")} className="px-2">
-                      Document
+                      Documento
                       {getSortIndicator("documentName")}
                   </Button>
               </TableHead>
               <TableHead className="w-[150px] text-right">
                   <Button variant="ghost" onClick={() => requestSort("relevanceScore")} className="px-2">
-                      Relevance
+                      Relevância
                       {getSortIndicator("relevanceScore")}
                   </Button>
               </TableHead>
@@ -96,7 +96,7 @@ export function SearchResultsTable({ results }: { results: Result[] }) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={2} className="h-24 text-center">
-                    No results.
+                    Sem resultados.
                   </TableCell>
                 </TableRow>
               )}

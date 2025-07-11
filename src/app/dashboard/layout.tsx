@@ -19,7 +19,7 @@ import { AppLogo } from "@/components/app-logo";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 
 const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
 ];
 
 export default function DashboardLayout({

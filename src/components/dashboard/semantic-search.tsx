@@ -33,19 +33,19 @@ export function SemanticSearch() {
         setResults(result.results);
       } else {
         setResults([
-          { documentName: 'Prenuptial Agreement - Silva & Costa', documentDescription: 'Agreement detailing asset division for João da Silva and Maria Costa.', relevanceScore: 0.92 },
-          { documentName: 'Real Estate Deed of Sale - Almeida Property', documentDescription: 'Transfer of property ownership from Carlos Almeida to Beatriz Souza.', relevanceScore: 0.85 },
-          { documentName: 'Power of Attorney - Fernandes', documentDescription: 'Legal document granting power of attorney from Mr. Fernandes to his lawyer.', relevanceScore: 0.78 },
-          { documentName: 'Last Will and Testament of Ms. Oliveira', documentDescription: 'Details the distribution of assets for the late Ms. Oliveira.', relevanceScore: 0.71 },
+          { documentName: 'Acordo Pré-nupcial - Silva & Costa', documentDescription: 'Acordo detalhando a divisão de bens para João da Silva e Maria Costa.', relevanceScore: 0.92 },
+          { documentName: 'Escritura de Compra e Venda de Imóvel - Propriedade Almeida', documentDescription: 'Transferência de propriedade do imóvel de Carlos Almeida para Beatriz Souza.', relevanceScore: 0.85 },
+          { documentName: 'Procuração - Fernandes', documentDescription: 'Documento legal que concede poderes de representação do Sr. Fernandes ao seu advogado.', relevanceScore: 0.78 },
+          { documentName: 'Último Testamento e Vontade da Sra. Oliveira', documentDescription: 'Detalha a distribuição de bens da falecida Sra. Oliveira.', relevanceScore: 0.71 },
         ].filter(r => r.documentName.toLowerCase().includes(query.toLowerCase()) || r.documentDescription.toLowerCase().includes(query.toLowerCase())));
       }
 
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error("A pesquisa falhou:", error);
       toast({
         variant: "destructive",
-        title: "Search Failed",
-        description: "Could not retrieve search results. Please try again.",
+        title: "Falha na Pesquisa",
+        description: "Não foi possível obter os resultados da pesquisa. Por favor, tente novamente.",
       });
     } finally {
       setIsLoading(false);
@@ -55,13 +55,13 @@ export function SemanticSearch() {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Semantic Search</CardTitle>
-        <CardDescription>Use natural language to find notarial acts and documents.</CardDescription>
+        <CardTitle>Pesquisa Semântica</CardTitle>
+        <CardDescription>Use linguagem natural para encontrar atos e documentos notariais.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col">
         <form onSubmit={handleSearch} className="flex gap-2">
           <Input
-            placeholder="e.g., 'prenuptial agreement for Silva'"
+            placeholder="ex: 'acordo pré-nupcial para Silva'"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             disabled={isLoading}
@@ -69,7 +69,7 @@ export function SemanticSearch() {
           />
           <Button type="submit" disabled={isLoading || !query.trim()} className="w-10 h-10 p-0 flex-shrink-0">
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            <span className="sr-only">Search</span>
+            <span className="sr-only">Pesquisar</span>
           </Button>
         </form>
 
@@ -84,14 +84,14 @@ export function SemanticSearch() {
           )}
           {!isLoading && hasSearched && results.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-10">
-              <p className="font-semibold">No results found.</p>
-              <p className="text-sm">Try a different or more specific search query.</p>
+              <p className="font-semibold">Nenhum resultado encontrado.</p>
+              <p className="text-sm">Tente uma consulta de pesquisa diferente ou mais específica.</p>
             </div>
           )}
           {!isLoading && !hasSearched && (
              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground pt-10">
-                <p className="font-semibold">Search results will appear here.</p>
-                <p className="text-sm">Enter a query above to start.</p>
+                <p className="font-semibold">Os resultados da pesquisa aparecerão aqui.</p>
+                <p className="text-sm">Digite uma consulta acima para começar.</p>
              </div>
           )}
         </div>

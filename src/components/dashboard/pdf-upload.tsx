@@ -48,21 +48,21 @@ export function PdfUpload() {
     // In a real app, you'd extract text from the PDF here.
     // For this demo, we'll use a mock text to simulate extraction.
     const mockDocumentText = `
-      This is a legal document.
-      Full Name of the Party: João da Silva
-      CPF Number: 123.456.789-00
-      This document confirms the agreement between the parties.
+      Este é um documento legal.
+      Nome Completo da Parte: João da Silva
+      Número do CPF: 123.456.789-00
+      Este documento confirma o acordo entre as partes.
     `;
 
     try {
       const result = await automatedValidation({ documentText: mockDocumentText });
       setValidationResult(result);
     } catch (error) {
-      console.error("Validation failed:", error);
+      console.error("A validação falhou:", error);
       toast({
         variant: "destructive",
-        title: "Validation Error",
-        description: "An unexpected error occurred during validation.",
+        title: "Erro de Validação",
+        description: "Ocorreu um erro inesperado durante a validação.",
       });
     } finally {
       setIsLoading(false);
@@ -77,8 +77,8 @@ export function PdfUpload() {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Automated Validation</CardTitle>
-        <CardDescription>Upload a PDF to automatically validate its content.</CardDescription>
+        <CardTitle>Validação Automatizada</CardTitle>
+        <CardDescription>Envie um PDF para validar seu conteúdo automaticamente.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!file ? (
@@ -92,11 +92,11 @@ export function PdfUpload() {
             }`}
           >
             <UploadCloud className="h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 font-semibold">Drag & drop a PDF here</p>
-            <p className="text-sm text-muted-foreground">or</p>
+            <p className="mt-4 font-semibold">Arraste e solte um PDF aqui</p>
+            <p className="text-sm text-muted-foreground">ou</p>
             <Button asChild variant="outline" size="sm" className="mt-2 z-10">
               <label>
-                Browse file
+                Procurar arquivo
                 <input type="file" className="sr-only" accept=".pdf" onChange={handleFileChange} />
               </label>
             </Button>
@@ -110,7 +110,7 @@ export function PdfUpload() {
                 <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remove file">
+            <Button variant="ghost" size="icon" onClick={clearFile} aria-label="Remover arquivo">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -119,17 +119,17 @@ export function PdfUpload() {
         {file && (
           <Button onClick={handleValidation} disabled={isLoading} className="w-full">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Validate Document
+            Validar Documento
           </Button>
         )}
 
         {validationResult && (
           <Alert variant={validationResult.isValid ? 'default' : 'destructive'} className={validationResult.isValid ? "border-green-300 bg-green-50 text-green-900" : ""}>
             {validationResult.isValid ? <CheckCircle className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4" />}
-            <AlertTitle>{validationResult.isValid ? 'Validation Successful' : 'Validation Failed'}</AlertTitle>
+            <AlertTitle>{validationResult.isValid ? 'Validação bem-sucedida' : 'Validação falhou'}</AlertTitle>
             <AlertDescription className={validationResult.isValid ? "text-green-800" : ""}>
               <p>{validationResult.validationDetails}</p>
-              {validationResult.extractedName && <p className="mt-2"><strong>Name:</strong> {validationResult.extractedName}</p>}
+              {validationResult.extractedName && <p className="mt-2"><strong>Nome:</strong> {validationResult.extractedName}</p>}
               {validationResult.extractedCPF && <p className="text-sm"><strong>CPF:</strong> {validationResult.extractedCPF}</p>}
             </AlertDescription>
           </Alert>

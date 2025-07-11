@@ -35,11 +35,11 @@ const prompt = ai.definePrompt({
   name: 'semanticSearchPrompt',
   input: {schema: SemanticSearchInputSchema},
   output: {schema: SemanticSearchOutputSchema},
-  prompt: `You are a search assistant for notarial acts. A user will provide a natural language query, and you should return a list of relevant documents, sorted by relevance.  Include a short description of the document's content in the response.
+  prompt: `Você é um assistente de busca para atos notariais. Um usuário fornecerá uma consulta em linguagem natural, e você deve retornar uma lista de documentos relevantes, classificados por relevância. Inclua uma breve descrição do conteúdo do documento na resposta.
 
-User Query: {{{query}}}
+Consulta do Usuário: {{{query}}}
 
-Return the results in the following JSON format:
+Retorne os resultados no seguinte formato JSON:
 {{$response}}`,
 });
 
@@ -54,4 +54,3 @@ const semanticSearchFlow = ai.defineFlow(
     return output!;
   }
 );
-

@@ -12,35 +12,35 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-headline text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="font-headline text-3xl font-bold tracking-tight">Painel</h1>
         <p className="text-muted-foreground">
-          An overview of your notarial activities.
+          Uma visão geral de suas atividades notariais.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Documents Uploaded"
+          title="Documentos Enviados"
           value="1,234"
           icon={FileText}
-          change="+20.1% from last month"
+          change="+20.1% do último mês"
         />
         <MetricCard
-          title="Validated Documents"
+          title="Documentos Validados"
           value="1,050"
           icon={FileCheck2}
-          change="+18.5% from last month"
+          change="+18.5% do último mês"
         />
         <MetricCard
-          title="Pending Validation"
+          title="Validação Pendente"
           value="184"
           icon={FileClock}
-          change="-5.2% from last month"
+          change="-5.2% do último mês"
         />
         <MetricCard
-          title="Search Queries"
+          title="Consultas de Pesquisa"
           value="573"
           icon={FileSearch2}
-          change="+12 since last hour"
+          change="+12 desde a última hora"
         />
       </div>
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
