@@ -45,8 +45,7 @@ export interface Ato {
     dataAto: string; // Formato YYYY-MM-DD
     partes: string[];
     urlPdf: string;
-    dadosExtraidos: Record<string, any> | null;
-    observacoes?: string;
+    averbacoes: string[];
 }
 
 export interface DocumentoCliente {
@@ -79,7 +78,7 @@ export const getLivroById = async (livroId: string): Promise<Livro | null> => {
     return livros.find(livro => livro.id === livroId) || null;
 }
 
-export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'dadosExtraidos'>[]): Promise<Livro> => {
+export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'averbacoes'>[]): Promise<Livro> => {
     await delay(1200);
     console.log("MOCK API: Criando novo livro com atos via processamento de PDF...");
     const livros: Livro[] = getFromStorage('actnexus_livros');
@@ -92,8 +91,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData:
         id: `ato-${novoLivro.id}-${ato.numeroAto}-${Date.now()}`,
         livroId: novoLivro.id,
         urlPdf: "/path/to/dummy.pdf",
-        dadosExtraidos: null,
-        observacoes: '',
+        averbacoes: [],
     }));
 
     livros.push(novoLivro);
@@ -114,33 +112,9 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
 
-export const createAto = async (atoData: Omit<Ato, 'id' | 'urlPdf' | 'dadosExtraidos' | 'observacoes'>): Promise<Ato> => {
-    await delay(800);
-    console.log("MOCK API: Criando novo ato...");
-    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
-    const novoAto: Ato = { 
-        ...atoData, 
-        id: `ato-${atoData.livroId}-${atoData.numeroAto}-${Date.now()}`,
-        urlPdf: "/path/to/dummy.pdf",
-        dadosExtraidos: null,
-        observacoes: '',
-    };
-    todosAtos.push(novoAto);
-    saveToStorage('actnexus_atos', todosAtos);
-
-    // Atualiza o total de atos no livro
-    const livros: Livro[] = getFromStorage('actnexus_livros');
-    const livroIndex = livros.findIndex(l => l.id === atoData.livroId);
-    if(livroIndex !== -1) {
-        livros[livroIndex].totalAtos += 1;
-        saveToStorage('actnexus_livros', livros);
-    }
-    return novoAto;
-}
-
-export const updateAto = async (atoId: string, atoData: Partial<Ato>): Promise<Ato | null> => {
+export const updateAto = async (atoId: string, data: { averbacao: string }): Promise<Ato | null> => {
     await delay(600);
-    console.log(`MOCK API: Atualizando ato ${atoId}...`);
+    console.log(`MOCK API: Adicionando averbação ao ato ${atoId}...`);
     const todosAtos: Ato[] = getFromStorage('actnexus_atos');
     const atoIndex = todosAtos.findIndex(a => a.id === atoId);
 
@@ -149,15 +123,16 @@ export const updateAto = async (atoId: string, atoData: Partial<Ato>): Promise<A
         return null;
     }
 
-    // Garante que apenas o campo de observações seja atualizado.
-    const atoAtualizado = { 
-        ...todosAtos[atoIndex], 
-        observacoes: atoData.observacoes 
-    };
-    todosAtos[atoIndex] = atoAtualizado;
+    const atoAtual = todosAtos[atoIndex];
+    if (!atoAtual.averbacoes) {
+        atoAtual.averbacoes = [];
+    }
+    atoAtual.averbacoes.push(data.averbacao);
+    
+    todosAtos[atoIndex] = atoAtual;
 
     saveToStorage('actnexus_atos', todosAtos);
-    return atoAtualizado;
+    return atoAtual;
 }
 
 

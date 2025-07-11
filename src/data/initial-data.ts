@@ -16,9 +16,10 @@ const initialLivros = [
     "numero": 2,
     "ano": 2025,
     "tipo": "Procuração",
-    "status": "Processando",
+    "status": "Concluído",
     "totalAtos": 1,
     "dataAbertura": "2025-02-01",
+    "dataFechamento": "2025-02-28",
     "urlPdfOriginal": "livro_procuracao_002_2025.pdf"
   },
   {
@@ -42,11 +43,9 @@ const initialAtos = [
     "dataAto": "2025-01-15",
     "partes": ["Maria Silva", "João Santos"],
     "urlPdf": "/path/to/dummy.pdf",
-    "dadosExtraidos": {
-      "outorgante": { "nome": "Maria Silva", "cpf": "111.222.333-44" },
-      "outorgado": { "nome": "João Santos", "cpf": "555.666.777-88" }
-    },
-    "observacoes": "Averbação: Em 20/01/2025, foi adicionado um novo endereço para o outorgante."
+    "averbacoes": [
+      "Em 20/01/2025, foi adicionado um novo endereço para o outorgante."
+    ]
   },
   {
     "id": "ato-001-002",
@@ -56,8 +55,7 @@ const initialAtos = [
     "dataAto": "2025-01-20",
     "partes": ["Pedro Costa", "Ana Pereira"],
     "urlPdf": "/path/to/dummy.pdf",
-    "dadosExtraidos": null,
-    "observacoes": ""
+    "averbacoes": []
   },
   {
     "id": "ato-002-001",
@@ -67,8 +65,7 @@ const initialAtos = [
     "dataAto": "2025-02-10",
     "partes": ["Carlos Nobrega"],
     "urlPdf": "/path/to/dummy.pdf",
-    "dadosExtraidos": null,
-    "observacoes": ""
+    "averbacoes": []
   }
 ];
 
@@ -123,14 +120,14 @@ const initialTiposLivro = [
 ];
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v2');
+    const isPopulated = localStorage.getItem('actnexus_populated_v3');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
-        localStorage.setItem('actnexus_populated_v2', 'true');
+        localStorage.setItem('actnexus_populated_v3', 'true');
     }
 }
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { getAtosByLivroId, type Ato, getLivroById, type Livro, getClientes, type Cliente } from '@/services/apiClientLocal';
+import { getAtosByLivroId, type Ato, getLivroById, type Livro } from '@/services/apiClientLocal';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
 import {
@@ -14,10 +14,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Search, PlusCircle, Edit, Calendar, CheckCircle, FileDown } from 'lucide-react';
+import { ArrowLeft, Search, Edit, Calendar, CheckCircle, FileDown, MessageSquareQuote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ValidationDialog } from '@/components/dashboard/validation-dialog';
 import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -43,11 +42,8 @@ const getStatusVariant = (status: string) => {
 export default function DetalhesLivroPage() {
     const [livro, setLivro] = useState<Livro | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
-    const [clientes, setClientes] = useState<Cliente[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedAto, setSelectedAto] = useState<Ato | null>(null);
     const [atoToEdit, setAtoToEdit] = useState<Ato | null>(null);
-    const [isValidationDialogOpen, setIsValidationDialogOpen] = useState(false);
     const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -67,10 +63,9 @@ export default function DetalhesLivroPage() {
         if (!livroId) return;
         setIsLoading(true);
         try {
-            const [livroData, atosData, clientesData] = await Promise.all([
+            const [livroData, atosData] = await Promise.all([
                 getLivroById(livroId),
-                getAtosByLivroId(livroId),
-                getClientes()
+                getAtosByLivroId(livroId)
             ]);
 
             if (!livroData) {
@@ -80,7 +75,6 @@ export default function DetalhesLivroPage() {
             
             setLivro(livroData);
             setAtos(atosData);
-            setClientes(clientesData);
         } catch (error) {
             console.error("Falha ao buscar dados do livro:", error);
         } finally {
@@ -98,25 +92,15 @@ export default function DetalhesLivroPage() {
         setAtoToEdit(null);
         toast({
             title: 'Sucesso!',
-            description: `Folha (Ato) ${atoToEdit ? 'atualizada' : 'cadastrada'} com sucesso.`,
+            description: `Nova averbação adicionada à folha.`,
         });
         loadData(); 
     }
-
-    const handleValidationClick = (ato: Ato) => {
-        setSelectedAto(ato);
-        setIsValidationDialogOpen(true);
-    };
 
     const handleEditClick = (ato: Ato) => {
         setAtoToEdit(ato);
         setIsAtoFormOpen(true);
     };
-
-    const handleNewAtoClick = () => {
-        setAtoToEdit(null);
-        setIsAtoFormOpen(true);
-    }
     
     const handlePdfDownload = () => {
         toast({
@@ -144,6 +128,8 @@ export default function DetalhesLivroPage() {
         return <div className="text-center p-8">Livro não encontrado.</div>;
     }
     
+    const canAverbate = livro.status === 'Concluído' || livro.status === 'Arquivado';
+
     return (
         <>
             <div className="space-y-6">
@@ -184,12 +170,6 @@ export default function DetalhesLivroPage() {
                                 Ver PDF Original
                             </Button>
                         )}
-                        {user?.role === 'admin' && (
-                            <Button onClick={handleNewAtoClick}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Nova Folha (Ato)
-                            </Button>
-                        )}
                     </div>
                 </div>
 
@@ -220,7 +200,8 @@ export default function DetalhesLivroPage() {
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Data</TableHead>
                                         <TableHead>Partes Envolvidas</TableHead>
-                                        <TableHead className="w-[100px] text-right">Ações</TableHead>
+                                        <TableHead className="w-[120px]">Averbações</TableHead>
+                                        <TableHead className="w-[80px] text-right">Ações</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -235,23 +216,30 @@ export default function DetalhesLivroPage() {
                                                         {ato.partes.map(parte => <span key={parte}>{parte}</span>)}
                                                     </div>
                                                 </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant={ato.averbacoes?.length > 0 ? "default" : "secondary"}>
+                                                        {ato.averbacoes?.length || 0}
+                                                    </Badge>
+                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    {user?.role === 'admin' && (
+                                                    {user?.role === 'admin' && canAverbate && (
                                                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(ato)}>
-                                                            <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">Editar Folha</span>
+                                                            <MessageSquareQuote className="h-4 w-4" />
+                                                            <span className="sr-only">Averbar Folha</span>
                                                         </Button>
                                                     )}
-                                                    <Button variant="ghost" size="icon" onClick={() => handleValidationClick(ato)}>
-                                                        <FileText className="h-4 w-4" />
-                                                        <span className="sr-only">Validar Folha</span>
-                                                    </Button>
+                                                     {user?.role === 'admin' && !canAverbate && (
+                                                         <Button variant="ghost" size="icon" disabled>
+                                                            <MessageSquareQuote className="h-4 w-4" />
+                                                            <span className="sr-only">Averbar Folha</span>
+                                                        </Button>
+                                                     )}
                                                 </TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">
+                                            <TableCell colSpan={6} className="h-24 text-center">
                                                 Nenhuma folha encontrada com os critérios de busca.
                                             </TableCell>
                                         </TableRow>
@@ -262,20 +250,12 @@ export default function DetalhesLivroPage() {
                     </CardContent>
                 </Card>
             </div>
-            {selectedAto && (
-                <ValidationDialog 
-                    isOpen={isValidationDialogOpen} 
-                    setIsOpen={setIsValidationDialogOpen} 
-                    ato={selectedAto} 
-                />
-            )}
+
             {livro && (
                 <AtoFormDialog 
                     isOpen={isAtoFormOpen}
                     setIsOpen={setIsAtoFormOpen}
                     onAtoSaved={handleAtoSaved}
-                    livro={livro}
-                    clientes={clientes}
                     atoToEdit={atoToEdit}
                 />
             )}
