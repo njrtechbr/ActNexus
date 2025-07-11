@@ -121,13 +121,14 @@ export default function ClientesPage() {
                                         <TableHead>CPF / CNPJ</TableHead>
                                         <TableHead className="w-[100px]">Tipo</TableHead>
                                         <TableHead className="w-[100px] text-right">Docs</TableHead>
+                                        <TableHead className="w-[100px] text-right">Dados IA</TableHead>
                                         <TableHead className="w-[100px]"></TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {isLoading && (
                                         <TableRow>
-                                            <TableCell colSpan={6}>
+                                            <TableCell colSpan={7}>
                                                 <div className="flex justify-center p-8 items-center gap-2 text-muted-foreground">
                                                     <Loader2 className="h-5 w-5 animate-spin" />
                                                     <span>Carregando clientes...</span>
@@ -149,6 +150,7 @@ export default function ClientesPage() {
                                                     <Badge variant={cliente.tipo === 'PF' ? 'secondary' : 'outline'}>{cliente.tipo}</Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">{cliente.documentos.length}</TableCell>
+                                                <TableCell className="text-right">{cliente.dadosAdicionais?.length || 0}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/clientes/${cliente.id}`)}>
                                                         <Eye className="h-4 w-4" />
@@ -160,7 +162,7 @@ export default function ClientesPage() {
                                     ) : null}
                                     {!isLoading && filteredClientes.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={6} className="h-24 text-center">
+                                            <TableCell colSpan={7} className="h-24 text-center">
                                                 Nenhum cliente encontrado.
                                             </TableCell>
                                         </TableRow>
