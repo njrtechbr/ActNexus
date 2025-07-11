@@ -145,8 +145,8 @@ export function AtoFormDialog({
                         <div key={index} className="text-xs border-b pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
                            <p><span className='font-semibold'>AV.{index+1}:</span> {av.texto}</p>
                            <div className="flex justify-between text-muted-foreground mt-1">
-                             <span>Data do Fato: {format(parseISO(av.dataAverbacao), 'dd/MM/yyyy')}</span>
-                             <span>Registro: {format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm")}</span>
+                             <span>Data do Fato: {av.dataAverbacao ? format(parseISO(av.dataAverbacao), 'dd/MM/yyyy') : 'N/A'}</span>
+                             <span>Registro: {av.dataRegistro ? format(parseISO(av.dataRegistro), "dd/MM/yyyy 'às' HH:mm") : 'N/A'}</span>
                            </div>
                         </div>
                     ))}
