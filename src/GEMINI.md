@@ -10,7 +10,9 @@ O **ActNexus** é uma plataforma moderna projetada para otimizar o gerenciamento
 
 - **Autenticação Segura por Perfil**: Tela de login que simula acesso para `admin` e `employee`, com restrições de funcionalidade baseadas no perfil (ex: apenas admins podem criar/editar).
 - **Dashboard Intuitivo com Métricas e Gráficos**: Apresenta métricas chave (dinâmicas, baseadas nos dados do `localStorage`) e um gráfico de "Atos por Mês" para visualização de tendências.
-- **Gestão de Livros e Atos**: Funcionalidades completas de CRUD (Criar, Ler, Atualizar) para livros e atos notariais, com formulários em diálogos e controle de acesso por perfil.
+- **Gestão de Livros e Atos**:
+  - **Cadastro de Livro via PDF com IA**: Em vez de um formulário manual, o usuário faz o upload de um PDF. A IA processa o documento, extrai o número do livro, ano e todos os atos contidos nele, e os cadastra no sistema de uma só vez, gerando um Markdown estruturado como passo intermediário.
+  - **CRUD para Atos**: Funcionalidades de Criar, Ler e Atualizar para atos notariais, com formulários em diálogos e controle de acesso por perfil.
 - **Gestão de Clientes**: CRUD para clientes, incluindo upload simulado de documentos e uma visão 360° com histórico de atos.
 - **Validação Automatizada com IA**: Um fluxo de IA que analisa o texto de um documento (com base no nome do arquivo) para validar informações como CPF e nome.
 - **Resumo de Cliente com IA**: Gera um resumo textual do histórico de atividades de um cliente, demonstrando a capacidade de geração de conteúdo da IA.
@@ -32,6 +34,7 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 - **Inteligência Artificial**:
   - **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google.
   - **Fluxos de IA**:
+    - `processLivroPdf`: Processa o texto de um PDF de livro e extrai seus dados e atos.
     - `automatedValidation`: Valida dados em um texto simulado de documento.
     - `summarizeClientHistory`: Gera um resumo do histórico de atos de um cliente.
 - **Gerenciamento de Formulários**:
@@ -45,13 +48,13 @@ O projeto é construído sobre uma base de tecnologias modernas, focadas em perf
 ├── data/              # Dados iniciais para popular o localStorage
 ├── services/          # Serviços de comunicação (mock ou real)
 ├── ai/                # Lógica de Inteligência Artificial com Genkit
-│   ├── flows/         # Fluxos de IA (validação, resumo)
+│   ├── flows/         # Fluxos de IA (processamento de livro, validação, resumo)
 │   └── genkit.ts      # Configuração do Genkit
 ├── app/               # Rotas e páginas do Next.js (App Router)
 │   ├── dashboard/     # Layout e páginas da área logada
 │   └── page.tsx       # Página de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: ValidationDialog, ClientFormDialog, LivroFormDialog, AtoFormDialog, AtosPorMesChart)
+│   ├── dashboard/     # Componentes específicos do dashboard (ex: LivroUpload, ValidationDialog, ClientFormDialog, AtoFormDialog, AtosPorMesChart)
 │   └── ui/            # Componentes base do ShadCN
 ├── hooks/             # Hooks customizados (ex: useToast, use-mobile)
 └── lib/               # Funções utilitárias e actions

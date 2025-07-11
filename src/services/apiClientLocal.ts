@@ -26,6 +26,7 @@ export interface Livro {
     ano: number;
     status: string;
     totalAtos: number;
+    conteudoMarkdown?: string;
 }
 
 export interface Ato {
@@ -68,13 +69,28 @@ export const getLivroById = async (livroId: string): Promise<Livro | null> => {
     return livros.find(livro => livro.id === livroId) || null;
 }
 
-export const createLivro = async (livroData: Omit<Livro, 'id'>): Promise<Livro> => {
-    await delay(800);
-    console.log("MOCK API: Criando novo livro...");
+export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'dadosExtraidos'>[]): Promise<Livro> => {
+    await delay(1200);
+    console.log("MOCK API: Criando novo livro com atos via processamento de PDF...");
     const livros: Livro[] = getFromStorage('actnexus_livros');
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+
     const novoLivro: Livro = { ...livroData, id: `livro-${livroData.numero}-${livroData.ano}-${Date.now()}` };
+    
+    const novosAtos: Ato[] = atosData.map(ato => ({
+        ...ato,
+        id: `ato-${novoLivro.id}-${ato.numeroAto}-${Date.now()}`,
+        livroId: novoLivro.id,
+        urlPdf: "/path/to/dummy.pdf",
+        dadosExtraidos: null,
+    }));
+
     livros.push(novoLivro);
+    todosAtos.push(...novosAtos);
+
     saveToStorage('actnexus_livros', livros);
+    saveToStorage('actnexus_atos', todosAtos);
+    
     return novoLivro;
 }
 

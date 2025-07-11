@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -13,30 +14,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, PlusCircle } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import Loading from '../loading';
 import { useRouter } from 'next/navigation';
-import { LivroFormDialog } from '@/components/dashboard/livro-form-dialog';
 import { useToast } from '@/hooks/use-toast';
-
-interface UserProfile {
-    role: string;
-}
+import { LivroUpload } from '@/components/dashboard/livro-upload';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LivrosPage() {
     const [livros, setLivros] = useState<Livro[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [user, setUser] = useState<UserProfile | null>(null);
     const router = useRouter();
     const { toast } = useToast();
-
-    useEffect(() => {
-        const userData = localStorage.getItem("actnexus_user");
-        if (userData) {
-            setUser(JSON.parse(userData));
-        }
-    }, []);
 
     const loadLivros = useCallback(async () => {
         setIsLoading(true);
@@ -56,18 +45,16 @@ export default function LivrosPage() {
     }, [toast]);
     
     useEffect(() => {
-        // Popula o localStorage com dados iniciais se não existirem
         populateInitialData();
         loadLivros();
     }, [loadLivros]);
 
-    const handleLivroCreated = () => {
-        setIsFormOpen(false);
+    const handleLivroProcessed = () => {
         toast({
             title: 'Sucesso!',
-            description: 'Novo livro cadastrado.',
+            description: 'Novo livro e seus atos foram cadastrados.',
         });
-        loadLivros(); // Recarrega a lista de livros
+        loadLivros();
     }
 
     const getStatusVariant = (status: string) => {
@@ -88,68 +75,70 @@ export default function LivrosPage() {
     }
 
     return (
-        <>
-            <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="font-headline text-3xl font-bold tracking-tight">Acervo de Livros</h1>
                         <p className="text-muted-foreground">
-                            Gerencie os livros e seus respectivos atos notariais.
+                            Visualize os livros e seus respectivos atos notariais.
                         </p>
                     </div>
-                    {user?.role === 'admin' && (
-                        <Button onClick={() => setIsFormOpen(true)}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Novo Livro
-                        </Button>
-                    )}
                 </div>
 
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[100px]">Número</TableHead>
-                                <TableHead className="w-[100px]">Ano</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Total de Atos</TableHead>
-                                <TableHead className="w-[100px]"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {livros.length > 0 ? (
-                                livros.map((livro) => (
-                                    <TableRow key={livro.id}>
-                                        <TableCell className="font-medium">{livro.numero.toString().padStart(3, '0')}</TableCell>
-                                        <TableCell>{livro.ano}</TableCell>
-                                        <TableCell>
-                                        <Badge variant={getStatusVariant(livro.status) as any}>{livro.status}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">{livro.totalAtos}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/livros/${livro.id}`)}>
-                                                <Eye className="h-4 w-4" />
-                                                <span className="sr-only">Visualizar</span>
-                                            </Button>
-                                        </TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Livros Cadastrados</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[100px]">Número</TableHead>
+                                        <TableHead className="w-[100px]">Ano</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Total de Atos</TableHead>
+                                        <TableHead className="w-[100px]"></TableHead>
                                     </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">
-                                        Nenhum livro encontrado.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
+                                </TableHeader>
+                                <TableBody>
+                                    {livros.length > 0 ? (
+                                        livros.map((livro) => (
+                                            <TableRow key={livro.id}>
+                                                <TableCell className="font-medium">{livro.numero.toString().padStart(3, '0')}</TableCell>
+                                                <TableCell>{livro.ano}</TableCell>
+                                                <TableCell>
+                                                <Badge variant={getStatusVariant(livro.status) as any}>{livro.status}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">{livro.totalAtos}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/livros/${livro.id}`)}>
+                                                        <Eye className="h-4 w-4" />
+                                                        <span className="sr-only">Visualizar</span>
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">
+                                                Nenhum livro encontrado.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-            <LivroFormDialog 
-                isOpen={isFormOpen}
-                setIsOpen={setIsFormOpen}
-                onLivroCreated={handleLivroCreated}
-            />
-        </>
+            <div className="lg:col-span-1">
+                 <div className="sticky top-8">
+                    <LivroUpload onLivroProcessed={handleLivroProcessed} />
+                 </div>
+            </div>
+        </div>
     );
 }
+

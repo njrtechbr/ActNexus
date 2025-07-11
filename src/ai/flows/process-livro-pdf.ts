@@ -1,0 +1,88 @@
+
+'use server';
+/**
+ * @fileOverview A Genkit flow for processing a notarial book PDF.
+ *
+ * This file defines a flow that takes the text content of a book, extracts its metadata
+ * (number, year) and all its individual acts, and transforms it into a structured
+ * Markdown format for easy system ingestion.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+
+// Input Schema: The text extracted from the PDF
+const ProcessLivroPdfInputSchema = z.object({
+  pdfText: z.string().describe('The full text content extracted from the book PDF.'),
+});
+export type ProcessLivroPdfInput = z.infer<typeof ProcessLivroPdfInputSchema>;
+
+// Output Schema: The structured Markdown content
+const ProcessLivroPdfOutputSchema = z.object({
+  markdownContent: z.string().describe('The structured Markdown content representing the entire book and its acts.'),
+});
+export type ProcessLivroPdfOutput = z.infer<typeof ProcessLivroPdfOutputSchema>;
+
+// The main exported function that clients will call.
+export async function processLivroPdf(input: ProcessLivroPdfInput): Promise<ProcessLivroPdfOutput> {
+  return processLivroPdfFlow(input);
+}
+
+// Genkit Prompt: Instructs the AI on how to perform the transformation
+const processLivroPdfPrompt = ai.definePrompt({
+  name: 'processLivroPdfPrompt',
+  input: { schema: ProcessLivroPdfInputSchema },
+  output: { schema: ProcessLivroPdfOutputSchema },
+  prompt: `
+Você é um assistente de cartório especialista em digitalização e estruturação de documentos.
+Sua tarefa é receber o texto completo de um livro de atos notariais e transformá-lo em um arquivo Markdown estruturado.
+
+O formato de saída DEVE seguir estritamente a seguinte estrutura:
+
+---
+numero: [Número do Livro]
+ano: [Ano do Livro]
+status: Processando
+---
+
+# Livro [Número do Livro]/[Ano do Livro]
+
+## Atos Registrados
+
+### Ato [Número do Ato 1]
+- **Tipo:** [Tipo do Ato 1]
+- **Data:** [Data do Ato 1 no formato AAAA-MM-DD]
+- **Partes:**
+  - [Nome da Parte 1]
+  - [Nome da Parte 2]
+
+### Ato [Número do Ato 2]
+- **Tipo:** [Tipo do Ato 2]
+- **Data:** [Data do Ato 2 no formato AAAA-MM-DD]
+- **Partes:**
+  - [Nome da Parte 1]
+  - [Nome da Parte 2]
+
+... (repita para todos os atos encontrados no texto)
+
+Analise o texto de entrada para extrair todas as informações necessárias. O status do livro deve ser sempre "Processando".
+
+Texto de Entrada:
+{{{pdfText}}}
+`,
+});
+
+// Genkit Flow: Orchestrates the call to the AI prompt
+const processLivroPdfFlow = ai.defineFlow(
+  {
+    name: 'processLivroPdfFlow',
+    inputSchema: ProcessLivroPdfInputSchema,
+    outputSchema: ProcessLivroPdfOutputSchema,
+  },
+  async (input) => {
+    const { output } = await processLivroPdfPrompt(input);
+    return {
+      markdownContent: output!.markdownContent,
+    };
+  }
+);
