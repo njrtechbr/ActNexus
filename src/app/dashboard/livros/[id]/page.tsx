@@ -133,7 +133,7 @@ export default function DetalhesLivroPage() {
                         </Button>
                         <div>
                             <h1 className="font-headline text-3xl font-bold tracking-tight">
-                                Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano}
+                                Livro {livro.numero.toString().padStart(3, '0')}/{livro.ano} - {livro.tipo}
                             </h1>
                             <p className="text-muted-foreground">
                                 Visualize e gerencie as folhas (atos) registradas neste livro.

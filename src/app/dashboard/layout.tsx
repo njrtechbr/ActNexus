@@ -51,6 +51,13 @@ export default function DashboardLayout({
     }
   }, []);
 
+  const isLinkActive = (path: string, itemHref: string) => {
+    if (itemHref === '/dashboard') {
+        return path === itemHref;
+    }
+    return path.startsWith(itemHref);
+  }
+
   return (
     <SidebarProvider>
       <Sidebar>
@@ -63,7 +70,7 @@ export default function DashboardLayout({
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.startsWith(item.href) && item.href.length > 10 ? pathname === item.href : pathname.startsWith(item.href)}
+                  isActive={isLinkActive(pathname, item.href)}
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
