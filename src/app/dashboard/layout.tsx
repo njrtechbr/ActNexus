@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Book,
+  Users,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -22,6 +23,7 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/dashboard/livros", label: "Livros", icon: Book },
+  { href: "/dashboard/clientes", label: "Clientes", icon: Users },
 ];
 
 export default function DashboardLayout({
