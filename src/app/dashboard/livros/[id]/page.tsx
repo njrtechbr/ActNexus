@@ -21,7 +21,6 @@ import { AtoFormDialog } from '@/components/dashboard/ato-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
-import { MarkdownViewerDialog } from '@/components/dashboard/markdown-viewer-dialog';
 
 interface UserProfile {
     role: string;
@@ -45,9 +44,7 @@ export default function DetalhesLivroPage() {
     const [atos, setAtos] = useState<Ato[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [atoToEdit, setAtoToEdit] = useState<Ato | null>(null);
-    const [atoToViewMarkdown, setAtoToViewMarkdown] = useState<Ato | null>(null);
     const [isAtoFormOpen, setIsAtoFormOpen] = useState(false);
-    const [isMarkdownViewerOpen, setIsMarkdownViewerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [user, setUser] = useState<UserProfile | null>(null);
     const params = useParams();
@@ -106,8 +103,7 @@ export default function DetalhesLivroPage() {
     };
 
     const handleMarkdownClick = (ato: Ato) => {
-        setAtoToViewMarkdown(ato);
-        setIsMarkdownViewerOpen(true);
+        router.push(`/dashboard/livros/${livroId}/atos/${ato.id}`);
     };
     
     const handlePdfDownload = () => {
@@ -233,7 +229,7 @@ export default function DetalhesLivroPage() {
                                                      {ato.conteudoMarkdown && (
                                                         <Button variant="ghost" size="icon" onClick={() => handleMarkdownClick(ato)}>
                                                             <FileCode className="h-4 w-4" />
-                                                            <span className="sr-only">Ver Markdown do Ato</span>
+                                                            <span className="sr-only">Ver Conteúdo do Ato</span>
                                                         </Button>
                                                      )}
                                                     {user?.role === 'admin' && canAverbate && (
@@ -270,13 +266,6 @@ export default function DetalhesLivroPage() {
                 setIsOpen={setIsAtoFormOpen}
                 onAtoSaved={handleAtoSaved}
                 atoToEdit={atoToEdit}
-            />
-            
-            <MarkdownViewerDialog
-                isOpen={isMarkdownViewerOpen}
-                setIsOpen={setIsMarkdownViewerOpen}
-                markdownContent={atoToViewMarkdown?.conteudoMarkdown || ''}
-                ato={atoToViewMarkdown}
             />
         </>
     );

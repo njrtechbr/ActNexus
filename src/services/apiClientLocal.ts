@@ -99,7 +99,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id'>, atosData:
         livroId: novoLivro.id,
         urlPdf: "/path/to/dummy.pdf",
         averbacoes: [],
-        conteudoMarkdown: ato.conteudoMarkdown // Garante que o markdown do ato seja salvo
+        conteudoMarkdown: ato.conteudoMarkdown
     }));
 
     livros.push(novoLivro);
@@ -119,6 +119,13 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   const atosDoLivro = todosAtos.filter((ato: any) => ato.livroId === livroId);
   return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
+
+export const getAtoById = async (atoId: string): Promise<Ato | null> => {
+    await delay(200);
+    console.log(`MOCK API: Buscando ato pelo ID ${atoId}...`);
+    const atos: Ato[] = getFromStorage('actnexus_atos');
+    return atos.find(ato => ato.id === atoId) || null;
+}
 
 export const updateAto = async (atoId: string, novaAverbacao: Averbacao): Promise<Ato | null> => {
     await delay(600);
