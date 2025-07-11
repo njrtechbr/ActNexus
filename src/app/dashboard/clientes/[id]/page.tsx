@@ -157,9 +157,9 @@ export default function DetalhesClientePage() {
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm">
                                 {cliente.dadosAdicionais.map(item => (
-                                    <div key={item.label} className="flex flex-col border-b pb-2 last:border-b-0">
+                                    <div key={item.label} className="flex justify-between items-center border-b pb-2 last:border-b-0">
                                         <span className="font-medium text-muted-foreground">{item.label}</span>
-                                        <span className="font-semibold text-right text-foreground">{item.value}</span>
+                                        <span className="font-semibold text-right text-foreground max-w-[70%] truncate" title={item.value}>{item.value}</span>
                                     </div>
                                 ))}
                             </CardContent>

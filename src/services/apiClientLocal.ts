@@ -42,6 +42,23 @@ export interface Averbacao {
     dataRegistro: string; // ISO String - Data em que foi salva no sistema, gerada automaticamente
 }
 
+interface ExtractedDetail {
+    label: string;
+    value: string;
+}
+
+interface InvolvedParty {
+    nome: string;
+    tipo: string;
+    detalhes: ExtractedDetail[];
+}
+
+export interface ExtractedActData {
+    detalhesGerais: ExtractedDetail[];
+    partes: InvolvedParty[];
+}
+
+
 export interface Ato {
     id: string;
     livroId: string;
@@ -53,7 +70,7 @@ export interface Ato {
     averbacoes: Averbacao[];
     escrevente?: string;
     conteudoMarkdown?: string;
-    dadosExtraidos?: { label: string; value: string; }[];
+    dadosExtraidos?: ExtractedActData;
 }
 
 export interface DocumentoCliente {
@@ -139,7 +156,7 @@ export const getAtoById = async (atoId: string): Promise<Ato | null> => {
 
 type UpdateAtoPayload = {
     averbacao?: Averbacao;
-    dadosExtraidos?: { label: string; value: string; }[];
+    dadosExtraidos?: ExtractedActData;
 };
 
 export const updateAto = async (atoId: string, payload: UpdateAtoPayload): Promise<Ato | null> => {

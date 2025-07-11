@@ -6,7 +6,7 @@
  *
  * This flow takes the Markdown content of an act and uses AI to extract
  * a structured list of key-value pairs representing the most important
- * information within the document.
+ * information within the document, grouped by the involved parties.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,14 +18,21 @@ const ExtractActDetailsInputSchema = z.object({
 });
 export type ExtractActDetailsInput = z.infer<typeof ExtractActDetailsInputSchema>;
 
-// Output Schema: A list of extracted key-value pairs
+// Output Schema
 const ExtractedDetailSchema = z.object({
-    label: z.string().describe("The label for the extracted detail (e.g., 'Outorgante', 'CPF', 'Objeto')."),
+    label: z.string().describe("The label for the extracted detail (e.g., 'CPF', 'Endereço')."),
     value: z.string().describe("The value of the extracted detail."),
 });
 
+const InvolvedPartySchema = z.object({
+    nome: z.string().describe("The full name of the involved party."),
+    tipo: z.string().describe("The role of the party in the act (e.g., 'Outorgante', 'Vendedor')."),
+    detalhes: z.array(ExtractedDetailSchema).describe("A list of key details specific to this party.")
+});
+
 const ExtractActDetailsOutputSchema = z.object({
-  details: z.array(ExtractedDetailSchema).describe("An array of key details extracted from the act."),
+  detalhesGerais: z.array(ExtractedDetailSchema).describe("An array of general details about the act itself (e.g., 'Objeto', 'Prazo de Validade')."),
+  partes: z.array(InvolvedPartySchema).describe("An array of the parties involved in the act and their specific details."),
 });
 export type ExtractActDetailsOutput = z.infer<typeof ExtractActDetailsOutputSchema>;
 
@@ -42,13 +49,11 @@ const extractActDetailsPrompt = ai.definePrompt({
   output: { schema: ExtractActDetailsOutputSchema },
   prompt: `
 Você é um assistente de cartório especialista em analisar documentos legais.
-Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais importantes em uma lista de pares de "rótulo" e "valor".
+Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais importantes de forma estruturada.
 
-Identifique os detalhes cruciais como:
-- As partes envolvidas (Outorgante, Outorgado, Vendedor, Comprador, etc.) e seus documentos (CPF/CNPJ).
-- O objeto principal do ato (ex: 'Transferência do veículo X', 'Compra e venda do imóvel Y').
-- Prazos, valores ou condições importantes.
-- O local e a data do documento.
+Divida as informações em duas categorias:
+1.  **detalhesGerais**: Informações que pertencem ao ato como um todo (Ex: Objeto do ato, Prazos, Valores, Local e Data).
+2.  **partes**: Informações específicas de cada pessoa ou empresa envolvida. Para cada parte, identifique o nome, o tipo (Outorgante, Outorgado, Vendedor, etc.) e uma lista de detalhes (CPF, CNPJ, Endereço, etc.).
 
 Seja conciso e direto nos valores. Evite texto introdutório.
 
