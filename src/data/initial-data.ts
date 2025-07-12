@@ -282,7 +282,7 @@ const initialConfig = {
 
 
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v16');
+    const isPopulated = localStorage.getItem('actnexus_populated_v17');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
@@ -293,6 +293,6 @@ export function populateInitialData() {
         localStorage.setItem('actnexus_nomes_documento', JSON.stringify(initialNomesDocumento));
         localStorage.setItem('actnexus_tipos_contato', JSON.stringify(initialTiposContato));
         localStorage.setItem('actnexus_config', JSON.stringify(initialConfig));
-        localStorage.setItem('actnexus_populated_v16', 'true');
+        localStorage.setItem('actnexus_populated_v17', 'true');
     }
 }
