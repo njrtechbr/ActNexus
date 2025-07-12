@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, Upload } from 'lucide-react';
 import Loading from '../loading';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Link from 'next/link';
 
 export default function LivrosPage() {
     const [livros, setLivros] = useState<Livro[]>([]);
@@ -93,13 +94,19 @@ export default function LivrosPage() {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h1 className="font-headline text-3xl font-bold tracking-tight">Acervo de Livros</h1>
                         <p className="text-muted-foreground">
                             Visualize os livros e seus respectivos atos notariais. Total de {livros.length} livros.
                         </p>
                     </div>
+                     <Button asChild>
+                        <Link href="/dashboard/livros/envio-em-lote">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Envio em Lote
+                        </Link>
+                    </Button>
                 </div>
 
                 {Object.keys(livrosAgrupados).length > 0 ? (
