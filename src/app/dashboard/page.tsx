@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -9,6 +10,7 @@ import { getLivros, getAtosByLivroId, getClientes, type Livro, type Ato, type Cl
 import { populateInitialData } from "@/data/initial-data";
 import Loading from "./loading";
 import { AtosPorMesChart } from "@/components/dashboard/atos-por-mes-chart";
+import { MinuteChecker } from "@/components/dashboard/minute-checker";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -130,6 +132,9 @@ export default function DashboardPage() {
             <SemanticSearch />
             <PdfUpload />
         </div>
+      </div>
+      <div>
+        <MinuteChecker />
       </div>
     </div>
   );
