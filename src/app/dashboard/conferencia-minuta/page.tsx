@@ -79,12 +79,12 @@ export default function ConferenciaMinutaPage() {
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
             
-            VENDEDOR: João Santos, brasileiro, casado, autônomo, portador do CPF 555.666.777-88.
+            VENDEDOR: João Santos, brasileiro, casado, portador do CPF 555.666.777-88.
             COMPRADORA: Maria Silva, brasileira, solteira, profissão advogada, portadora do CPF nº 111.222.333-44.
             
             O endereço da compradora é Rua das Flores, 123, Centro, São Paulo-SP, CEP 01000-000.
             O RG do vendedor não está mencionado na minuta.
-            O estado civil da compradora na minuta está como solteira, mas seu cadastro pode dizer outra coisa para teste.
+            O estado civil da compradora na minuta está como solteira, mas seu cadastro (corretamente) diz 'casada' para teste de divergência.
 
             Preço: R$ 500.000,00 (quinhentos mil reais).
             Data: ${new Date().toLocaleDateString('pt-BR')}

@@ -155,7 +155,7 @@ const initialClientes = [
     ],
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileira" },
-        { "label": "Estado Civil", "value": "solteira" },
+        { "label": "Estado Civil", "value": "casada" },
         { "label": "Profissão", "value": "advogada" },
         { "label": "RG", "value": "11.222.333-4 SSP/SP" },
         { "label": "CPF", "value": "111.222.333-44" },
