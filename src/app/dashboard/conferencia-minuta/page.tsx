@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from 'zod';
@@ -14,12 +14,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
 import { getClientesByNomes, updateCliente, type Cliente } from "@/services/apiClientLocal";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
     file: z.any().refine(file => !!file, { message: "O envio do arquivo PDF é obrigatório." }),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+type FieldsToSave = Record<string, { label: string; value: string }[]>;
 
 const getStatusInfo = (status: VerificationResult['status']) => {
     switch (status) {
@@ -36,6 +39,7 @@ export default function ConferenciaMinutaPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [checkResult, setCheckResult] = useState<CheckMinuteDataOutput | null>(null);
     const [clientesEncontrados, setClientesEncontrados] = useState<Cliente[]>([]);
+    const [fieldsToSave, setFieldsToSave] = useState<FieldsToSave>({});
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
 
@@ -44,13 +48,18 @@ export default function ConferenciaMinutaPage() {
     });
     
     const file = form.watch("file");
+
+    const clearState = () => {
+        setCheckResult(null);
+        setClientesEncontrados([]);
+        setFieldsToSave({});
+    }
     
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile && selectedFile.type === "application/pdf") {
             form.setValue("file", selectedFile);
-            setCheckResult(null);
-            setClientesEncontrados([]);
+            clearState();
         }
     };
     
@@ -65,21 +74,18 @@ export default function ConferenciaMinutaPage() {
         const droppedFile = e.dataTransfer.files?.[0];
         if (droppedFile && droppedFile.type === "application/pdf") {
              form.setValue("file", droppedFile);
-             setCheckResult(null);
-             setClientesEncontrados([]);
+             clearState();
         }
     };
 
     const clearFile = () => {
         form.setValue("file", null);
-        setCheckResult(null);
-        setClientesEncontrados([]);
+        clearState();
     }
 
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
-        setCheckResult(null);
-        setClientesEncontrados([]);
+        clearState();
 
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
@@ -134,45 +140,47 @@ export default function ConferenciaMinutaPage() {
             setIsSubmitting(false);
         }
     };
+
+    const handleFieldSelection = (clientName: string, field: { label: string, value: string }, isChecked: boolean) => {
+        setFieldsToSave(prev => {
+            const newFields = { ...prev };
+            const clientFields = newFields[clientName] || [];
+
+            if (isChecked) {
+                if (!clientFields.some(f => f.label === field.label)) {
+                    newFields[clientName] = [...clientFields, field];
+                }
+            } else {
+                newFields[clientName] = clientFields.filter(f => f.label !== field.label);
+            }
+            return newFields;
+        });
+    };
     
     const handleSaveChanges = async () => {
-        if (!checkResult || !clientesEncontrados.length) return;
-        setIsSaving(true);
-
-        const camposParaSalvar: Record<string, { label: string, value: string }[]> = {};
-        
-        checkResult.clientChecks.forEach(clientCheck => {
-            const campos = clientCheck.verifications
-                .filter(v => (v.status === 'Novo' || v.status === 'Divergente') && v.foundValue)
-                .map(v => ({ label: v.label, value: v.foundValue! }));
-
-            if (campos.length > 0) {
-                 camposParaSalvar[clientCheck.clientName] = campos;
-            }
-        });
-
-        if (Object.keys(camposParaSalvar).length === 0) {
-            toast({ title: "Nenhuma alteração para salvar."});
-            setIsSaving(false);
+        if (!Object.keys(fieldsToSave).length || !clientesEncontrados.length) {
+            toast({ title: "Nenhuma alteração para salvar.", description: "Selecione os campos que deseja sincronizar com o cadastro do cliente." });
             return;
         }
-
+        
+        setIsSaving(true);
         try {
             let updatedCount = 0;
-            for (const clientName in camposParaSalvar) {
+            let fieldsSaved = 0;
+            for (const clientName in fieldsToSave) {
                 const cliente = clientesEncontrados.find(c => c.nome === clientName);
-                if (cliente) {
-                    await updateCliente(cliente.id, { campos: camposParaSalvar[clientName] }, "Sistema (Conferência de Minuta)");
+                if (cliente && fieldsToSave[clientName].length > 0) {
+                    await updateCliente(cliente.id, { campos: fieldsToSave[clientName] }, "Sistema (Conferência de Minuta)");
                     updatedCount++;
+                    fieldsSaved += fieldsToSave[clientName].length;
                 }
             }
             toast({
                 title: "Dados Atualizados!",
-                description: `${updatedCount} perfis de cliente foram atualizados com as informações da minuta.`
+                description: `${fieldsSaved} campos foram sincronizados em ${updatedCount} perfis de cliente.`
             });
-            // Opcional: Limpar resultados após salvar
-            // setCheckResult(null); 
-            // setClientesEncontrados([]);
+            clearState();
+            form.setValue("file", null);
         } catch (error) {
              console.error("Erro ao salvar alterações:", error);
              toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível atualizar os perfis dos clientes."});
@@ -180,6 +188,8 @@ export default function ConferenciaMinutaPage() {
             setIsSaving(false);
         }
     }
+
+    const hasChangesToSave = checkResult?.clientChecks.some(c => c.verifications.some(v => v.status === 'Novo' || v.status === 'Divergente'));
     
     return (
         <div className="space-y-6">
@@ -283,37 +293,53 @@ export default function ConferenciaMinutaPage() {
                                                 <h4 className='font-semibold flex items-center gap-2'><User className='h-4 w-4'/>{clientCheck.clientName}</h4>
                                                 <Separator />
                                                 <div className='space-y-3 pt-2'>
-                                                    {clientCheck.verifications.map(v => (
-                                                        <div key={v.label} className="text-sm">
-                                                            <div className='flex items-center gap-2 font-medium'>
-                                                                <StatusIcon status={v.status} />
-                                                                <span>{v.label}</span>
-                                                                <span className="text-xs font-normal text-muted-foreground">({v.status})</span>
-                                                            </div>
-                                                            <div className='pl-6 text-muted-foreground'>
-                                                                {v.status === 'OK' && <p>Valor conferido: <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>}
-                                                                {v.status === 'Divergente' && (
-                                                                    <>
-                                                                        <p>Esperado (Cadastro): <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>
-                                                                        <p>Encontrado (Minuta): <span className='font-medium text-yellow-600'>{v.foundValue || 'N/A'}</span></p>
-                                                                    </>
+                                                    {clientCheck.verifications.map(v => {
+                                                        const isChange = (v.status === 'Novo' || v.status === 'Divergente') && !!v.foundValue;
+                                                        const fieldId = `${clientCheck.clientName}-${v.label}`;
+
+                                                        return (
+                                                            <div key={v.label} className="text-sm flex items-start gap-3">
+                                                                {isChange && (
+                                                                     <Checkbox
+                                                                        id={fieldId}
+                                                                        className="mt-1"
+                                                                        onCheckedChange={(checked) => handleFieldSelection(clientCheck.clientName, { label: v.label, value: v.foundValue! }, !!checked)}
+                                                                    />
                                                                 )}
-                                                                 {v.status === 'Novo' && (
-                                                                    <p>Novo dado encontrado: <span className='font-medium text-blue-600'>{v.foundValue || 'N/A'}</span></p>
-                                                                )}
-                                                                {v.status === 'Não Encontrado' && <p className='text-red-600'>Não foi encontrado no texto da minuta.</p>}
+                                                                <div className={`flex-1 ${!isChange ? 'ml-6' : ''}`}>
+                                                                    <div className='flex items-center gap-2 font-medium'>
+                                                                        <StatusIcon status={v.status} />
+                                                                        <label htmlFor={fieldId} className={isChange ? "cursor-pointer" : ""}>{v.label}</label>
+                                                                        <span className="text-xs font-normal text-muted-foreground">({v.status})</span>
+                                                                    </div>
+                                                                    <div className='pl-6 text-muted-foreground'>
+                                                                        {v.status === 'OK' && <p>Valor conferido: <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>}
+                                                                        {v.status === 'Divergente' && (
+                                                                            <>
+                                                                                <p>Esperado (Cadastro): <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>
+                                                                                <p>Encontrado (Minuta): <span className='font-medium text-yellow-600'>{v.foundValue || 'N/A'}</span></p>
+                                                                            </>
+                                                                        )}
+                                                                        {v.status === 'Novo' && (
+                                                                            <p>Novo dado encontrado: <span className='font-medium text-blue-600'>{v.foundValue || 'N/A'}</span></p>
+                                                                        )}
+                                                                        {v.status === 'Não Encontrado' && <p className='text-red-600'>Não foi encontrado no texto da minuta.</p>}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        )
+                                                    })}
                                                 </div>
                                             </div>
                                             )
                                         })}
                                     </div>
-                                    <Button onClick={handleSaveChanges} disabled={isSaving || isSubmitting}>
-                                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                        Salvar Dados nos Clientes
-                                    </Button>
+                                    {hasChangesToSave && (
+                                        <Button onClick={handleSaveChanges} disabled={isSaving || isSubmitting}>
+                                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                            Salvar Dados Selecionados
+                                        </Button>
+                                    )}
                                 </div>
                             )}
                         </div>
