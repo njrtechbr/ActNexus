@@ -10,6 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { getPrompt } from '@/services/promptService';
 
 const ProcessLivroPdfInputSchema = z.object({
   pdfText: z.string().describe('The full text content extracted from the book PDF.'),
@@ -25,52 +26,6 @@ export async function processLivroPdf(input: ProcessLivroPdfInput): Promise<Proc
   return processLivroPdfFlow(input);
 }
 
-const processLivroPdfPrompt = ai.definePrompt({
-  name: 'processLivroPdfPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
-  input: { schema: ProcessLivroPdfInputSchema },
-  output: { schema: ProcessLivroPdfOutputSchema },
-  prompt: `
-Você é um assistente de cartório especialista em digitalização e estruturação de documentos.
-Sua tarefa é receber o texto completo de um livro de atos notariais e transformá-lo em um arquivo Markdown estruturado.
-
-O formato de saída DEVE seguir estritamente a seguinte estrutura:
-
----
-numero: [Número do Livro]
-ano: [Ano do Livro]
-tipo: [Tipo do Livro, ex: Notas, Procuração, Escritura]
-status: Processando
-dataAbertura: [Data de Abertura no formato AAAA-MM-DD]
-dataFechamento: [Data de Fechamento no formato AAAA-MM-DD, se houver]
----
-
-# Livro [Número do Livro]/[Ano do Livro]
-
-## Atos Registrados
-
-### Ato [Número do Ato 1]
-- **Tipo:** [Tipo do Ato 1]
-- **Data:** [Data do Ato 1 no formato AAAA-MM-DD]
-- **Partes:**
-  - [Nome da Parte 1]
-  - [Nome da Parte 2]
-
-### Ato [Número do Ato 2]
-- **Tipo:** [Tipo do Ato 2]
-- **Data:** [Data do Ato 2 no formato AAAA-MM-DD]
-- **Partes:**
-  - [Nome da Parte 1]
-  - [Nome da Parte 2]
-
-... (repita para todos os atos encontrados no texto)
-
-Analise o texto de entrada para extrair todas as informações necessárias, incluindo as datas de abertura e fechamento do livro. O status do livro deve ser sempre "Processando". Se a data de fechamento não for encontrada, omita o campo 'dataFechamento'.
-
-Texto de Entrada:
-{{{pdfText}}}
-`
-});
 
 const processLivroPdfFlow = ai.defineFlow(
   {
@@ -79,6 +34,17 @@ const processLivroPdfFlow = ai.defineFlow(
     outputSchema: ProcessLivroPdfOutputSchema,
   },
   async (input) => {
+
+    const promptTemplate = await getPrompt('processLivroPdfPrompt');
+    
+    const processLivroPdfPrompt = ai.definePrompt({
+      name: 'processLivroPdfPrompt_dynamic',
+      model: 'googleai/gemini-1.5-flash-latest',
+      input: { schema: ProcessLivroPdfInputSchema },
+      output: { schema: ProcessLivroPdfOutputSchema },
+      prompt: promptTemplate,
+    });
+
     const { output } = await processLivroPdfPrompt(input);
     return {
       markdownContent: output!.markdownContent,

@@ -1,9 +1,11 @@
 
+import type { SystemPrompts } from './promptService';
+
 // Simula a latência da rede
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // Funções para simular a API usando localStorage
-const getFromStorage = (key: string, defaultValue: any[] = []) => {
+const getFromStorage = (key: string, defaultValue: any | null = null) => {
   if (typeof window === 'undefined') {
     return defaultValue;
   }
@@ -23,6 +25,21 @@ const saveToStorage = (key: string, data: any) => {
 };
 
 // -- INTERFACES DE DADOS --
+export interface NotaryData {
+    nome: string;
+    endereco: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+    telefone: string;
+    email: string;
+    tabeliao: string;
+}
+
+export interface AppConfig {
+    prompts: SystemPrompts;
+    notaryData: NotaryData;
+}
 
 export interface AiUsageLog {
     id: string;
@@ -146,18 +163,45 @@ export interface Cliente {
 
 // -- FUNÇÕES EXPORTADAS --
 
+// System Config
+export const getFullConfig = async (): Promise<AppConfig | null> => {
+    await delay(100);
+    return getFromStorage('actnexus_config');
+}
+
+export const saveFullConfig = async (config: AppConfig): Promise<void> => {
+    await delay(100);
+    saveToStorage('actnexus_config', config);
+}
+
+
+// Prompts
+export const getPrompts = async (): Promise<SystemPrompts> => {
+    const config = await getFullConfig();
+    return config?.prompts || {};
+}
+
+export const updatePrompt = async (key: keyof SystemPrompts, text: string): Promise<void> => {
+    const config = await getFullConfig();
+    if (config) {
+        config.prompts[key] = text;
+        await saveFullConfig(config);
+    }
+}
+
+
 // AI Usage
 export const getAiUsageLogs = async (): Promise<AiUsageLog[]> => {
     await delay(300);
     console.log("MOCK API: Buscando logs de uso de IA...");
-    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs');
+    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs', []);
     return logs.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
 export const logAiUsage = async (logData: Omit<AiUsageLog, 'id'>): Promise<void> => {
     // Nao simular delay para não atrasar a resposta da IA
     console.log("MOCK API: Registrando uso de IA...");
-    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs');
+    const logs: AiUsageLog[] = getFromStorage('actnexus_ai_usage_logs', []);
     const newLog: AiUsageLog = {
         ...logData,
         id: `log-${Date.now()}-${Math.random()}`,
@@ -171,22 +215,22 @@ export const logAiUsage = async (logData: Omit<AiUsageLog, 'id'>): Promise<void>
 export const getLivros = async (): Promise<Livro[]> => {
   await delay(500);
   console.log("MOCK API: Buscando livros...");
-  const livros: Livro[] = getFromStorage('actnexus_livros');
+  const livros: Livro[] = getFromStorage('actnexus_livros', []);
   return livros.sort((a,b) => b.ano - a.ano || b.numero - a.numero);
 };
 
 export const getLivroById = async (livroId: string): Promise<Livro | null> => {
     await delay(200);
     console.log(`MOCK API: Buscando livro pelo ID ${livroId}...`);
-    const livros: Livro[] = getFromStorage('actnexus_livros');
+    const livros: Livro[] = getFromStorage('actnexus_livros', []);
     return livros.find(livro => livro.id === livroId) || null;
 }
 
 export const createLivroComAtos = async (livroData: Omit<Livro, 'id' | 'totalAtos'>, atosData: Omit<Ato, 'id' | 'livroId' | 'urlPdf' | 'averbacoes'>[]): Promise<Livro> => {
     await delay(1200);
     console.log("MOCK API: Criando novo livro com atos via processamento de PDF...");
-    const livros: Livro[] = getFromStorage('actnexus_livros');
-    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    const livros: Livro[] = getFromStorage('actnexus_livros', []);
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos', []);
 
     const novoLivro: Livro = { 
         ...livroData, 
@@ -215,7 +259,7 @@ export const createLivroComAtos = async (livroData: Omit<Livro, 'id' | 'totalAto
 export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
   await delay(300);
   console.log(`MOCK API: Buscando atos para o livro ${livroId}...`);
-  const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+  const todosAtos: Ato[] = getFromStorage('actnexus_atos', []);
   const atosDoLivro = todosAtos.filter((ato: any) => ato.livroId === livroId);
   return atosDoLivro.sort((a, b) => a.numeroAto - b.numeroAto);
 };
@@ -223,7 +267,7 @@ export const getAtosByLivroId = async (livroId: string): Promise<Ato[]> => {
 export const getAtoById = async (atoId: string): Promise<Ato | null> => {
     await delay(200);
     console.log(`MOCK API: Buscando ato pelo ID ${atoId}...`);
-    const atos: Ato[] = getFromStorage('actnexus_atos');
+    const atos: Ato[] = getFromStorage('actnexus_atos', []);
     return atos.find(ato => ato.id === atoId) || null;
 }
 
@@ -235,7 +279,7 @@ type UpdateAtoPayload = {
 export const updateAto = async (atoId: string, payload: UpdateAtoPayload): Promise<Ato | null> => {
     await delay(600);
     console.log(`MOCK API: Atualizando ato ${atoId}...`);
-    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos', []);
     const atoIndex = todosAtos.findIndex(a => a.id === atoId);
 
     if (atoIndex === -1) {
@@ -268,7 +312,7 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
     const cliente = await getClienteById(clienteId);
     if (!cliente) return [];
     
-    const todosAtos: Ato[] = getFromStorage('actnexus_atos');
+    const todosAtos: Ato[] = getFromStorage('actnexus_atos', []);
     // Filtra atos onde o nome do cliente aparece na lista de partes
     return todosAtos.filter((ato: any) => ato.partes.some((p: string) => p.toLowerCase().includes(cliente.nome.toLowerCase())));
 }
@@ -277,21 +321,21 @@ export const getAtosByClienteId = async (clienteId: string): Promise<Ato[]> => {
 export const getClientes = async (): Promise<Cliente[]> => {
     await delay(400);
     console.log("MOCK API: Buscando clientes...");
-    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes', []);
     return clientes.sort((a, b) => a.nome.localeCompare(b.nome));
 };
 
 export const getClienteById = async (clienteId: string): Promise<Cliente | null> => {
     await delay(200);
     console.log(`MOCK API: Buscando cliente pelo ID ${clienteId}...`);
-    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes', []);
     return clientes.find(c => c.id === clienteId) || null;
 }
 
 export const getClientesByNomes = async (nomes: string[]): Promise<Cliente[]> => {
     await delay(200);
     console.log(`MOCK API: Buscando clientes pelos nomes: ${nomes.join(', ')}...`);
-    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes', []);
     const lowerCaseNomes = nomes.map(n => n.toLowerCase());
     return clientes.filter(c => lowerCaseNomes.includes(c.nome.toLowerCase()));
 };
@@ -300,7 +344,7 @@ export const getClientesByNomes = async (nomes: string[]): Promise<Cliente[]> =>
 export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<Cliente> => {
     await delay(800);
     console.log("MOCK API: Criando novo cliente...");
-    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes', []);
     const novoCliente: Cliente = { 
         ...clienteData, 
         id: `cliente-${clienteData.cpfCnpj.replace(/\D/g, '')}`, 
@@ -361,7 +405,7 @@ const generateEvents = (oldData: Cliente, newData: Cliente, autor: string): Even
 export const updateCliente = async (clienteId: string, payload: UpdateClientePayload, autor: string): Promise<Cliente | null> => {
     await delay(400);
     console.log(`MOCK API: Atualizando cliente ${clienteId}...`);
-    const clientes: Cliente[] = getFromStorage('actnexus_clientes');
+    const clientes: Cliente[] = getFromStorage('actnexus_clientes', []);
     const clienteIndex = clientes.findIndex(c => c.id === clienteId);
 
     if (clienteIndex === -1) {
@@ -408,7 +452,7 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
 }
 
 
-// Configurações
+// Configurações Parametrizaveis
 const createConfigManager = (storageKey: string, defaultValues: string[]) => ({
   getAll: async (): Promise<string[]> => {
     await delay(100);

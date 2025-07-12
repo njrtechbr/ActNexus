@@ -1,4 +1,6 @@
 
+import { promptTexts, type SystemPrompts } from "@/services/promptService";
+
 const initialLivros = [
   {
     "id": "livro-001",
@@ -260,8 +262,27 @@ const initialTiposContato = [
     "whatsapp"
 ];
 
+const initialPrompts: SystemPrompts = promptTexts;
+
+const initialNotaryData = {
+    nome: "Cartório Exemplo",
+    tabeliao: "Fulano de Tal",
+    endereco: "Rua Exemplo, 123",
+    cidade: "São Paulo",
+    estado: "SP",
+    cep: "01234-567",
+    telefone: "(11) 5555-4444",
+    email: "contato@cartorioexemplo.com"
+};
+
+const initialConfig = {
+    prompts: initialPrompts,
+    notaryData: initialNotaryData
+};
+
+
 export function populateInitialData() {
-    const isPopulated = localStorage.getItem('actnexus_populated_v15');
+    const isPopulated = localStorage.getItem('actnexus_populated_v16');
 
     if (!isPopulated) {
         localStorage.setItem('actnexus_livros', JSON.stringify(initialLivros));
@@ -271,6 +292,7 @@ export function populateInitialData() {
         localStorage.setItem('actnexus_tipos_ato', JSON.stringify(initialTiposAto));
         localStorage.setItem('actnexus_nomes_documento', JSON.stringify(initialNomesDocumento));
         localStorage.setItem('actnexus_tipos_contato', JSON.stringify(initialTiposContato));
-        localStorage.setItem('actnexus_populated_v15', 'true');
+        localStorage.setItem('actnexus_config', JSON.stringify(initialConfig));
+        localStorage.setItem('actnexus_populated_v16', 'true');
     }
 }

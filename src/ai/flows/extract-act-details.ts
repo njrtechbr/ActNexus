@@ -11,6 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { getPrompt } from '@/services/promptService';
 
 const ExtractActDetailsInputSchema = z.object({
   actContent: z.string().describe("The full Markdown content of the notarial act."),
@@ -39,29 +40,6 @@ export async function extractActDetails(input: ExtractActDetailsInput): Promise<
   return extractActDetailsFlow(input);
 }
 
-const extractActDetailsPrompt = ai.definePrompt({
-  name: 'extractActDetailsPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
-  input: { schema: ExtractActDetailsInputSchema },
-  output: { schema: ExtractActDetailsOutputSchema },
-  prompt: `
-Você é um assistente de cartório especialista em analisar documentos legais.
-Sua tarefa é ler o conteúdo de um ato notarial e extrair as informações mais importantes de forma estruturada.
-
-Divida as informações em duas categorias:
-1.  **detalhesGerais**: Informações que pertencem ao ato como um todo (Ex: Objeto do ato, Prazos, Valores, Local e Data).
-2.  **partes**: Informações específicas de cada pessoa ou empresa envolvida. Para cada parte, identifique:
-    - O **nome** completo.
-    - O **tipo** (Outorgante, Outorgado, Vendedor, etc.).
-    - A **qualificação completa** nos mínimos detalhes, extraindo cada informação como um par de label/value (Ex: 'Nacionalidade', 'Estado Civil', 'Profissão', 'RG', 'CPF', 'Endereço Completo').
-
-Seja exaustivo e preciso na extração da qualificação. Evite texto introdutório na resposta.
-
-Conteúdo do Ato:
-{{{actContent}}}
-`
-});
-
 const extractActDetailsFlow = ai.defineFlow(
   {
     name: 'extractActDetailsFlow',
@@ -69,6 +47,16 @@ const extractActDetailsFlow = ai.defineFlow(
     outputSchema: ExtractActDetailsOutputSchema,
   },
   async (input) => {
+    const promptTemplate = await getPrompt('extractActDetailsPrompt');
+
+    const extractActDetailsPrompt = ai.definePrompt({
+      name: 'extractActDetailsPrompt_dynamic',
+      model: 'googleai/gemini-1.5-flash-latest',
+      input: { schema: ExtractActDetailsInputSchema },
+      output: { schema: ExtractActDetailsOutputSchema },
+      prompt: promptTemplate
+    });
+
     const { output } = await extractActDetailsPrompt(input);
     return output!;
   }

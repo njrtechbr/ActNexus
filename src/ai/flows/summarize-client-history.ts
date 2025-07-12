@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
+import { getPrompt } from '@/services/promptService';
 
 // Define schemas that mirror the structure in apiClientLocal.ts
 const ContatoSchema = z.object({
@@ -76,68 +77,6 @@ export async function summarizeClientHistory(input: SummarizeClientHistoryInput)
   return summarizeClientHistoryFlow(input);
 }
 
-const summarizeClientHistoryPrompt = ai.definePrompt({
-  name: 'summarizeClientHistoryPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
-  input: {schema: SummarizeClientHistoryInputSchema},
-  output: {schema: SummarizeClientHistoryOutputSchema},
-  prompt: `
-Você é um assistente de cartório especialista em analisar perfis de clientes.
-Sua tarefa é gerar um resumo em **português do Brasil**, conciso e em linguagem natural, sobre o perfil completo de um cliente, com base em todos os dados fornecidos.
-O resumo deve ser um único parágrafo, profissional e direto.
-
-Analise todos os dados a seguir para criar um resumo coeso. Destaque os pontos mais importantes, como a natureza do cliente (PF/PJ), o histórico de atividades, a completude do cadastro e quaisquer pontos de atenção (como documentos perto de expirar).
-
-**Dados do Cliente:**
-- Nome: {{{nome}}}
-- CPF/CNPJ: {{{cpfCnpj}}}
-- Tipo: {{{tipo}}}
-
-{{#if contatos.length}}
-**Contatos:**
-{{#each contatos}}
-- {{this.tipo}}: {{this.valor}} ({{this.label}})
-{{/each}}
-{{/if}}
-
-{{#if enderecos.length}}
-**Endereços:**
-{{#each enderecos}}
-- {{this.logradouro}}, {{this.numero}} - {{this.bairro}}, {{this.cidade}}/{{this.estado}}
-{{/each}}
-{{/if}}
-
-{{#if documentos.length}}
-**Documentos:**
-{{#each documentos}}
-- {{this.nome}} {{#if this.dataValidade}}(Validade: {{this.dataValidade}}){{/if}}
-{{/each}}
-{{/if}}
-
-{{#if dadosAdicionais.length}}
-**Dados de Qualificação:**
-{{#each dadosAdicionais}}
-- {{this.label}}: {{this.value}}
-{{/each}}
-{{/if}}
-
-{{#if observacoes.length}}
-**Observações Existentes:**
-{{#each observacoes}}
-- {{this.texto}} (por {{this.autor}} em {{this.data}})
-{{/each}}
-{{/if}}
-
-{{#if atos.length}}
-**Histórico de Atos:**
-{{#each atos}}
-- Tipo: {{{this.type}}}, Data: {{{this.date}}}
-{{/each}}
-{{/if}}
-
-Gere o resumo em um parágrafo.
-`
-});
 
 const summarizeClientHistoryFlow = ai.defineFlow(
   {
@@ -149,8 +88,18 @@ const summarizeClientHistoryFlow = ai.defineFlow(
     if (input.atos.length === 0 && input.contatos?.length === 0 && input.enderecos?.length === 0) {
         return { summary: `${input.nome} possui um cadastro básico, sem histórico de atos ou informações de contato detalhadas.`};
     }
+    
+    const promptTemplate = await getPrompt('summarizeClientHistoryPrompt');
+    
+    const summarizeClientHistoryPrompt = ai.definePrompt({
+      name: 'summarizeClientHistoryPrompt_dynamic',
+      model: 'googleai/gemini-1.5-flash-latest',
+      input: {schema: SummarizeClientHistoryInputSchema},
+      output: {schema: SummarizeClientHistoryOutputSchema},
+      prompt: promptTemplate,
+    });
+    
     const {output} = await summarizeClientHistoryPrompt(input);
     return output!;
   }
 );
-

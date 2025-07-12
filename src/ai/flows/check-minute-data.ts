@@ -10,6 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { getPrompt } from '@/services/promptService';
+
 
 const VerificationInputSchema = z.object({
   minuteText: z.string().describe("The full text content of the act's minute/draft."),
@@ -52,45 +54,6 @@ export async function checkMinuteData(input: CheckMinuteDataInput): Promise<Chec
   return checkMinuteDataFlow(input);
 }
 
-const verifyDataPrompt = ai.definePrompt({
-  name: 'verifyDataPrompt',
-  model: 'googleai/gemini-1.5-flash-latest',
-  input: { schema: VerificationInputSchema },
-  output: { schema: CheckMinuteDataOutputSchema },
-  prompt: `
-Você é um assistente de cartório extremamente meticuloso, especializado em conferir minutas de atos antes da lavratura final.
-Sua tarefa é comparar o texto da minuta de um ato com os dados cadastrais dos clientes envolvidos para identificar qualquer inconsistência ou informação nova.
-
-Para cada cliente, você deve:
-1.  Analisar os dados do cadastro e tentar localizá-los na minuta. Definir o status:
-    -   'OK': Se o valor na minuta for idêntico ou semanticamente equivalente ao do cadastro.
-    -   'Divergente': Se o valor for encontrado, mas diferente do cadastro. Informe o valor encontrado.
-    -   'Não Encontrado': Se o campo do cadastro não for encontrado no texto da minuta.
-2.  Analisar a minuta e identificar informações de qualificação (como RG, Profissão, Estado Civil, etc.) que **NÃO** existem no cadastro do cliente. Definir o status:
-    -   'Novo': Se um dado relevante for encontrado na minuta, mas não existe no perfil do cliente. Informe o valor encontrado.
-
-Forneça um raciocínio claro para cada divergência ou dado novo.
-Adicione observações gerais em 'geral' se notar algo estranho no documento que não se encaixe em um campo específico.
-
-**Texto da Minuta para Conferência:**
----
-{{{minuteText}}}
----
-
-**Dados Cadastrais dos Clientes (Fonte da Verdade):**
----
-{{#each clientProfiles}}
-- **Cliente: {{this.nome}}**
-  {{#each this.dadosAdicionais}}
-  - {{this.label}}: {{this.value}}
-  {{/each}}
-{{/each}}
----
-
-Realize a análise e retorne o resultado no formato JSON especificado.
-`
-});
-
 
 const checkMinuteDataFlow = ai.defineFlow(
   {
@@ -106,6 +69,17 @@ const checkMinuteDataFlow = ai.defineFlow(
       return { geral: ["Perfis de cliente não fornecidos para verificação."], clientChecks: [] };
     }
     
+    const promptTemplate = await getPrompt('checkMinuteDataPrompt');
+
+    const verifyDataPrompt = ai.definePrompt({
+      name: 'verifyDataPrompt_dynamic', // Use a unique name to avoid conflicts if this flow runs concurrently
+      model: 'googleai/gemini-1.5-flash-latest',
+      input: { schema: VerificationInputSchema },
+      output: { schema: CheckMinuteDataOutputSchema },
+      prompt: promptTemplate,
+    });
+
+
     const { output: verificationOutput } = await verifyDataPrompt({
         minuteText: input.minuteText,
         clientProfiles: input.clientProfiles
