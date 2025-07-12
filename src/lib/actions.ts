@@ -87,3 +87,5 @@ export async function checkMinuteData(
 ): Promise<CheckMinuteDataOutput> {
     return await checkMinuteDataFlow(input);
 }
+
+    
