@@ -9,6 +9,7 @@ import {
   Users,
   Settings,
   BrainCircuit,
+  ClipboardCheck,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -32,6 +33,7 @@ const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/dashboard/livros", label: "Livros", icon: Book },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
+  { href: "/dashboard/conferencia-minuta", label: "Conferir Minuta", icon: ClipboardCheck },
 ];
 
 const adminMenuItems = [
