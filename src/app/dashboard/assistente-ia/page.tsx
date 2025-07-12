@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Send, Loader2, Bot, User, PlusCircle, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { conversationalAgent as agentAction } from "@/lib/actions";
+import { agentAction, generateConvoTitle as generateTitleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -41,7 +41,7 @@ export default function AssistenteIaPage() {
       } else {
         startNewConversation();
       }
-    } catch (error) {
+    } catch (error) => {
       console.error("Failed to load conversations from localStorage", error);
     }
   }, []);
@@ -72,9 +72,28 @@ export default function AssistenteIaPage() {
 
   const startNewConversation = () => {
     const newId = `convo-${Date.now()}`;
+    const newConversation = { id: newId, title: 'Nova Conversa', messages: [] };
+    setConversations(prev => [newConversation, ...prev]);
     setActiveConversationId(newId);
-    setConversations(prev => [{ id: newId, title: 'Nova Conversa', messages: [] }, ...prev]);
     inputRef.current?.focus();
+  };
+
+
+  const generateTitle = async (convoId: string, userQuery: string, assistantResponse: string) => {
+    try {
+      const historyForTitle = `Usuário: ${userQuery}\nAssistente: ${assistantResponse}`;
+      const result = await generateTitleAction({ conversationHistory: historyForTitle });
+      
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === convoId ? { ...c, title: result.title } : c
+        )
+      );
+
+    } catch (error) {
+        console.error("Failed to generate conversation title:", error);
+        // Silently fail, as this is not a critical function. The title will remain the default.
+    }
   };
 
 
@@ -83,14 +102,16 @@ export default function AssistenteIaPage() {
     if (!query.trim() || isLoading || !activeConversationId) return;
 
     const userMessage: Message = { role: 'user', content: query };
-    
+    const isFirstMessage = activeConversation?.messages.length === 0;
+
+    // Immediately update the conversation with the user's message
+    // If it's the first message, set a temporary title
     setConversations(prev =>
         prev.map(convo => {
             if (convo.id === activeConversationId) {
-                const isFirstMessage = convo.messages.length === 0;
                 return {
                     ...convo,
-                    title: isFirstMessage ? query : convo.title,
+                    title: isFirstMessage ? (query.length > 40 ? query.substring(0, 40) + '...' : query) : convo.title,
                     messages: [...convo.messages, userMessage],
                 };
             }
@@ -98,12 +119,14 @@ export default function AssistenteIaPage() {
         })
     );
 
+    const currentQuery = query;
     setQuery("");
     setIsLoading(true);
     
     try {
-      const result = await agentAction({ query });
+      const result = await agentAction({ query: currentQuery });
       const assistantMessage: Message = { role: 'assistant', content: result.response };
+       
        setConversations(prev =>
         prev.map(convo =>
           convo.id === activeConversationId
@@ -111,6 +134,11 @@ export default function AssistenteIaPage() {
             : convo
         )
       );
+      
+      // If it was the first message, trigger title generation in the background
+      if (isFirstMessage) {
+        generateTitle(activeConversationId, currentQuery, result.response);
+      }
 
     } catch (error) {
       console.error("A pesquisa do agente falhou:", error);

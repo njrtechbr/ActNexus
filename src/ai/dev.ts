@@ -10,6 +10,8 @@ import '@/ai/flows/extract-act-details.ts';
 import '@/ai/flows/generate-qualification.ts';
 import '@/ai/flows/check-minute-data.ts';
 import '@/ai/flows/conversational-agent.ts';
+import '@/ai/flows/generate-convo-title.ts';
+
 
 
 

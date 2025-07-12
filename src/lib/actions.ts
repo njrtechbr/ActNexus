@@ -49,6 +49,12 @@ import {
     type ConversationalAgentOutput,
 } from "@/ai/flows/conversational-agent";
 
+import {
+    generateConvoTitle as generateConvoTitleFlow,
+    type GenerateConvoTitleInput,
+    type GenerateConvoTitleOutput,
+} from "@/ai/flows/generate-convo-title";
+
 
 export async function automatedValidation(
   input: AutomatedValidationInput
@@ -98,4 +104,10 @@ export async function conversationalAgent(
     input: ConversationalAgentInput
 ): Promise<ConversationalAgentOutput> {
     return await conversationalAgentFlow(input);
+}
+
+export async function generateConvoTitle(
+    input: GenerateConvoTitleInput
+): Promise<GenerateConvoTitleOutput> {
+    return await generateConvoTitleFlow(input);
 }
