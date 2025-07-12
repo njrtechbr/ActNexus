@@ -10,8 +10,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { CampoAdicionalClienteSchema } from './summarize-client-history';
 
+const CampoAdicionalClienteSchema = z.object({
+    label: z.string(),
+    value: z.string(),
+});
 
 const ClientProfileSchema = z.object({
   nome: z.string().describe("The client's full name."),
