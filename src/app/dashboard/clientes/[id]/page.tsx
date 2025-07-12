@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getClienteById, getAtosByClienteId, updateCliente, type Cliente, type Ato, type Evento } from '@/services/apiClientLocal';
+import { getClienteById, getAtosByClienteId, updateCliente, getTiposDeContato, type Cliente, type Ato, type Evento } from '@/services/apiClientLocal';
 import { summarizeClientHistory } from '@/lib/actions';
 import { useParams, useRouter } from 'next/navigation';
 import Loading from './loading';
@@ -63,7 +63,7 @@ const getDocumentStatus = (doc: { dataValidade?: string | Date | null }): {text:
 
 const contatoSchema = z.object({
     id: z.string(),
-    tipo: z.enum(['email', 'telefone', 'whatsapp']),
+    tipo: z.string().min(1, { message: "O tipo é obrigatório."}),
     valor: z.string().min(1, { message: "O valor é obrigatório."}),
     label: z.string().optional(),
 });
@@ -105,6 +105,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function DetalhesClientePage() {
     const [cliente, setCliente] = useState<Cliente | null>(null);
     const [atos, setAtos] = useState<Ato[]>([]);
+    const [tiposDeContato, setTiposDeContato] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,9 +151,10 @@ export default function DetalhesClientePage() {
         if (!clienteId) return;
         setIsLoading(true);
         try {
-            const [clienteData, atosData] = await Promise.all([
+            const [clienteData, atosData, contatosData] = await Promise.all([
                 getClienteById(clienteId),
-                getAtosByClienteId(clienteId)
+                getAtosByClienteId(clienteId),
+                getTiposDeContato(),
             ]);
 
             if (!clienteData) {
@@ -167,6 +169,7 @@ export default function DetalhesClientePage() {
             
             setCliente(clienteData);
             setAtos(atosData);
+            setTiposDeContato(contatosData);
             resetFormValues(clienteData);
 
         } catch (error) {
@@ -305,10 +308,11 @@ export default function DetalhesClientePage() {
         }
     }
 
-    const contactIcons = {
+    const contactIcons: Record<string, React.ElementType> = {
         email: Mail,
         telefone: Phone,
         whatsapp: MessageSquare,
+        default: Contact,
     };
 
     if (isLoading) {
@@ -396,7 +400,9 @@ export default function DetalhesClientePage() {
                                                         <FormItem className="w-28"><FormLabel>Tipo</FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
-                                                                <SelectContent><SelectItem value="email">Email</SelectItem><SelectItem value="telefone">Telefone</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem></SelectContent>
+                                                                <SelectContent>
+                                                                    {tiposDeContato.map(tipo => <SelectItem key={tipo} value={tipo} className="capitalize">{tipo}</SelectItem>)}
+                                                                </SelectContent>
                                                             </Select>
                                                         </FormItem>
                                                     )}/>
@@ -406,12 +412,12 @@ export default function DetalhesClientePage() {
                                                     <Button type="button" variant="ghost" size="icon" onClick={() => removeContato(index)}><Trash2 className="h-4 w-4" /></Button>
                                                 </div>
                                             ))}
-                                            <Button type="button" variant="outline" size="sm" onClick={() => appendContato({ id: `contato-${Date.now()}`, tipo: 'email', valor: '', label: '' })}><PlusCircle className="mr-2 h-4 w-4" />Contato</Button>
+                                            <Button type="button" variant="outline" size="sm" onClick={() => appendContato({ id: `contato-${Date.now()}`, tipo: tiposDeContato[0] || 'email', valor: '', label: '' })}><PlusCircle className="mr-2 h-4 w-4" />Contato</Button>
                                         </>
                                     ) : (
                                         cliente.contatos && cliente.contatos.length > 0 ? (
                                             cliente.contatos.map(contato => {
-                                                const Icon = contactIcons[contato.tipo];
+                                                const Icon = contactIcons[contato.tipo] || contactIcons.default;
                                                 return (
                                                     <div key={contato.id} className="border-l-2 border-primary pl-3">
                                                         <div className='flex items-center gap-2'><Icon className="h-4 w-4 text-muted-foreground"/><p className="font-semibold">{contato.valor}</p></div>
@@ -729,4 +735,3 @@ export default function DetalhesClientePage() {
         </>
     );
 }
-

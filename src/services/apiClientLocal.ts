@@ -102,7 +102,7 @@ export interface CampoAdicionalCliente {
 
 export interface Contato {
     id: string;
-    tipo: 'email' | 'telefone' | 'whatsapp';
+    tipo: 'email' | 'telefone' | 'whatsapp' | string; // Permite tipos customizados
     valor: string;
     label?: string; // e.g., 'Pessoal', 'Comercial'
 }
@@ -409,36 +409,44 @@ export const updateCliente = async (clienteId: string, payload: UpdateClientePay
 
 
 // Configurações
-const defaultTiposDeLivro = [
-    "Livro de Notas",
-    "Livro de Procurações",
-    "Livro de Testamentos",
-    "Livro de Protocolo",
-    "Livro de Controle de Depósito Prévio",
-    "Livro Diário Auxiliar da Receita e da Despesa"
-];
-
-export const getTiposDeLivro = async (): Promise<string[]> => {
+const createConfigManager = (storageKey: string, defaultValues: string[]) => ({
+  getAll: async (): Promise<string[]> => {
+    await delay(100);
+    return getFromStorage(storageKey, defaultValues);
+  },
+  add: async (newItem: string): Promise<void> => {
     await delay(200);
-    console.log("MOCK API: Buscando tipos de livro...");
-    return getFromStorage('actnexus_tipos_livro', defaultTiposDeLivro);
-};
-
-export const addTipoDeLivro = async (novoTipo: string): Promise<void> => {
-    await delay(300);
-    console.log(`MOCK API: Adicionando tipo de livro "${novoTipo}"...`);
-    const tipos = await getTiposDeLivro();
-    if (tipos.some(t => t.toLowerCase() === novoTipo.toLowerCase())) {
-        throw new Error("Este tipo de livro já existe.");
+    const items = await getFromStorage(storageKey, defaultValues);
+    if (items.some((i: string) => i.toLowerCase() === newItem.toLowerCase())) {
+      throw new Error("Este item já existe.");
     }
-    tipos.push(novoTipo);
-    saveToStorage('actnexus_tipos_livro', tipos);
-};
+    items.push(newItem);
+    saveToStorage(storageKey, items);
+  },
+  remove: async (itemToRemove: string): Promise<void> => {
+    await delay(200);
+    let items = await getFromStorage(storageKey, defaultValues);
+    items = items.filter((i: string) => i.toLowerCase() !== itemToRemove.toLowerCase());
+    saveToStorage(storageKey, items);
+  },
+});
 
-export const removeTipoDeLivro = async (tipoParaRemover: string): Promise<void> => {
-    await delay(300);
-    console.log(`MOCK API: Removendo tipo de livro "${tipoParaRemover}"...`);
-    let tipos = await getTiposDeLivro();
-    tipos = tipos.filter(t => t.toLowerCase() !== tipoParaRemover.toLowerCase());
-    saveToStorage('actnexus_tipos_livro', tipos);
-};
+const tiposLivroManager = createConfigManager('actnexus_tipos_livro', []);
+export const getTiposDeLivro = tiposLivroManager.getAll;
+export const addTipoDeLivro = tiposLivroManager.add;
+export const removeTipoDeLivro = tiposLivroManager.remove;
+
+const tiposAtoManager = createConfigManager('actnexus_tipos_ato', []);
+export const getTiposDeAto = tiposAtoManager.getAll;
+export const addTipoDeAto = tiposAtoManager.add;
+export const removeTipoDeAto = tiposAtoManager.remove;
+
+const nomesDocumentoManager = createConfigManager('actnexus_nomes_documento', []);
+export const getNomesDeDocumento = nomesDocumentoManager.getAll;
+export const addNomeDeDocumento = nomesDocumentoManager.add;
+export const removeNomeDeDocumento = nomesDocumentoManager.remove;
+
+const tiposContatoManager = createConfigManager('actnexus_tipos_contato', []);
+export const getTiposDeContato = tiposContatoManager.getAll;
+export const addTipoDeContato = tiposContatoManager.add;
+export const removeTipoDeContato = tiposContatoManager.remove;

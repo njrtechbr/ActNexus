@@ -76,7 +76,7 @@ const initialAtos = [
           "nome": "João Santos",
           "tipo": "Outorgado",
           "detalhes": [
-            { "label": "Nacionalidade", "value": "brasileira" },
+            { "label": "Nacionalidade", "value": "brasileiro" },
             { "label": "Estado Civil", "value": "casado" },
             { "label": "Profissão", "value": "autônomo" },
             { "label": "RG", "value": "55.666.777-8 SSP/SP" },
@@ -184,7 +184,7 @@ const initialClientes = [
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileiro" },
         { "label": "Estado Civil", "value": "casado" },
-        { "label": "Profissão", "value": "autônomo" },
+        { "label": "Profissão", "value": "Engenheiro Civil" },
         { "label": "RG", "value": "55.666.777-8 SSP/SP" },
         { "label": "CPF", "value": "555.666.777-88" }
     ],
@@ -231,12 +231,33 @@ const initialClientes = [
 ];
 
 const initialTiposLivro = [
-    "Livro de Notas",
-    "Livro de Procurações",
-    "Livro de Testamentos",
-    "Livro de Protocolo",
-    "Livro de Controle de Depósito Prévio",
-    "Livro Diário Auxiliar da Receita e da Despesa"
+    "Notas",
+    "Procuração",
+    "Testamento",
+    "Escritura",
+];
+
+const initialTiposAto = [
+    "Procuração Pública",
+    "Escritura de Compra e Venda",
+    "Testamento Particular",
+    "Ata Notarial",
+    "Reconhecimento de Firma"
+];
+
+const initialNomesDocumento = [
+    "RG",
+    "CPF",
+    "CNH",
+    "Comprovante de Endereço",
+    "Contrato Social",
+    "Certidão de Casamento"
+];
+
+const initialTiposContato = [
+    "email",
+    "telefone",
+    "whatsapp"
 ];
 
 export function populateInitialData() {
@@ -247,6 +268,9 @@ export function populateInitialData() {
         localStorage.setItem('actnexus_atos', JSON.stringify(initialAtos));
         localStorage.setItem('actnexus_clientes', JSON.stringify(initialClientes));
         localStorage.setItem('actnexus_tipos_livro', JSON.stringify(initialTiposLivro));
+        localStorage.setItem('actnexus_tipos_ato', JSON.stringify(initialTiposAto));
+        localStorage.setItem('actnexus_nomes_documento', JSON.stringify(initialNomesDocumento));
+        localStorage.setItem('actnexus_tipos_contato', JSON.stringify(initialTiposContato));
         localStorage.setItem('actnexus_populated_v15', 'true');
     }
 }

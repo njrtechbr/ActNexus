@@ -37,7 +37,7 @@ import { Calendar } from '@/components/ui/calendar';
 const documentoSchema = z.object({
   nome: z.string(),
   url: z.string(),
-  dataValidade: z.date().optional(),
+  dataValidade: z.date().optional().nullable(),
 });
 
 const formSchema = z.object({
@@ -84,6 +84,7 @@ export function ClientFormDialog({
       const newDocs = Array.from(files).map(file => ({
         nome: file.name,
         url: `/docs/simulado/${file.name}`, // Simula um caminho
+        dataValidade: null,
       }));
       append(newDocs);
     }
@@ -241,7 +242,7 @@ export function ClientFormDialog({
                                                 <PopoverContent className="w-auto p-0">
                                                 <Calendar
                                                     mode="single"
-                                                    selected={field.value}
+                                                    selected={field.value ?? undefined}
                                                     onSelect={field.onChange}
                                                     initialFocus
                                                 />
