@@ -37,6 +37,12 @@ import {
     type GenerateQualificationOutput,
 } from "@/ai/flows/generate-qualification";
 
+import {
+    checkMinuteData as checkMinuteDataFlow,
+    type CheckMinuteDataInput,
+    type CheckMinuteDataOutput,
+} from "@/ai/flows/check-minute-data";
+
 
 export async function automatedValidation(
   input: AutomatedValidationInput
@@ -74,4 +80,10 @@ export async function generateQualification(
     input: GenerateQualificationInput
 ): Promise<GenerateQualificationOutput> {
     return await generateQualificationFlow(input);
+}
+
+export async function checkMinuteData(
+    input: CheckMinuteDataInput
+): Promise<CheckMinuteDataOutput> {
+    return await checkMinuteDataFlow(input);
 }

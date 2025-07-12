@@ -288,13 +288,14 @@ export const getClienteById = async (clienteId: string): Promise<Cliente | null>
     return clientes.find(c => c.id === clienteId) || null;
 }
 
-export const getClienteByNome = async (nome: string): Promise<Cliente | null> => {
-    await delay(100);
-    console.log(`MOCK API: Buscando cliente pelo Nome "${nome}"...`);
+export const getClientesByNomes = async (nomes: string[]): Promise<Cliente[]> => {
+    await delay(200);
+    console.log(`MOCK API: Buscando clientes pelos nomes: ${nomes.join(', ')}...`);
     const clientes: Cliente[] = getFromStorage('actnexus_clientes');
-    // Busca exata pelo nome para evitar ambiguidades.
-    return clientes.find(c => c.nome.toLowerCase() === nome.toLowerCase()) || null;
-}
+    const lowerCaseNomes = nomes.map(n => n.toLowerCase());
+    return clientes.filter(c => lowerCaseNomes.includes(c.nome.toLowerCase()));
+};
+
 
 export const createCliente = async (clienteData: Omit<Cliente, 'id'>): Promise<Cliente> => {
     await delay(800);
@@ -352,7 +353,7 @@ const generateEvents = (oldData: Cliente, newData: Cliente, autor: string): Even
         });
     }
 
-    if (JSON.stringify(oldData.dadosAdicionais) !== JSON.stringify(newData.dadosAdicionais)) eventos.push({ data: now, autor, descricao: "Dados de qualificação foram sincronizados." });
+    if (JSON.stringify(oldData.dadosAdicionais) !== JSON.stringify(newData.dadosAdicionais)) eventos.push({ data: now, autor: "Sistema", descricao: "Dados de qualificação foram sincronizados." });
 
     return eventos;
 };
