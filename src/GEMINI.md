@@ -8,66 +8,58 @@ O **ActNexus** é uma plataforma moderna projetada para otimizar o gerenciamento
 
 ## 2. Funcionalidades Principais
 
--   **Autenticação Segura por Perfil**: Tela de login que simula acesso para `admin` e `employee`, com restrições de funcionalidade baseadas no perfil (ex: apenas admins podem adicionar averbações ou gerenciar configurações).
+-   **Autenticação Segura por Perfil**: Simulação de login para `admin` e `employee`, com restrições de funcionalidade baseadas no perfil.
 -   **Dashboard Intuitivo com Métricas e Gráficos**: Apresenta métricas chave (dinâmicas, baseadas nos dados do `localStorage`) e um gráfico de "Atos por Mês" para visualização de tendências.
 -   **Gestão de Livros e Atos**:
-    -   **Cadastro de Livro via PDF com IA**: Em vez de um formulário manual, o usuário faz o upload de um PDF. A IA processa o documento, extrai o número do livro, ano e todos os atos contidos nele, e os cadastra no sistema de uma só vez.
-    -   **Extração Detalhada da Qualificação com IA**: Após o cadastro, a IA analisa o conteúdo de cada ato e extrai a qualificação completa de todas as partes envolvidas (CPF, endereço, profissão, etc.).
-    -   **Averbações**: Admins podem adicionar averbações (modificações/observações) a atos existentes, mas apenas em livros com status "Concluído" ou "Arquivado", garantindo a imutabilidade de registros em processamento.
+    -   **Cadastro de Livro via PDF com IA**: O usuário faz o upload de um PDF. A IA processa o documento, extrai o número do livro, ano e todos os atos contidos nele, e os cadastra no sistema de uma só vez.
+    -   **Extração Detalhada da Qualificação com IA**: Após o cadastro, a IA analisa o conteúdo de cada ato e extrai a qualificação completa de todas as partes envolvidas, sincronizando automaticamente os dados com os perfis dos clientes.
+    -   **Averbações**: Admins podem adicionar averbações (modificações/observações) a atos existentes, mas apenas em livros com status "Concluído" ou "Arquivado".
 -   **Gestão de Clientes**:
-    -   **Visualização 360° e Edição Inline**: Uma página de detalhes do cliente completa, com abas para dados principais, histórico de atos e documentos. Admins podem ativar um "modo de edição" para atualizar todas as informações do cliente diretamente na página, sem a necessidade de modais.
-    -   **Gerenciamento de Contatos, Endereços e Documentos**: Suporte para cadastrar múltiplos contatos (email, telefone), endereços e documentos para cada cliente. Os documentos podem ter uma data de validade associada, com indicadores visuais de status (válido, expirando, expirado).
-    -   **Sincronização Automática com IA**: Os dados de qualificação extraídos dos atos são automaticamente salvos nos perfis dos clientes correspondentes, enriquecendo a base de dados.
+    -   **Visão 360° e Edição Inline**: Uma página de detalhes do cliente completa, com abas para dados, histórico, documentos e eventos. Admins podem editar todas as informações do cliente diretamente na página.
+    -   **Gerenciamento de Contatos, Endereços e Documentos**: Suporte para cadastrar múltiplos contatos, endereços e documentos para cada cliente, com indicadores visuais para validade de documentos.
     -   **Geração de Qualificação com IA**: Permite gerar um parágrafo de qualificação formatado, no estilo legal, a partir dos dados salvos no perfil do cliente.
--   **Validação Automatizada com IA**: Um fluxo de IA que analisa o texto de um documento (com base no nome do arquivo) para validar informações como CPF e nome.
+-   **Conferência de Minuta com IA (Página Dedicada)**:
+    -   O usuário acessa uma página específica e faz o upload de um **PDF de uma minuta** (rascunho de ato).
+    -   A IA processa o texto, identifica as partes envolvidas e busca seus perfis cadastrados no sistema.
+    -   O sistema compara o texto da minuta com os dados dos clientes, gerando um relatório que destaca:
+        -   **Dados Conformes (OK)**: Informações que batem com o cadastro.
+        -   **Dados Divergentes**: Informações que existem nos dois lugares, mas são diferentes.
+        -   **Dados Novos**: Informações que existem na minuta, mas não no cadastro do cliente.
+    -   O usuário pode então **selecionar com checkboxes quais dados novos ou divergentes deseja salvar**, sincronizando-os com os perfis dos clientes correspondentes.
 -   **Auditoria de IA**: Uma tela dedicada, acessível apenas por administradores, que registra cada chamada feita aos modelos de IA, detalhando o fluxo, custo, latência e os tokens de entrada/saída.
 -   **Tabelas Interativas**: Exibem os resultados de listagens com busca e ordenação.
 
 ## 3. Arquitetura e Tecnologias
 
-O projeto é construído sobre uma base de tecnologias modernas, focadas em performance e escalabilidade.
-
 -   **Framework**: **Next.js 15** (utilizando o App Router).
--   **Linguagem**: **TypeScript** para garantir a tipagem e a qualidade do código.
--   **Estilização**:
-    -   **Tailwind CSS**: Framework CSS para estilização utilitária.
-    -   **ShadCN/UI**: Coleção de componentes de UI reusáveis e acessíveis.
-    -   **Cores e Tema**: O tema principal está definido em `src/app/globals.css` com variáveis CSS.
--   **Mock de API**:
-    -   **`localStorage`**: Utilizado para persistir os dados da aplicação no navegador.
-    -   **`src/services/apiClientLocal.ts`**: Centraliza toda a lógica de acesso e manipulação do `localStorage`, simulando uma API real com latência.
+-   **Linguagem**: **TypeScript**.
+-   **Estilização**: **Tailwind CSS** e **ShadCN/UI**.
+-   **Mock de API**: `localStorage` e `src/services/apiClientLocal.ts`.
 -   **Inteligência Artificial**:
-    -   **Genkit**: É o framework utilizado para orquestrar as chamadas para os modelos de IA do Google. O modelo padrão utilizado em toda a aplicação é o `googleai/gemini-1.5-flash-latest`.
+    -   **Genkit**: Framework para orquestrar chamadas para os modelos de IA do Google (o padrão é `googleai/gemini-1.5-flash-latest`).
     -   **Fluxos de IA**:
-        -   `processLivroPdf`: Processa o texto de um PDF de livro e extrai seus dados e atos.
-        -   `extractActDetails`: Analisa o conteúdo de um ato e extrai a qualificação completa das partes.
-        -   `generateQualification`: Gera um parágrafo de qualificação formatado a partir de dados estruturados.
-        -   `automatedValidation`: Valida dados em um texto simulado de documento.
-        -   `semanticSearch`: Realiza buscas em linguagem natural (funcionalidade presente no dashboard).
+        -   `processLivroPdf`: Processa o PDF de um livro e extrai seus dados e atos.
+        -   `extractActDetails`: Analisa o conteúdo de um ato e extrai a qualificação das partes.
+        -   `checkMinuteData`: Compara o texto de uma minuta com dados cadastrais de clientes.
+        -   `generateQualification`: Gera um parágrafo de qualificação formatado.
         -   `summarizeClientHistory`: Gera um resumo do histórico de atos de um cliente.
--   **Gerenciamento de Formulários**:
-    -   **React Hook Form**: Para gerenciamento de estado de formulários, incluindo a lógica de edição inline e campos dinâmicos (`useFieldArray`).
-    -   **Zod**: Para validação de esquemas de dados.
+-   **Gerenciamento de Formulários**: **React Hook Form** e **Zod**.
 
 ## 4. Estrutura do Projeto
 
 ```
 /src
 ├── data/              # Dados iniciais para popular o localStorage
-├── services/          # Serviços de comunicação (mock ou real)
+├── services/          # Serviços de comunicação (mock)
 ├── ai/                # Lógica de Inteligência Artificial com Genkit
-│   ├── flows/         # Fluxos de IA (processamento, extração, geração, validação, resumo)
-│   └── genkit.ts      # Configuração do Genkit com middleware de logging
-├── app/               # Rotas e páginas do Next.js (App Router)
+│   ├── flows/         # Fluxos de IA
+│   └── genkit.ts      # Configuração do Genkit
+├── app/               # Rotas e páginas do Next.js
 │   ├── dashboard/     # Layout e páginas da área logada
-│   └── page.tsx       # Página de login/bypass
+│   └── page.tsx       # Página de bypass de login
 ├── components/        # Componentes React reutilizáveis
-│   ├── dashboard/     # Componentes específicos do dashboard (ex: LivroUpload, QualificationGeneratorDialog, AtosPorMesChart, ClientFormDialog)
-│   └── ui/            # Componentes base do ShadCN
-├── hooks/             # Hooks customizados (ex: useToast, use-mobile)
-├── lib/               # Funções utilitárias e actions
-│   ├── actions.ts     # Server Actions que invocam os fluxos de IA
-│   └── ai-pricing.ts  # Lógica para cálculo de custo de uso da IA
+├── hooks/             # Hooks customizados
+├── lib/               # Funções utilitárias e Server Actions
 └── backend.md         # Especificação da API para o backend real
 ```
 

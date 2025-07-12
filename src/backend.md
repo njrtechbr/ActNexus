@@ -14,30 +14,24 @@ O frontend atualmente simula o login salvando um objeto de usuário no `localSto
 }
 ```
 
-O `role` pode ser `"admin"` ou `"employee"`, controlando o acesso a certas funcionalidades no frontend.
-
 ## 2. Regras de Negócio e Autorização
-
-O backend deve implementar as seguintes regras para garantir a integridade dos dados e o controle de acesso correto.
 
 ### 2.1. Autorização por Perfil (`role`)
 
 -   **Perfil `admin`**:
-    -   Pode adicionar averbações em atos (`PATCH /atos/:atoId`).
-    -   Pode criar novos clientes (`POST /clientes`).
-    -   Pode editar clientes existentes (`PATCH /clientes/:id`).
-    -   Pode gerenciar os tipos de livro (`GET`, `POST`, `DELETE` em `/configuracoes/tipos-livro`).
+    -   Pode realizar todas as ações CRUD em livros, atos, clientes e configurações.
     -   Pode acessar a tela de auditoria de IA (`GET /auditoria-ia`).
-
 -   **Perfil `employee`**:
     -   Possui acesso de leitura à maioria dos dados (livros, atos, clientes).
-    -   **Não pode** realizar as ações restritas ao perfil `admin`.
+    -   Pode cadastrar novos livros (`POST /livros/processar-pdf`).
+    -   Pode realizar conferência de minutas (`POST /minutas/conferir`).
+    -   **Não pode** gerenciar configurações ou adicionar averbações.
 
 ### 2.2. Regras de Negócio Específicas
 
--   **Averbações**: Uma averbação só pode ser adicionada a um `Ato` se o `Livro` ao qual ele pertence tiver o status `"Concluído"` ou `"Arquivado"`. O backend deve validar essa condição antes de aceitar um `PATCH` em `/atos/:atoId` que contenha uma averbação.
--   **Extração de Dados da IA**: Quando a IA extrai dados de qualificação de um ato (`dadosExtraidos`), o backend deve automaticamente procurar pelo cliente correspondente (usando o nome/CPF) e adicionar/atualizar os `dadosAdicionais` no perfil do cliente. A lógica deve evitar duplicatas de `label`.
--   **Tipos de Livro**: Ao adicionar um novo tipo de livro, o backend deve validar para não permitir a criação de tipos duplicados (a verificação deve ser case-insensitive).
+-   **Averbações**: Uma averbação só pode ser adicionada a um `Ato` se o `Livro` ao qual ele pertence tiver o status `"Concluído"` ou `"Arquivado"`.
+-   **Extração de Dados da IA**: Quando a IA extrai dados de qualificação de um ato (`dadosExtraidos`), o backend deve automaticamente procurar pelo cliente correspondente (usando o nome/CPF) e adicionar/atualizar os `dadosAdicionais` no perfil do cliente.
+-   **Sincronização de Dados da Minuta**: Ao salvar dados da conferência de minuta, o backend deve mesclar os novos campos no perfil do cliente, evitando duplicatas de `label`.
 
 ## 3. Endpoints da API
 
@@ -48,296 +42,145 @@ A URL base para os endpoints pode ser `/api`.
 ### 3.1. Livros e Atos
 
 #### **`GET /livros`**
-
--   **Descrição**: Retorna a lista de todos os livros cadastrados.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**:
-    ```json
-    [
-      {
-        "id": "string",
-        "numero": "number",
-        "ano": "number",
-        "tipo": "string",
-        "status": "string (Concluído, Processando, Arquivado)",
-        "totalAtos": "number",
-        "dataAbertura": "string (YYYY-MM-DD)",
-        "dataFechamento": "string (YYYY-MM-DD)",
-        "urlPdfOriginal": "string"
-      }
-    ]
-    ```
+-   **Descrição**: Retorna a lista de todos os livros.
+-   **Resposta (200 OK)**: `Array<Livro>`
 
 #### **`POST /livros/processar-pdf`**
-
--   **Descrição**: Endpoint para receber o conteúdo Markdown gerado pela IA no frontend e criar um novo livro e seus respectivos atos.
--   **Autorização**: `admin`, `employee`.
--   **Payload**:
-    ```json
-    {
-      "livroData": {
-        "numero": "number",
-        "ano": "number",
-        "tipo": "string",
-        "status": "string",
-        "dataAbertura": "string (YYYY-MM-DD)",
-        "dataFechamento": "string (YYYY-MM-DD)",
-        "urlPdfOriginal": "string"
-      },
-      "atosData": [
-        {
-          "numeroAto": "number",
-          "tipoAto": "string",
-          "dataAto": "string (YYYY-MM-DD)",
-          "partes": ["string"],
-          "conteudoMarkdown": "string"
-        }
-      ]
-    }
-    ```
--   **Resposta (201 Created)**: Retorna o objeto do livro criado.
+-   **Descrição**: Recebe o conteúdo Markdown gerado pela IA e cria um novo livro e seus atos.
+-   **Payload**: `{ livroData: Livro, atosData: Array<Ato> }`
+-   **Resposta (201 Created)**: `Livro`
 
 #### **`GET /livros/:livroId`**
-
 -   **Descrição**: Retorna os detalhes de um livro específico.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: O objeto `Livro`.
+-   **Resposta (200 OK)**: `Livro`
 
 #### **`GET /livros/:livroId/atos`**
-
--   **Descrição**: Retorna todos os atos (folhas) de um livro específico.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: Um array de objetos `Ato`. O objeto `Ato` deve ter a estrutura:
-    ```json
-    {
-        "id": "string",
-        "livroId": "string",
-        "numeroAto": "number",
-        "tipoAto": "string",
-        "dataAto": "string (YYYY-MM-DD)",
-        "partes": ["string"],
-        "escrevente": "string",
-        "urlPdf": "string",
-        "averbacoes": [
-          {
-            "texto": "string",
-            "dataAverbacao": "string (YYYY-MM-DD)",
-            "dataRegistro": "string (ISO 8601)"
-          }
-        ],
-        "conteudoMarkdown": "string",
-        "dadosExtraidos": {
-          "detalhesGerais": [{ "label": "string", "value": "string" }],
-          "partes": [
-            {
-              "nome": "string",
-              "tipo": "string",
-              "detalhes": [{ "label": "string", "value": "string" }]
-            }
-          ]
-        }
-      }
-    ```
+-   **Descrição**: Retorna todos os atos de um livro.
+-   **Resposta (200 OK)**: `Array<Ato>`
 
 #### **`GET /atos/:atoId`**
-
--   **Descrição**: Retorna os detalhes de um ato (folha) específico.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: O objeto `Ato`.
+-   **Descrição**: Retorna os detalhes de um ato específico.
+-   **Resposta (200 OK)**: `Ato`
 
 #### **`PATCH /atos/:atoId`**
-
--   **Descrição**: Atualiza um ato, principalmente para adicionar averbações ou dados extraídos pela IA.
--   **Regra de Negócio**: A adição de `averbacao` só é permitida se o livro associado tiver status "Concluído" ou "Arquivado".
--   **Autorização**: A adição de `averbacao` é restrita a `admin`. A atualização de `dadosExtraidos` pode ser feita por qualquer processo do sistema.
--   **Payload**:
-    ```json
-    {
-      "averbacao": { // Opcional
-        "texto": "string",
-        "dataAverbacao": "string (YYYY-MM-DD)",
-        "dataRegistro": "string (ISO 8601)"
-      },
-      "dadosExtraidos": { // Opcional
-        "detalhesGerais": [],
-        "partes": []
-      }
-    }
-    ```
--   **Resposta (200 OK)**: O objeto `Ato` atualizado.
+-   **Descrição**: Atualiza um ato, para adicionar averbações ou dados da IA.
+-   **Regra**: A adição de `averbacao` só é permitida para `admin` e se o livro estiver "Concluído" ou "Arquivado".
+-   **Payload**: `{ averbacao?: Averbacao, dadosExtraidos?: ExtractedActData }`
+-   **Resposta (200 OK)**: `Ato`
 
 ---
 
 ### 3.2. Clientes
 
 #### **`GET /clientes`**
-
 -   **Descrição**: Retorna a lista de todos os clientes.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: Um array de objetos `Cliente`.
-    ```json
-    [
-      {
-        "id": "string",
-        "nome": "string",
-        "cpfCnpj": "string",
-        "tipo": "string (PF ou PJ)",
-        "contatos": [
-          {
-            "id": "string",
-            "tipo": "string (email, telefone, whatsapp)",
-            "valor": "string",
-            "label": "string (opcional, ex: Pessoal)"
-          }
-        ],
-        "enderecos": [
-          {
-            "id": "string",
-            "logradouro": "string",
-            "numero": "string",
-            "bairro": "string",
-            "cidade": "string",
-            "estado": "string",
-            "cep": "string",
-            "label": "string (opcional, ex: Residencial)"
-          }
-        ],
-        "observacoes": ["string"],
-        "documentos": [
-          { 
-            "nome": "string", 
-            "url": "string",
-            "dataValidade": "string (YYYY-MM-DD, opcional)"
-          }
-        ],
-        "dadosAdicionais": [
-          { "label": "string", "value": "string" }
-        ]
-      }
-    ]
-    ```
+-   **Resposta (200 OK)**: `Array<Cliente>`
 
 #### **`POST /clientes`**
-
 -   **Descrição**: Cria um novo cliente.
 -   **Autorização**: `admin`.
 -   **Payload**: `Omit<Cliente, 'id'>`.
--   **Resposta (201 Created)**: O objeto `Cliente` criado.
+-   **Resposta (201 Created)**: `Cliente`
 
 #### **`GET /clientes/:id`**
+-   **Descrição**: Retorna os detalhes de um cliente.
+-   **Resposta (200 OK)**: `Cliente`
 
--   **Descrição**: Retorna os detalhes de um cliente específico.
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: O objeto `Cliente`.
-
-#### **`GET /clientes/:id/atos`**
-
--   **Descrição**: Retorna os atos associados a um cliente (o backend deve buscar atos onde o nome do cliente aparece nas partes).
--   **Autorização**: `admin`, `employee`.
--   **Resposta (200 OK)**: Um array de objetos `Ato`.
+#### **`GET /clientes/por-nomes`**
+-   **Descrição**: Busca clientes por uma lista de nomes. Usado na conferência de minuta.
+-   **Query Params**: `nomes=Nome1,Nome2`
+-   **Resposta (200 OK)**: `Array<Cliente>`
 
 #### **`PATCH /clientes/:id`**
-
--   **Descrição**: Atualiza um cliente. Pode ser usado para atualizar dados básicos e gerenciar listas como contatos, endereços, observações e documentos.
--   **Regra de Negócio**: 
-    - Ao mesclar `dadosAdicionais` (campos), o backend deve fazer a gestão para não criar `labels` duplicadas, atualizando o `value` se a `label` já existir.
-    - As listas como `contatos`, `enderecos`, `observacoes` e `documentos` devem ser substituídas inteiramente pelo novo array fornecido no payload. O frontend enviará a lista completa e atualizada.
--   **Autorização**: `admin` para edições manuais. Pode também ser chamado por um processo interno do sistema (após extração da IA).
--   **Payload (parcial, todos os campos são opcionais)**:
-    ```json
-    {
-      "nome": "string",
-      "cpfCnpj": "string",
-      "tipo": "string (PF ou PJ)",
-      "contatos": [
-        {
-          "id": "string",
-          "tipo": "string (email, telefone, whatsapp)",
-          "valor": "string",
-          "label": "string (opcional)"
-        }
-      ],
-      "enderecos": [
-        {
-          "id": "string",
-          "logradouro": "string",
-          // ... outros campos de endereço
-        }
-      ],
-      "observacoes": ["string"],
-      "documentos": [
-         { 
-            "nome": "string", 
-            "url": "string",
-            "dataValidade": "string (YYYY-MM-DD, opcional)"
-          }
-      ],
-      "campos": [ // Para mesclar/sincronizar dados adicionais
-        { "label": "string", "value": "string" }
-      ]
-    }
-    ```
--   **Resposta (200 OK)**: O objeto `Cliente` atualizado.
+-   **Descrição**: Atualiza um cliente.
+-   **Regra**: Deve mesclar `dadosAdicionais` (campos) sem duplicatas. Gera um `Evento` no histórico do cliente para auditoria.
+-   **Autorização**: `admin` ou processo de sistema (IA).
+-   **Payload**: `Partial<Cliente> & { campos?: CampoAdicionalCliente[] }`
+-   **Resposta (200 OK)**: `Cliente`
 
 ---
 
-### 3.3. Configurações
+### 3.3. Conferência de Minuta
+
+#### **`POST /minutas/conferir`**
+-   **Descrição**: Recebe o texto de uma minuta e os clientes envolvidos para conferência.
+-   **Payload**: `{ minuteText: string, clientProfiles: Array<{ nome: string, dadosAdicionais: any[] }> }`
+-   **Resposta (200 OK)**: `CheckMinuteDataOutput` (resultado da análise da IA).
+
+---
+
+### 3.4. Configurações
 
 #### **`GET /configuracoes/tipos-livro`**
-
--   **Descrição**: Retorna a lista de tipos de livro permitidos.
+-   **Descrição**: Retorna os tipos de livro.
 -   **Autorização**: `admin`.
--   **Resposta (200 OK)**: `["string"]`
+-   **Resposta (200 OK)**: `string[]`
 
 #### **`POST /configuracoes/tipos-livro`**
-
 -   **Descrição**: Adiciona um novo tipo de livro.
--   **Regra de Negócio**: Não permitir a criação de tipos duplicados (case-insensitive).
 -   **Autorização**: `admin`.
 -   **Payload**: `{ "novoTipo": "string" }`
 -   **Resposta (201 Created)**.
 
 #### **`DELETE /configuracoes/tipos-livro`**
-
 -   **Descrição**: Remove um tipo de livro.
 -   **Autorização**: `admin`.
 -   **Payload**: `{ "tipoParaRemover": "string" }`
--   **Resposta (204 No Content)**.
+-   **Resposta (24 No Content)**.
 
 ---
 
-### 3.4. Auditoria de IA
+### 3.5. Auditoria de IA
 
 #### **`GET /auditoria-ia`**
-
--   **Descrição**: Retorna todos os logs de uso da IA, ordenados por data decrescente.
+-   **Descrição**: Retorna os logs de uso da IA.
 -   **Autorização**: `admin`.
--   **Resposta (200 OK)**: Um array de objetos `AiUsageLog`.
-    ```json
-    [
-      {
-        "id": "string",
-        "timestamp": "string (ISO 8601)",
-        "flowName": "string",
-        "model": "string",
-        "latencyMs": "number",
-        "inputTokens": "number",
-        "outputTokens": "number",
-        "totalTokens": "number",
-        "inputCost": "number",
-        "outputCost": "number",
-        "totalCost": "number",
-        "prompt": "string (JSON stringified)",
-        "response": "string (JSON stringified)"
-      }
-    ]
-    ```
+-   **Resposta (200 OK)**: `Array<AiUsageLog>`
 
 #### **`POST /auditoria-ia`**
-
--   **Descrição**: Este endpoint seria chamado pelo próprio backend (ou por um middleware/webhook do Genkit) para registrar um novo log de uso.
--   **Autorização**: Acesso interno do sistema/backend.
+-   **Descrição**: Endpoint interno para registrar um log.
+-   **Autorização**: Acesso interno do sistema.
 -   **Payload**: `Omit<AiUsageLog, 'id'>`.
 -   **Resposta (201 Created)**.
 
-    
+---
+### **Modelos de Dados Principais**
+
+```typescript
+interface Livro {
+    id: string;
+    numero: number;
+    ano: number;
+    tipo: string;
+    status: string; // 'Concluído', 'Processando', 'Arquivado'
+    totalAtos: number;
+    dataAbertura: string; // 'YYYY-MM-DD'
+    dataFechamento?: string; // 'YYYY-MM-DD'
+    urlPdfOriginal?: string;
+}
+
+interface Ato {
+    id: string;
+    livroId: string;
+    numeroAto: number;
+    tipoAto: string;
+    dataAto: string; // 'YYYY-MM-DD'
+    partes: string[];
+    averbacoes: Averbacao[];
+    conteudoMarkdown?: string;
+    dadosExtraidos?: ExtractedActData;
+}
+
+interface Cliente {
+    id: string;
+    nome: string;
+    cpfCnpj: string;
+    tipo: 'PF' | 'PJ';
+    contatos?: Contato[];
+    enderecos?: Endereco[];
+    documentos?: DocumentoCliente[];
+    observacoes?: Observacao[];
+    dadosAdicionais?: CampoAdicionalCliente[];
+    eventos?: Evento[];
+}
+```
