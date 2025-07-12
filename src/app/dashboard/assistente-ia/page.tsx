@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Send, Loader2, Bot, User, PlusCircle, MessageSquare } from "lucide-react";
+import { Send, Loader2, Bot, User, PlusCircle, MessageSquare, Paperclip, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { conversationalAgent, generateConvoTitle as generateTitleAction } from "@/lib/actions";
@@ -10,10 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  fileName?: string;
 }
 
 interface Conversation {
@@ -24,14 +26,25 @@ interface Conversation {
 
 const STORAGE_KEY = 'actnexus_ia_conversations';
 
+const readFileAsDataURI = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function AssistenteIaPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -76,8 +89,8 @@ export default function AssistenteIaPage() {
     setConversations(prev => [newConversation, ...prev]);
     setActiveConversationId(newId);
     inputRef.current?.focus();
+    setAttachedFile(null);
   };
-
 
   const generateTitle = async (convoId: string, userQuery: string, assistantResponse: string) => {
     try {
@@ -92,20 +105,28 @@ export default function AssistenteIaPage() {
 
     } catch (error) {
         console.error("Failed to generate conversation title:", error);
-        // Silently fail, as this is not a critical function. The title will remain the default.
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAttachedFile(file);
+    }
+    e.target.value = ''; // Reset input to allow selecting the same file again
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || isLoading || !activeConversationId) return;
 
-    const userMessage: Message = { role: 'user', content: query };
+    const userMessage: Message = { 
+      role: 'user', 
+      content: query,
+      ...(attachedFile && { fileName: attachedFile.name }),
+    };
     const isFirstMessage = activeConversation?.messages.length === 0;
 
-    // Immediately update the conversation with the user's message
-    // If it's the first message, set a temporary title
     setConversations(prev =>
         prev.map(convo => {
             if (convo.id === activeConversationId) {
@@ -120,11 +141,18 @@ export default function AssistenteIaPage() {
     );
 
     const currentQuery = query;
+    const currentFile = attachedFile;
     setQuery("");
+    setAttachedFile(null);
     setIsLoading(true);
     
     try {
-      const result = await conversationalAgent({ query: currentQuery });
+      let fileDataUri: string | undefined = undefined;
+      if (currentFile) {
+        fileDataUri = await readFileAsDataURI(currentFile);
+      }
+
+      const result = await conversationalAgent({ query: currentQuery, fileDataUri });
       const assistantMessage: Message = { role: 'assistant', content: result.response };
        
        setConversations(prev =>
@@ -135,7 +163,6 @@ export default function AssistenteIaPage() {
         )
       );
       
-      // If it was the first message, trigger title generation in the background
       if (isFirstMessage) {
         generateTitle(activeConversationId, currentQuery, result.response);
       }
@@ -205,7 +232,7 @@ export default function AssistenteIaPage() {
                             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
                                 <Bot className="h-12 w-12 mb-4 text-primary" />
                                 <h2 className="text-xl font-semibold">Como posso ajudar hoje?</h2>
-                                <p className="text-sm">Faça perguntas sobre livros, atos e clientes.</p>
+                                <p className="text-sm">Faça perguntas sobre livros, atos, clientes ou anexe um arquivo para análise.</p>
                                 <p className="text-sm mt-4 p-2 bg-muted rounded-md">Exemplo: <span className="font-semibold">"Quais atos o João Santos realizou em 2025?"</span></p>
                             </div>
                         ) : (
@@ -216,7 +243,13 @@ export default function AssistenteIaPage() {
                                             <AvatarFallback><Bot className="h-5 w-5"/></AvatarFallback>
                                         </Avatar>
                                     )}
-                                    <div className={`rounded-lg px-4 py-3 max-w-2xl shadow-sm ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border'}`}>
+                                    <div className={`rounded-lg px-4 py-3 max-w-2xl shadow-sm space-y-2 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card border'}`}>
+                                        {message.fileName && (
+                                          <Badge variant="secondary" className="gap-2">
+                                            <Paperclip className="h-3 w-3" />
+                                            {message.fileName}
+                                          </Badge>
+                                        )}
                                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                     </div>
                                     {message.role === 'user' && (
@@ -241,19 +274,37 @@ export default function AssistenteIaPage() {
                 </ScrollArea>
 
                 <div className="border-t p-4 bg-card-muted/50">
-                    <form onSubmit={handleSearch} className="flex gap-4 max-w-4xl mx-auto">
-                        <Input
-                            ref={inputRef}
-                            placeholder="Pergunte ao assistente..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            disabled={isLoading}
-                            className="text-base md:text-sm h-12"
-                        />
-                        <Button type="submit" disabled={isLoading || !query.trim()} size="lg">
-                            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                            <span className="sr-only">Enviar</span>
-                        </Button>
+                    <form onSubmit={handleSearch} className="max-w-4xl mx-auto space-y-3">
+                         {attachedFile && (
+                            <div className="flex items-center">
+                              <Badge variant="outline" className="gap-2 p-2">
+                                <Paperclip className="h-4 w-4" />
+                                <span className="truncate max-w-xs">{attachedFile.name}</span>
+                                <button type="button" onClick={() => setAttachedFile(null)} className="ml-2 rounded-full hover:bg-muted p-0.5">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            </div>
+                          )}
+                        <div className="flex gap-4">
+                            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,application/pdf" />
+                            <Button type="button" variant="outline" size="icon" className="h-12 w-12 flex-shrink-0" onClick={() => fileInputRef.current?.click()}>
+                                <Paperclip className="h-5 w-5"/>
+                                <span className="sr-only">Anexar Arquivo</span>
+                            </Button>
+                            <Input
+                                ref={inputRef}
+                                placeholder="Pergunte ao assistente..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                disabled={isLoading}
+                                className="text-base md:text-sm h-12"
+                            />
+                            <Button type="submit" disabled={isLoading || !query.trim()} size="lg">
+                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                                <span className="sr-only">Enviar</span>
+                            </Button>
+                        </div>
                     </form>
                 </div>
         </div>

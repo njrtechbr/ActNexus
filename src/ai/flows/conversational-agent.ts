@@ -2,7 +2,8 @@
 'use server';
 /**
  * @fileOverview A conversational AI agent for the ActNexus system.
- * This agent uses tools to query internal data about books, acts, and clients.
+ * This agent uses tools to query internal data about books, acts, and clients,
+ * and can analyze user-uploaded files.
  */
 
 import { ai } from '@/ai/genkit';
@@ -12,6 +13,7 @@ import { getLivros, getClientes, getAtosByLivroId, type Livro, type Cliente, typ
 // Schemas for Input and Output
 const ConversationalAgentInputSchema = z.object({
   query: z.string().describe("The user's question or command in natural language."),
+  fileDataUri: z.string().optional().describe("An optional file (image or PDF) provided by the user as a data URI."),
 });
 export type ConversationalAgentInput = z.infer<typeof ConversationalAgentInputSchema>;
 
@@ -87,9 +89,10 @@ const searchActsTool = ai.defineTool(
     }
 );
 
-const systemPrompt = `Você é o "ActNexus Agent", um assistente de IA para um sistema de cartório.
+const systemPrompt = `Você é o "ActNexus Agent", um assistente de IA especialista para um sistema de cartório.
 Seu trabalho é responder às perguntas dos usuários sobre livros, atos e clientes.
-- Use as ferramentas disponíveis para buscar informações no sistema.
+- Use as ferramentas disponíveis para buscar informações no sistema sempre que necessário.
+- Se o usuário enviar um arquivo, analise seu conteúdo para responder à pergunta.
 - Seja conciso e direto em suas respostas.
 - Se não encontrar a informação, informe o usuário claramente.
 - Responda em português do Brasil.`;
@@ -101,11 +104,16 @@ const conversationalAgentFlow = ai.defineFlow(
         inputSchema: ConversationalAgentInputSchema,
         outputSchema: ConversationalAgentOutputSchema,
     },
-    async (input) => {
+    async ({ query, fileDataUri }) => {
+        const promptParts: any[] = [{ text: query }];
+        if (fileDataUri) {
+            promptParts.push({ media: { url: fileDataUri } });
+        }
+
         const result = await ai.generate({
             model: 'googleai/gemini-1.5-flash-latest',
             tools: [searchBooksTool, searchClientsTool, searchActsTool],
-            prompt: input.query,
+            prompt: promptParts,
             system: systemPrompt,
         });
 
