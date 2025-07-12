@@ -82,22 +82,27 @@ export default function DetalhesAtoPage() {
             const result = await extractActDetails({ actContent: currentAto.conteudoMarkdown });
             if (result) {
                 setExtractedDetails(result);
-                await updateAto(currentAto.id, { dadosExtraidos: result });
+                // Não chama updateAto aqui para evitar salvar os dados duas vezes se já existirem
+                if (!currentAto.dadosExtraidos) {
+                    await updateAto(currentAto.id, { dadosExtraidos: result });
+                }
 
                 const newSyncedFields: Record<string, string[]> = {};
                 let totalSavedCount = 0;
 
                 const clientNames = result.partes.map(p => p.nome);
-                const clientes = await getClientesByNomes(clientNames);
-                
-                for (const parte of result.partes) {
-                    const cliente = clientes.find(c => c.nome === parte.nome);
-                    if (cliente) {
-                        const camposParaSalvar: CampoAdicionalCliente[] = parte.detalhes.map(d => ({ label: d.label, value: d.value }));
-                        await updateCliente(cliente.id, { campos: camposParaSalvar }, "Sistema (Extração IA)");
-                        
-                        newSyncedFields[parte.nome] = parte.detalhes.map(d => d.label);
-                        totalSavedCount += camposParaSalvar.length;
+                if (clientNames.length > 0) {
+                    const clientes = await getClientesByNomes(clientNames);
+                    
+                    for (const parte of result.partes) {
+                        const cliente = clientes.find(c => c.nome === parte.nome);
+                        if (cliente) {
+                            const camposParaSalvar: CampoAdicionalCliente[] = parte.detalhes.map(d => ({ label: d.label, value: d.value }));
+                            await updateCliente(cliente.id, { campos: camposParaSalvar }, "Sistema (Extração IA)");
+                            
+                            newSyncedFields[parte.nome] = parte.detalhes.map(d => d.label);
+                            totalSavedCount += camposParaSalvar.length;
+                        }
                     }
                 }
                 setSyncedFields(newSyncedFields);
@@ -161,7 +166,7 @@ export default function DetalhesAtoPage() {
         return <div className="text-center p-8">Ato ou Livro não encontrado.</div>;
     }
 
-    const showExtractionLoader = isExtracting || (!extractedDetails && !!ato.conteudoMarkdown);
+    const showExtractionLoader = isExtracting && !extractedDetails;
 
     return (
         <div className="space-y-6">
@@ -221,7 +226,7 @@ export default function DetalhesAtoPage() {
                                             <div key={detalhe.label} className="flex flex-col gap-1 group">
                                                 <div className="flex justify-between items-center">
                                                     <span className="font-medium text-muted-foreground">{detalhe.label}</span>
-                                                    {(syncedFields[parte.nome] || ato.dadosExtraidos?.partes.find(p => p.nome === parte.nome)?.detalhes.some(d => d.label === detalhe.label)) && (
+                                                    {(syncedFields[parte.nome]?.includes(detalhe.label)) && (
                                                         <CheckCircle className="h-4 w-4 text-green-500" title={`"${detalhe.label}" salvo no perfil de ${parte.nome}`} />
                                                     )}
                                                 </div>

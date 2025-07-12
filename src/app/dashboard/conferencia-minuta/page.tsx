@@ -1,20 +1,19 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from 'zod';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { checkMinuteData, type CheckMinuteDataOutput } from "@/lib/actions";
+import { checkMinuteData, type CheckMinuteDataOutput, type VerificationResult, type ClientVerification } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, SearchCheck, User, CheckCircle, AlertTriangle, XCircle, Info, UploadCloud, File as FileIcon, X as XIcon } from "lucide-react";
+import { Loader2, SearchCheck, User, CheckCircle, AlertTriangle, XCircle, Info, UploadCloud, File as FileIcon, X as XIcon, PlusCircle, Save } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
-import { getClientesByNomes } from "@/services/apiClientLocal";
+import { getClientesByNomes, updateCliente, type Cliente } from "@/services/apiClientLocal";
 
 const formSchema = z.object({
     file: z.any().refine(file => !!file, { message: "O envio do arquivo PDF é obrigatório." }),
@@ -22,18 +21,21 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const getStatusIcon = (status: 'OK' | 'Divergente' | 'Não Encontrado') => {
+const getStatusInfo = (status: VerificationResult['status']) => {
     switch (status) {
-        case 'OK': return <CheckCircle className="h-4 w-4 text-green-500" />;
-        case 'Divergente': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-        case 'Não Encontrado': return <XCircle className="h-4 w-4 text-red-500" />;
-        default: return <Info className="h-4 w-4 text-muted-foreground" />;
+        case 'OK': return { icon: CheckCircle, className: "text-green-500" };
+        case 'Divergente': return { icon: AlertTriangle, className: "text-yellow-500" };
+        case 'Não Encontrado': return { icon: XCircle, className: "text-red-500" };
+        case 'Novo': return { icon: PlusCircle, className: "text-blue-500" };
+        default: return { icon: Info, className: "text-muted-foreground" };
     }
 };
 
 export default function ConferenciaMinutaPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [checkResult, setCheckResult] = useState<CheckMinuteDataOutput | null>(null);
+    const [clientesEncontrados, setClientesEncontrados] = useState<Cliente[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const { toast } = useToast();
 
@@ -48,6 +50,7 @@ export default function ConferenciaMinutaPage() {
         if (selectedFile && selectedFile.type === "application/pdf") {
             form.setValue("file", selectedFile);
             setCheckResult(null);
+            setClientesEncontrados([]);
         }
     };
     
@@ -63,38 +66,38 @@ export default function ConferenciaMinutaPage() {
         if (droppedFile && droppedFile.type === "application/pdf") {
              form.setValue("file", droppedFile);
              setCheckResult(null);
+             setClientesEncontrados([]);
         }
     };
 
     const clearFile = () => {
         form.setValue("file", null);
         setCheckResult(null);
+        setClientesEncontrados([]);
     }
 
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         setCheckResult(null);
+        setClientesEncontrados([]);
 
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
             
-            VENDEDOR: João Santos, brasileiro, casado, portador do CPF 555.666.777-88.
+            VENDEDOR: João Santos, brasileiro, casado, profissão "Engenheiro Civil", portador do CPF 555.666.777-88.
             COMPRADORA: Maria Silva, brasileira, solteira, profissão advogada, portadora do CPF nº 111.222.333-44.
             
             O endereço da compradora é Rua das Flores, 123, Centro, São Paulo-SP, CEP 01000-000.
             O RG do vendedor não está mencionado na minuta.
             O estado civil da compradora na minuta está como solteira, mas seu cadastro (corretamente) diz 'casada' para teste de divergência.
+            A compradora também se identifica com o RG 99.888.777-6 SSP/SP, que é uma informação nova.
 
             Preço: R$ 500.000,00 (quinhentos mil reais).
             Data: ${new Date().toLocaleDateString('pt-BR')}
         `;
         
-        // Simulação da lógica que aconteceria no backend
         try {
-            // 1. Identificar nomes no texto (aqui estamos simulando, mas na real a IA faria isso)
             const identifiedNames = ["Maria Silva", "João Santos"];
-
-            // 2. Buscar os perfis completos desses clientes
             const clientProfilesFromDB = await getClientesByNomes(identifiedNames);
 
             if (clientProfilesFromDB.length === 0) {
@@ -102,13 +105,13 @@ export default function ConferenciaMinutaPage() {
                  setIsSubmitting(false);
                  return;
             }
+            setClientesEncontrados(clientProfilesFromDB);
 
             const clientProfilesForVerification = clientProfilesFromDB.map(c => ({
                 nome: c.nome,
                 dadosAdicionais: c.dadosAdicionais || []
             }));
 
-            // 3. Chamar a IA para fazer a conferência
             const result = await checkMinuteData({
                 minuteText: mockDocumentText,
                 clientProfiles: clientProfilesForVerification,
@@ -132,18 +135,64 @@ export default function ConferenciaMinutaPage() {
         }
     };
     
+    const handleSaveChanges = async () => {
+        if (!checkResult || !clientesEncontrados.length) return;
+        setIsSaving(true);
+
+        const camposParaSalvar: Record<string, { label: string, value: string }[]> = {};
+        
+        checkResult.clientChecks.forEach(clientCheck => {
+            const campos = clientCheck.verifications
+                .filter(v => (v.status === 'Novo' || v.status === 'Divergente') && v.foundValue)
+                .map(v => ({ label: v.label, value: v.foundValue! }));
+
+            if (campos.length > 0) {
+                 camposParaSalvar[clientCheck.clientName] = campos;
+            }
+        });
+
+        if (Object.keys(camposParaSalvar).length === 0) {
+            toast({ title: "Nenhuma alteração para salvar."});
+            setIsSaving(false);
+            return;
+        }
+
+        try {
+            let updatedCount = 0;
+            for (const clientName in camposParaSalvar) {
+                const cliente = clientesEncontrados.find(c => c.nome === clientName);
+                if (cliente) {
+                    await updateCliente(cliente.id, { campos: camposParaSalvar[clientName] }, "Sistema (Conferência de Minuta)");
+                    updatedCount++;
+                }
+            }
+            toast({
+                title: "Dados Atualizados!",
+                description: `${updatedCount} perfis de cliente foram atualizados com as informações da minuta.`
+            });
+            // Opcional: Limpar resultados após salvar
+            // setCheckResult(null); 
+            // setClientesEncontrados([]);
+        } catch (error) {
+             console.error("Erro ao salvar alterações:", error);
+             toast({ variant: 'destructive', title: "Erro ao Salvar", description: "Não foi possível atualizar os perfis dos clientes."});
+        } finally {
+            setIsSaving(false);
+        }
+    }
+    
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="font-headline text-3xl font-bold tracking-tight">Conferência de Minuta com IA</h1>
-                <p className="text-muted-foreground">Envie o PDF da minuta e deixe a IA identificar as partes e verificar inconsistências com os dados do sistema.</p>
+                <p className="text-muted-foreground">Envie o PDF da minuta, a IA identificará as partes, verificará inconsistências e encontrará novos dados.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 <Card>
                      <CardHeader>
                         <CardTitle>1. Documento para Análise</CardTitle>
-                        <CardDescription>Envie o arquivo PDF. A IA identificará os clientes automaticamente.</CardDescription>
+                        <CardDescription>Envie o arquivo PDF. A IA identificará os clientes e fará a conferência.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Form {...form}>
@@ -193,7 +242,7 @@ export default function ConferenciaMinutaPage() {
                 <Card>
                      <CardHeader>
                         <CardTitle>2. Resultado da Análise</CardTitle>
-                        <CardDescription>A IA irá destacar as conformidades e divergências encontradas.</CardDescription>
+                        <CardDescription>A IA irá destacar as conformidades, divergências e novos dados encontrados.</CardDescription>
                     </CardHeader>
                     <CardContent>
                          <div className="space-y-4">
@@ -211,45 +260,60 @@ export default function ConferenciaMinutaPage() {
                             )}
                             
                             {checkResult && (
-                                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                                    {checkResult.geral.length > 0 && (
-                                        <Alert>
-                                            <Info className="h-4 w-4" />
-                                            <AlertTitle>Observações Gerais</AlertTitle>
-                                            <AlertDescription>
-                                                <ul className='list-disc pl-5'>
-                                                    {checkResult.geral.map((obs, i) => <li key={i}>{obs}</li>)}
-                                                </ul>
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                    {checkResult.clientChecks.map(clientCheck => (
-                                        <div key={clientCheck.clientName} className="space-y-2 rounded-md border p-4">
-                                            <h4 className='font-semibold flex items-center gap-2'><User className='h-4 w-4'/>{clientCheck.clientName}</h4>
-                                            <Separator />
-                                            <div className='space-y-3 pt-2'>
-                                                {clientCheck.verifications.map(v => (
-                                                    <div key={v.label} className="text-sm">
-                                                        <div className='flex items-center gap-2 font-medium'>
-                                                            {getStatusIcon(v.status)}
-                                                            <span>{v.label}</span>
+                                <div className="space-y-4">
+                                    <div className="max-h-[500px] overflow-y-auto pr-2 space-y-4">
+                                        {checkResult.geral.length > 0 && (
+                                            <Alert>
+                                                <Info className="h-4 w-4" />
+                                                <AlertTitle>Observações Gerais</AlertTitle>
+                                                <AlertDescription>
+                                                    <ul className='list-disc pl-5'>
+                                                        {checkResult.geral.map((obs, i) => <li key={i}>{obs}</li>)}
+                                                    </ul>
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
+                                        {checkResult.clientChecks.map(clientCheck => {
+                                            const StatusIcon = ({ status }: { status: VerificationResult['status'] }) => {
+                                                const { icon: Icon, className } = getStatusInfo(status);
+                                                return <Icon className={`h-4 w-4 ${className}`} />;
+                                            };
+                                            return (
+                                            <div key={clientCheck.clientName} className="space-y-2 rounded-md border p-4">
+                                                <h4 className='font-semibold flex items-center gap-2'><User className='h-4 w-4'/>{clientCheck.clientName}</h4>
+                                                <Separator />
+                                                <div className='space-y-3 pt-2'>
+                                                    {clientCheck.verifications.map(v => (
+                                                        <div key={v.label} className="text-sm">
+                                                            <div className='flex items-center gap-2 font-medium'>
+                                                                <StatusIcon status={v.status} />
+                                                                <span>{v.label}</span>
+                                                                <span className="text-xs font-normal text-muted-foreground">({v.status})</span>
+                                                            </div>
+                                                            <div className='pl-6 text-muted-foreground'>
+                                                                {v.status === 'OK' && <p>Valor conferido: <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>}
+                                                                {v.status === 'Divergente' && (
+                                                                    <>
+                                                                        <p>Esperado (Cadastro): <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>
+                                                                        <p>Encontrado (Minuta): <span className='font-medium text-yellow-600'>{v.foundValue || 'N/A'}</span></p>
+                                                                    </>
+                                                                )}
+                                                                 {v.status === 'Novo' && (
+                                                                    <p>Novo dado encontrado: <span className='font-medium text-blue-600'>{v.foundValue || 'N/A'}</span></p>
+                                                                )}
+                                                                {v.status === 'Não Encontrado' && <p className='text-red-600'>Não foi encontrado no texto da minuta.</p>}
+                                                            </div>
                                                         </div>
-                                                        <div className='pl-6 text-muted-foreground'>
-                                                            {v.status === 'OK' && <p>Valor conferido: <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>}
-                                                            {v.status === 'Divergente' && (
-                                                                <>
-                                                                    <p>Esperado: <span className='font-medium text-foreground/80'>{v.expectedValue}</span></p>
-                                                                    <p>Encontrado: <span className='font-medium text-yellow-600'>{v.foundValue || 'N/A'}</span></p>
-                                                                    <p className='text-xs italic'>Motivo: {v.reasoning}</p>
-                                                                </>
-                                                            )}
-                                                            {v.status === 'Não Encontrado' && <p className='text-red-600'>Não foi encontrado no texto da minuta.</p>}
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                            )
+                                        })}
+                                    </div>
+                                    <Button onClick={handleSaveChanges} disabled={isSaving || isSubmitting}>
+                                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                        Salvar Dados nos Clientes
+                                    </Button>
                                 </div>
                             )}
                         </div>
