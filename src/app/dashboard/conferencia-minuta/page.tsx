@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { getClientes, type Cliente } from "@/services/apiClientLocal";
 import { checkMinuteData, type CheckMinuteDataOutput } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, SearchCheck, User, CheckCircle, AlertTriangle, XCircle, Info, Users, UploadCloud, File, X as XIcon } from "lucide-react";
+import { Loader2, SearchCheck, User, CheckCircle, AlertTriangle, XCircle, Info, Users, UploadCloud, File as FileIcon, X as XIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Form } from "@/components/ui/form";
 
 const formSchema = z.object({
     file: z.any().refine(file => !!file, { message: "O envio do arquivo PDF é obrigatório." }),
@@ -172,7 +173,7 @@ export default function ConferenciaMinutaPage() {
                                 ) : (
                                      <div className="flex items-center justify-between rounded-lg border p-3">
                                         <div className="flex items-center gap-3 overflow-hidden">
-                                            <File className="h-8 w-8 flex-shrink-0 text-primary" />
+                                            <FileIcon className="h-8 w-8 flex-shrink-0 text-primary" />
                                             <div className="truncate">
                                                 <p className="truncate text-sm font-medium">{file.name}</p>
                                                 <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
