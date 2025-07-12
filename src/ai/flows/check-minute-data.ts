@@ -21,7 +21,7 @@ const ClientProfileSchema = z.object({
   dadosAdicionais: z.array(CampoAdicionalClienteSchema).describe("The structured data fields for the client."),
 });
 
-export const CheckMinuteDataInputSchema = z.object({
+const CheckMinuteDataInputSchema = z.object({
   minuteText: z.string().describe("The full text content of the act's minute/draft."),
   clientProfiles: z.array(ClientProfileSchema).describe("An array of profiles for the clients involved in the act."),
 });
@@ -41,7 +41,7 @@ const ClientVerificationSchema = z.object({
   verifications: z.array(VerificationResultSchema).describe("A list of verification results for this client's data."),
 });
 
-export const CheckMinuteDataOutputSchema = z.object({
+const CheckMinuteDataOutputSchema = z.object({
   geral: z.array(z.string()).describe("General observations about the minute that are not tied to a specific client field."),
   clientChecks: z.array(ClientVerificationSchema).describe("The verification results for each client."),
 });
