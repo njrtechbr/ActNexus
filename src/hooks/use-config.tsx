@@ -1,4 +1,6 @@
 
+"use client";
+
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { getFullConfig, saveFullConfig, type AppConfig } from '@/services/apiClientLocal';
 
