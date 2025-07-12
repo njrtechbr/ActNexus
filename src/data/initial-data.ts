@@ -165,6 +165,45 @@ const initialClientes = [
         { "data": "2024-07-30T11:00:00Z", "autor": "Admin Dev", "descricao": "Dados de qualificação foram sincronizados." }
     ]
   },
+  {
+    "id": "cliente-jsantos",
+    "nome": "JOÃO SANTOS",
+    "cpfCnpj": "555.666.777-88",
+    "tipo": "PF",
+    "documentos": [],
+    "contatos": [],
+    "enderecos": [
+      {
+        "id": "end-jsantos",
+        "logradouro": "Avenida Principal",
+        "numero": "456",
+        "bairro": "Sul",
+        "cidade": "Campinas",
+        "estado": "SP",
+        "cep": "13000-000",
+        "label": "Residencial"
+      }
+    ],
+    "observacoes": [],
+    "dadosAdicionais": [
+        { "label": "Estado Civil", "value": "casado" }
+    ],
+    "eventos": []
+  },
+  {
+    "id": "cliente-msilva",
+    "nome": "MARIA SILVA",
+    "cpfCnpj": "111.222.333-44",
+    "tipo": "PF",
+    "documentos": [],
+    "contatos": [],
+    "enderecos": [],
+    "observacoes": [],
+    "dadosAdicionais": [
+        { "label": "RG", "value": "11.222.333-4 SSP/SP" }
+    ],
+    "eventos": []
+  },
    {
     "id": "cliente-55566677788",
     "nome": "João Santos",
