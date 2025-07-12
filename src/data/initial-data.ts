@@ -166,14 +166,15 @@ const initialClientes = [
     ]
   },
   {
-    "id": "cliente-jsantos",
-    "nome": "JOÃO SANTOS",
+    "id": "cliente-55566677788",
+    "nome": "João Santos",
     "cpfCnpj": "555.666.777-88",
     "tipo": "PF",
-    "documentos": [],
-    "contatos": [],
+    "contatos": [
+        { "id": "email2", "tipo": "email", "valor": "joao.santos@corp.com", "label": "Comercial" }
+    ],
     "enderecos": [
-      {
+       {
         "id": "end-jsantos",
         "logradouro": "Avenida Principal",
         "numero": "456",
@@ -185,35 +186,6 @@ const initialClientes = [
       }
     ],
     "observacoes": [],
-    "dadosAdicionais": [
-        { "label": "Estado Civil", "value": "casado" }
-    ],
-    "eventos": []
-  },
-  {
-    "id": "cliente-msilva",
-    "nome": "MARIA SILVA",
-    "cpfCnpj": "111.222.333-44",
-    "tipo": "PF",
-    "documentos": [],
-    "contatos": [],
-    "enderecos": [],
-    "observacoes": [],
-    "dadosAdicionais": [
-        { "label": "RG", "value": "11.222.333-4 SSP/SP" }
-    ],
-    "eventos": []
-  },
-   {
-    "id": "cliente-55566677788",
-    "nome": "João Santos",
-    "cpfCnpj": "555.666.777-88",
-    "tipo": "PF",
-    "contatos": [
-        { "id": "email2", "tipo": "email", "valor": "joao.santos@corp.com", "label": "Comercial" }
-    ],
-    "enderecos": [],
-    "observacoes": [],
     "documentos": [],
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileira" },
@@ -222,7 +194,9 @@ const initialClientes = [
         { "label": "RG", "value": "55.666.777-8 SSP/SP" },
         { "label": "CPF", "value": "555.666.777-88" }
     ],
-    "eventos": []
+    "eventos": [
+        { "data": "2024-07-29T10:01:00Z", "autor": "Sistema", "descricao": "Cliente cadastrado no sistema." }
+    ]
   },
   {
     "id": "cliente-99988877766",

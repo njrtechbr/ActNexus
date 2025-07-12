@@ -79,8 +79,8 @@ export default function ConferenciaMinutaPage() {
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
             
-            Pela presente minuta, de um lado como VENDEDOR: JOÃO SANTOS, já qualificado no sistema.
-            E de outro lado como COMPRADOR: MARIA SILVA, também já qualificada.
+            Pela presente minuta, de um lado como VENDEDOR: João Santos, já qualificado no sistema.
+            E de outro lado como COMPRADOR: Maria Silva, também já qualificada.
             
             Objeto: Imóvel matrícula 12345, localizado na Rua das Flores, 123.
             No cadastro do vendedor, o endereço está como Avenida Principal, nº 456, o que é uma divergência.
@@ -112,7 +112,7 @@ export default function ConferenciaMinutaPage() {
             } else if (errorMessage.toLowerCase().includes('nenhum cliente identificado')) {
                  toast({ variant: 'destructive', title: "Nenhum Cliente Identificado", description: "A IA não conseguiu identificar clientes conhecidos no texto da minuta." });
             } else {
-                toast({ variant: 'destructive', title: "Erro de IA", description: "Não foi possível conferir a minuta." });
+                toast({ variant: 'destructive', title: "Erro de IA", description: errorMessage || "Não foi possível conferir a minuta." });
             }
         } finally {
             setIsSubmitting(false);
@@ -246,5 +246,3 @@ export default function ConferenciaMinutaPage() {
         </div>
     );
 }
-
-    
