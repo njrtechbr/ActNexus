@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { X, PlusCircle, Loader2, BookType, FileSignature, FileText, Contact, PencilRuler, Building, BrainCircuit, Save } from 'lucide-react';
+import { X, PlusCircle, Loader2, BookType, FileSignature, FileText, Contact, PencilRuler, Building, BrainCircuit, Save, DatabaseZap, UploadCloud, File as FileIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Loading from './loading';
 import { Separator } from '@/components/ui/separator';
@@ -87,6 +87,91 @@ function NotaryDataForm() {
                         </div>
                     </form>
                 </Form>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Section for Knowledge Base
+function KnowledgeBaseManager() {
+    const [files, setFiles] = useState<File[]>([]);
+    const [isDragging, setIsDragging] = useState(false);
+    const { toast } = useToast();
+
+    const handleFilesChange = (selectedFiles: FileList | null) => {
+        if (selectedFiles) {
+            setFiles(prev => [...prev, ...Array.from(selectedFiles)]);
+        }
+    };
+    
+    const handleDragEvent = (e: React.DragEvent<HTMLDivElement>, entering: boolean) => {
+        e.preventDefault();
+        setIsDragging(entering);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setIsDragging(false);
+        handleFilesChange(e.dataTransfer.files);
+    };
+
+    const removeFile = (fileName: string) => {
+        setFiles(prev => prev.filter(f => f.name !== fileName));
+    };
+    
+    const handleTrain = () => {
+        toast({
+            title: "Simulação de Treinamento",
+            description: `Em uma aplicação real, ${files.length} arquivos seriam enviados para indexação e treinamento do agente.`,
+        });
+        setFiles([]);
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><DatabaseZap className="h-5 w-5" />Base de Conhecimento do Agente</CardTitle>
+                <CardDescription>Envie arquivos (PDF, TXT) para que o agente de IA possa usá-los como fonte de conhecimento para responder perguntas.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div
+                    onDragEnter={(e) => handleDragEvent(e, true)}
+                    onDragOver={(e) => handleDragEvent(e, true)}
+                    onDragLeave={(e) => handleDragEvent(e, false)}
+                    onDrop={handleDrop}
+                    className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-10 text-center transition-colors ${
+                    isDragging ? "border-primary bg-primary/10" : "border-border"
+                    }`}
+                >
+                    <UploadCloud className="h-10 w-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm font-semibold">Arraste ou clique para anexar arquivos</p>
+                    <input type="file" className="absolute inset-0 h-full w-full cursor-pointer opacity-0" multiple onChange={(e) => handleFilesChange(e.target.files)} />
+                </div>
+                
+                {files.length > 0 && (
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                             <h4 className="text-sm font-medium text-muted-foreground">Arquivos para Treinamento</h4>
+                             <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+                                {files.map((file, i) => (
+                                     <div key={`${file.name}-${i}`} className="flex items-center justify-between gap-3 rounded-md border p-2">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileIcon className="h-4 w-4 flex-shrink-0" />
+                                            <span className="truncate text-sm font-medium">{file.name}</span>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeFile(file.name)}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                        <Button className="w-full" onClick={handleTrain}>
+                            <DatabaseZap className="mr-2 h-4 w-4" />
+                            Treinar Agente com {files.length} arquivo(s)
+                        </Button>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
@@ -344,10 +429,11 @@ export default function ConfiguracoesPage() {
             </div>
             
             <Tabs defaultValue="parametros" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="parametros">Parâmetros Gerais</TabsTrigger>
                     <TabsTrigger value="cartorio">Dados do Cartório</TabsTrigger>
                     <TabsTrigger value="ia">Prompts de IA</TabsTrigger>
+                    <TabsTrigger value="conhecimento">Base de Conhecimento</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="parametros" className="mt-6">
@@ -373,6 +459,10 @@ export default function ConfiguracoesPage() {
                 
                 <TabsContent value="ia" className="mt-6">
                     <AiSettingsSection />
+                </TabsContent>
+
+                <TabsContent value="conhecimento" className="mt-6">
+                    <KnowledgeBaseManager />
                 </TabsContent>
             </Tabs>
         </div>

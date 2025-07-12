@@ -43,6 +43,12 @@ import {
     type CheckMinuteDataOutput,
 } from "@/ai/flows/check-minute-data";
 
+import {
+    conversationalAgent as conversationalAgentFlow,
+    type ConversationalAgentInput,
+    type ConversationalAgentOutput,
+} from "@/ai/flows/conversational-agent";
+
 
 export async function automatedValidation(
   input: AutomatedValidationInput
@@ -86,4 +92,10 @@ export async function checkMinuteData(
     input: CheckMinuteDataInput
 ): Promise<CheckMinuteDataOutput> {
     return await checkMinuteDataFlow(input);
+}
+
+export async function conversationalAgent(
+    input: ConversationalAgentInput
+): Promise<ConversationalAgentOutput> {
+    return await conversationalAgentFlow(input);
 }

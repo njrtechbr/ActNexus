@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -54,7 +55,7 @@ export function SemanticSearch() {
             disabled={isLoading}
             className="text-base md:text-sm"
           />
-          <Button type="submit" disabled={isLoading || !query.trim()} className="w-10 h-10 p-0 flex-shrink-0">
+          <Button type="submit" disabled={isLoading || !query.trim()} size="icon" className="flex-shrink-0">
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             <span className="sr-only">Pesquisar</span>
           </Button>

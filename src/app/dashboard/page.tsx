@@ -4,8 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Book, FileText, Users, FileCheck2 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/metric-card";
-import { SemanticSearch } from "@/components/dashboard/semantic-search";
-import { PdfUpload } from "@/components/dashboard/pdf-upload";
+import { ConversationalAgent } from "@/components/dashboard/conversational-agent";
 import { getLivros, getAtosByLivroId, getClientes, type Livro, type Ato, type Cliente } from "@/services/apiClientLocal";
 import { populateInitialData } from "@/data/initial-data";
 import Loading from "./loading";
@@ -127,9 +126,8 @@ export default function DashboardPage() {
         <div className="xl:col-span-2">
             <AtosPorMesChart data={chartData}/>
         </div>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:col-span-1 xl:flex xl:flex-col">
-            <SemanticSearch />
-            <PdfUpload />
+        <div className="xl:col-span-1">
+            <ConversationalAgent />
         </div>
       </div>
     </div>
