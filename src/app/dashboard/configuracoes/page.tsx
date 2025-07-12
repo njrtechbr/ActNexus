@@ -20,11 +20,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { X, PlusCircle, Loader2, BookType, FileSignature, FileText, Contact, PencilRuler, Building, BrainCircuit, Save } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import Loading from '../loading';
+import Loading from './loading';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useConfig } from '@/hooks/use-config';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 // Section for Notary Data
@@ -377,4 +378,3 @@ export default function ConfiguracoesPage() {
         </div>
     );
 }
-
