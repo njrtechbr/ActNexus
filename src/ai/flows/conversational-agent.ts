@@ -87,18 +87,12 @@ const searchActsTool = ai.defineTool(
     }
 );
 
-// Agent Definition
-const agentPrompt = ai.definePrompt({
-    name: 'conversationalAgentPrompt',
-    model: 'googleai/gemini-1.5-flash-latest',
-    tools: [searchBooksTool, searchClientsTool, searchActsTool],
-    system: `Você é o "ActNexus Agent", um assistente de IA para um sistema de cartório.
-    Seu trabalho é responder às perguntas dos usuários sobre livros, atos e clientes.
-    - Use as ferramentas disponíveis para buscar informações no sistema.
-    - Seja conciso e direto em suas respostas.
-    - Se não encontrar a informação, informe o usuário claramente.
-    - Responda em português do Brasil.`,
-});
+const systemPrompt = `Você é o "ActNexus Agent", um assistente de IA para um sistema de cartório.
+Seu trabalho é responder às perguntas dos usuários sobre livros, atos e clientes.
+- Use as ferramentas disponíveis para buscar informações no sistema.
+- Seja conciso e direto em suas respostas.
+- Se não encontrar a informação, informe o usuário claramente.
+- Responda em português do Brasil.`;
 
 // Main Flow
 const conversationalAgentFlow = ai.defineFlow(
@@ -108,7 +102,13 @@ const conversationalAgentFlow = ai.defineFlow(
         outputSchema: ConversationalAgentOutputSchema,
     },
     async (input) => {
-        const result = await agentPrompt(input);
+        const result = await ai.generate({
+            model: 'googleai/gemini-1.5-flash-latest',
+            tools: [searchBooksTool, searchClientsTool, searchActsTool],
+            prompt: input.query,
+            system: systemPrompt,
+        });
+
         return { response: result.text };
     }
 );
