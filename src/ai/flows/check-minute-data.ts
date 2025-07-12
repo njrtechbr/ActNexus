@@ -38,7 +38,7 @@ const ClientVerificationSchema = z.object({
   verifications: z.array(VerificationResultSchema).describe("A list of verification results for this client's data."),
 });
 
-export const CheckMinuteDataInputSchema = z.object({
+const CheckMinuteDataInputSchema = z.object({
   minuteText: z.string().describe("The full text content of the act's minute/draft."),
   clientProfiles: z.array(z.object({
       nome: z.string(),
@@ -50,7 +50,7 @@ export const CheckMinuteDataInputSchema = z.object({
 });
 export type CheckMinuteDataInput = z.infer<typeof CheckMinuteDataInputSchema>;
 
-export const CheckMinuteDataOutputSchema = z.object({
+const CheckMinuteDataOutputSchema = z.object({
   geral: z.array(z.string()).describe("General observations about the minute that are not tied to a specific client field."),
   clientChecks: z.array(ClientVerificationSchema).describe("The verification results for each client."),
 });
