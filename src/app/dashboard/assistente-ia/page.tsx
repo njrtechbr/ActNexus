@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Send, Loader2, Bot, User, PlusCircle, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { agentAction, generateConvoTitle as generateTitleAction } from "@/lib/actions";
+import { conversationalAgent, generateConvoTitle as generateTitleAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -41,7 +41,7 @@ export default function AssistenteIaPage() {
       } else {
         startNewConversation();
       }
-    } catch (error) => {
+    } catch (error) {
       console.error("Failed to load conversations from localStorage", error);
     }
   }, []);
@@ -124,7 +124,7 @@ export default function AssistenteIaPage() {
     setIsLoading(true);
     
     try {
-      const result = await agentAction({ query: currentQuery });
+      const result = await conversationalAgent({ query: currentQuery });
       const assistantMessage: Message = { role: 'assistant', content: result.response };
        
        setConversations(prev =>
