@@ -4,46 +4,27 @@
 /**
  * @fileOverview A Genkit flow to check an act's minute against client data.
  *
- * This flow first identifies the clients mentioned in the minute's text,
- * then fetches their data from the system, and finally compares the minute
- * against the structured client profiles to find inconsistencies.
+ * This flow compares a given minute text against a pre-fetched list of
+ * client profiles to find inconsistencies. It does not identify clients itself.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getClientesByNomes } from '@/services/apiClientLocal';
 
-// Section 1: Schemas for Client Identification
-const IdentifyClientsInputSchema = z.object({
-  minuteText: z.string().describe("The full text content of the act's minute/draft."),
-});
-
-const IdentifiedClientSchema = z.object({
-  nome: z.string().describe("The full name of the client identified in the text."),
-});
-
-const IdentifyClientsOutputSchema = z.object({
-  clients: z.array(IdentifiedClientSchema).describe("An array of clients identified in the minute."),
-});
-
-
-// Section 2: Schemas for Data Verification (similar to the original)
-const CampoAdicionalClienteSchema = z.object({
-    label: z.string(),
-    value: z.string(),
-});
-
-const ClientProfileSchema = z.object({
-  nome: z.string().describe("The client's full name."),
-  dadosAdicionais: z.array(CampoAdicionalClienteSchema).describe("The structured data fields for the client."),
-});
-
+// Input schema for the verification prompt
 const VerificationInputSchema = z.object({
   minuteText: z.string().describe("The full text content of the act's minute/draft."),
-  clientProfiles: z.array(ClientProfileSchema).describe("An array of profiles for the clients involved in the act."),
+  clientProfiles: z.array(z.object({
+    nome: z.string(),
+    dadosAdicionais: z.array(z.object({
+      label: z.string(),
+      value: z.string(),
+    })),
+  })).describe("An array of profiles for the clients involved in the act."),
 });
 
 
+// Schemas for the final output of the flow
 const VerificationResultSchema = z.object({
   label: z.string().describe("The data field that was checked (e.g., 'CPF', 'Endereço')."),
   expectedValue: z.string().describe("The correct value from the client's profile."),
@@ -57,12 +38,19 @@ const ClientVerificationSchema = z.object({
   verifications: z.array(VerificationResultSchema).describe("A list of verification results for this client's data."),
 });
 
-const CheckMinuteDataInputSchema = z.object({
+export const CheckMinuteDataInputSchema = z.object({
   minuteText: z.string().describe("The full text content of the act's minute/draft."),
+  clientProfiles: z.array(z.object({
+      nome: z.string(),
+      dadosAdicionais: z.array(z.object({
+          label: z.string(),
+          value: z.string(),
+      }))
+  })).describe("An array of client profiles to check against the minute text."),
 });
 export type CheckMinuteDataInput = z.infer<typeof CheckMinuteDataInputSchema>;
 
-const CheckMinuteDataOutputSchema = z.object({
+export const CheckMinuteDataOutputSchema = z.object({
   geral: z.array(z.string()).describe("General observations about the minute that are not tied to a specific client field."),
   clientChecks: z.array(ClientVerificationSchema).describe("The verification results for each client."),
 });
@@ -73,28 +61,7 @@ export async function checkMinuteData(input: CheckMinuteDataInput): Promise<Chec
   return checkMinuteDataFlow(input);
 }
 
-
-// Prompt 1: Identify Clients from text
-const identifyClientsPrompt = ai.definePrompt({
-    name: 'identifyClientsPrompt',
-    model: 'googleai/gemini-1.5-flash-latest',
-    input: { schema: IdentifyClientsInputSchema },
-    output: { schema: IdentifyClientsOutputSchema },
-    prompt: `
-    Você é um especialista em análise de documentos legais.
-    Sua tarefa é ler o texto de uma minuta de ato notarial e identificar os nomes completos de todas as partes (pessoas físicas ou jurídicas) mencionadas.
-    Retorne apenas os nomes.
-
-    Texto da Minuta:
-    ---
-    {{{minuteText}}}
-    ---
-
-    Responda no formato JSON especificado.
-    `
-});
-
-// Prompt 2: Verify data once clients are known
+// Main prompt for data verification
 const verifyDataPrompt = ai.definePrompt({
   name: 'verifyDataPrompt',
   model: 'googleai/gemini-1.5-flash-latest',
@@ -135,7 +102,7 @@ Realize a análise e retorne o resultado no formato JSON especificado.
 });
 
 
-// The main flow that orchestrates the two steps
+// The main flow that orchestrates the verification
 const checkMinuteDataFlow = ai.defineFlow(
   {
     name: 'checkMinuteDataFlow',
@@ -146,31 +113,14 @@ const checkMinuteDataFlow = ai.defineFlow(
     if (!input.minuteText) {
       return { geral: ["Texto da minuta não fornecido."], clientChecks: [] };
     }
-
-    // Step 1: Identify clients from the minute text
-    const { output: identifiedClientsOutput } = await identifyClientsPrompt({ minuteText: input.minuteText });
-    const identifiedNames = identifiedClientsOutput?.clients.map(c => c.nome) || [];
-    
-    if (identifiedNames.length === 0) {
-        throw new Error("Nenhum cliente identificado no texto da minuta.");
-    }
-
-    // Step 2: Fetch full client profiles from the database (mock)
-    const clientProfilesFromDB = await getClientesByNomes(identifiedNames);
-
-    if (clientProfilesFromDB.length === 0) {
-        throw new Error("Os clientes identificados no texto não foram encontrados no sistema.");
+     if (!input.clientProfiles || input.clientProfiles.length === 0) {
+      return { geral: ["Perfis de cliente não fornecidos para verificação."], clientChecks: [] };
     }
     
-    const clientProfilesForVerification = clientProfilesFromDB.map(c => ({
-        nome: c.nome,
-        dadosAdicionais: c.dadosAdicionais || []
-    }));
-
-    // Step 3: Run the verification against the found profiles
+    // Run the verification against the provided profiles
     const { output: verificationOutput } = await verifyDataPrompt({
         minuteText: input.minuteText,
-        clientProfiles: clientProfilesForVerification
+        clientProfiles: input.clientProfiles
     });
     
     return verificationOutput!;

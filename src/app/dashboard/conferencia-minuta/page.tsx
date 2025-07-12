@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Form } from "@/components/ui/form";
+import { getClientesByNomes } from "@/services/apiClientLocal";
 
 const formSchema = z.object({
     file: z.any().refine(file => !!file, { message: "O envio do arquivo PDF é obrigatório." }),
@@ -74,8 +75,6 @@ export default function ConferenciaMinutaPage() {
         setIsSubmitting(true);
         setCheckResult(null);
 
-        // Simulação de extração de texto do PDF
-        // Em um app real, aqui entraria a lógica para ler o PDF (ex: pdf-lib)
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
             
@@ -89,13 +88,32 @@ export default function ConferenciaMinutaPage() {
             Preço: R$ 500.000,00 (quinhentos mil reais).
             Data: ${new Date().toLocaleDateString('pt-BR')}
         `;
-
+        
+        // Simulação da lógica que aconteceria no backend
         try {
-            // A action agora recebe apenas o texto da minuta.
-            // A IA será responsável por identificar os clientes e buscar seus dados.
+            // 1. Identificar nomes no texto (aqui estamos simulando, mas na real a IA faria isso)
+            const identifiedNames = ["Maria Silva", "João Santos"];
+
+            // 2. Buscar os perfis completos desses clientes
+            const clientProfilesFromDB = await getClientesByNomes(identifiedNames);
+
+            if (clientProfilesFromDB.length === 0) {
+                 toast({ variant: 'destructive', title: "Clientes Não Encontrados", description: "Os clientes mencionados na minuta não foram encontrados no sistema." });
+                 setIsSubmitting(false);
+                 return;
+            }
+
+            const clientProfilesForVerification = clientProfilesFromDB.map(c => ({
+                nome: c.nome,
+                dadosAdicionais: c.dadosAdicionais || []
+            }));
+
+            // 3. Chamar a IA para fazer a conferência
             const result = await checkMinuteData({
                 minuteText: mockDocumentText,
+                clientProfiles: clientProfilesForVerification,
             });
+
             setCheckResult(result);
             toast({
                 title: "Conferência Concluída",
@@ -106,8 +124,6 @@ export default function ConferenciaMinutaPage() {
             const errorMessage = (error as Error).message;
             if (errorMessage.includes('503')) {
                 toast({ variant: 'destructive', title: "Serviço de IA Indisponível", description: "O modelo de IA parece estar sobrecarregado. Tente novamente em alguns instantes." });
-            } else if (errorMessage.toLowerCase().includes('nenhum cliente identificado') || errorMessage.toLowerCase().includes('não foram encontrados no sistema')) {
-                 toast({ variant: 'destructive', title: "Clientes Não Encontrados", description: "A IA não conseguiu identificar clientes conhecidos no texto da minuta ou os dados não correspondem." });
             } else {
                 toast({ variant: 'destructive', title: "Erro de IA", description: errorMessage || "Não foi possível conferir a minuta." });
             }

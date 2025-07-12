@@ -141,12 +141,6 @@ const initialClientes = [
         "autor": "Admin Dev",
         "data": "2024-07-29T18:00:00Z",
         "tipo": "manual"
-      },
-      {
-        "texto": "Excelente histórico de relacionamento com o cartório.",
-        "autor": "Admin Dev",
-        "data": "2024-07-28T14:30:00Z",
-        "tipo": "manual"
       }
     ],
     "documentos": [
@@ -159,11 +153,10 @@ const initialClientes = [
         { "label": "Profissão", "value": "advogada" },
         { "label": "RG", "value": "11.222.333-4 SSP/SP" },
         { "label": "CPF", "value": "111.222.333-44" },
-        { "label": "Endereço", "value": "Rua das Flores, 123, Centro, São Paulo-SP, CEP 01000-000" }
+        { "label": "Endereço", "value": "Rua das Flores, nº 123, Bairro Centro, São Paulo-SP, CEP 01000-000" }
     ],
     "eventos": [
-        { "data": "2024-07-29T10:00:00Z", "autor": "Sistema", "descricao": "Cliente cadastrado no sistema." },
-        { "data": "2024-07-30T11:00:00Z", "autor": "Admin Dev", "descricao": "Dados de qualificação foram sincronizados." }
+        { "data": "2024-07-29T10:00:00Z", "autor": "Sistema", "descricao": "Cliente cadastrado no sistema." }
     ]
   },
   {
