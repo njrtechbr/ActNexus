@@ -4,11 +4,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { Book, FileText, Users, FileCheck2 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/metric-card";
-import { ConversationalAgent } from "@/components/dashboard/conversational-agent";
 import { getLivros, getAtosByLivroId, getClientes, type Livro, type Ato, type Cliente } from "@/services/apiClientLocal";
 import { populateInitialData } from "@/data/initial-data";
 import Loading from "./loading";
 import { AtosPorMesChart } from "@/components/dashboard/atos-por-mes-chart";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -122,14 +122,11 @@ export default function DashboardPage() {
           change="Clientes na base"
         />
       </div>
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+      <Card>
+        <CardContent className="p-2">
             <AtosPorMesChart data={chartData}/>
-        </div>
-        <div className="xl:col-span-1">
-            <ConversationalAgent />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   Settings,
   BrainCircuit,
   ClipboardCheck,
+  Bot,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -32,6 +33,7 @@ interface UserProfile {
 
 const menuItems = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
+  { href: "/dashboard/assistente-ia", label: "Assistente IA", icon: Bot },
   { href: "/dashboard/conferencia-minuta", label: "Conferir Minuta", icon: ClipboardCheck },
   { href: "/dashboard/livros", label: "Livros", icon: Book },
   { href: "/dashboard/clientes", label: "Clientes", icon: Users },
