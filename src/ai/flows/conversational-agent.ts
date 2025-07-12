@@ -10,12 +10,12 @@ import { z } from 'zod';
 import { getLivros, getClientes, getAtosByLivroId, type Livro, type Cliente, type Ato } from '@/services/apiClientLocal';
 
 // Schemas for Input and Output
-export const ConversationalAgentInputSchema = z.object({
+const ConversationalAgentInputSchema = z.object({
   query: z.string().describe("The user's question or command in natural language."),
 });
 export type ConversationalAgentInput = z.infer<typeof ConversationalAgentInputSchema>;
 
-export const ConversationalAgentOutputSchema = z.object({
+const ConversationalAgentOutputSchema = z.object({
   response: z.string().describe("The agent's response to the user's query."),
 });
 export type ConversationalAgentOutput = z.infer<typeof ConversationalAgentOutputSchema>;
