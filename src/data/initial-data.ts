@@ -156,9 +156,10 @@ const initialClientes = [
     "dadosAdicionais": [
         { "label": "Nacionalidade", "value": "brasileira" },
         { "label": "Estado Civil", "value": "solteira" },
-        { "label": "Profissão", "value": "administradora" },
+        { "label": "Profissão", "value": "advogada" },
         { "label": "RG", "value": "11.222.333-4 SSP/SP" },
-        { "label": "CPF", "value": "111.222.333-44" }
+        { "label": "CPF", "value": "111.222.333-44" },
+        { "label": "Endereço", "value": "Rua das Flores, 123, Centro, São Paulo-SP, CEP 01000-000" }
     ],
     "eventos": [
         { "data": "2024-07-29T10:00:00Z", "autor": "Sistema", "descricao": "Cliente cadastrado no sistema." },
@@ -188,7 +189,7 @@ const initialClientes = [
     "observacoes": [],
     "documentos": [],
     "dadosAdicionais": [
-        { "label": "Nacionalidade", "value": "brasileira" },
+        { "label": "Nacionalidade", "value": "brasileiro" },
         { "label": "Estado Civil", "value": "casado" },
         { "label": "Profissão", "value": "autônomo" },
         { "label": "RG", "value": "55.666.777-8 SSP/SP" },

@@ -79,15 +79,12 @@ export default function ConferenciaMinutaPage() {
         const mockDocumentText = `
             Minuta de Escritura Pública de Compra e Venda
             
-            Pela presente minuta, de um lado como VENDEDOR: João Santos, já qualificado no sistema.
-            E de outro lado como COMPRADOR: Maria Silva, também já qualificada.
+            VENDEDOR: João Santos, brasileiro, casado, autônomo, portador do CPF 555.666.777-88.
+            COMPRADORA: Maria Silva, brasileira, solteira, profissão advogada, portadora do CPF nº 111.222.333-44.
             
-            Objeto: Imóvel matrícula 12345, localizado na Rua das Flores, 123.
-            No cadastro do vendedor, o endereço está como Avenida Principal, nº 456, o que é uma divergência.
-            
-            O CPF de João é 555.666.777-88.
-            O RG de Maria é 11.222.333-4, mas no sistema está como 11.222.333-4 SSP/SP.
-            O estado civil de João não está mencionado na minuta.
+            O endereço da compradora é Rua das Flores, 123, Centro, São Paulo-SP, CEP 01000-000.
+            O RG do vendedor não está mencionado na minuta.
+            O estado civil da compradora na minuta está como solteira, mas seu cadastro pode dizer outra coisa para teste.
 
             Preço: R$ 500.000,00 (quinhentos mil reais).
             Data: ${new Date().toLocaleDateString('pt-BR')}
@@ -109,8 +106,8 @@ export default function ConferenciaMinutaPage() {
             const errorMessage = (error as Error).message;
             if (errorMessage.includes('503')) {
                 toast({ variant: 'destructive', title: "Serviço de IA Indisponível", description: "O modelo de IA parece estar sobrecarregado. Tente novamente em alguns instantes." });
-            } else if (errorMessage.toLowerCase().includes('nenhum cliente identificado')) {
-                 toast({ variant: 'destructive', title: "Nenhum Cliente Identificado", description: "A IA não conseguiu identificar clientes conhecidos no texto da minuta." });
+            } else if (errorMessage.toLowerCase().includes('nenhum cliente identificado') || errorMessage.toLowerCase().includes('não foram encontrados no sistema')) {
+                 toast({ variant: 'destructive', title: "Clientes Não Encontrados", description: "A IA não conseguiu identificar clientes conhecidos no texto da minuta ou os dados não correspondem." });
             } else {
                 toast({ variant: 'destructive', title: "Erro de IA", description: errorMessage || "Não foi possível conferir a minuta." });
             }
