@@ -1,0 +1,415 @@
+# =============================================================================
+# ActNexus Backend - Git Ignore
+# =============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
+#   This is especially recommended for binary packages to ensure reproducibility, and is more
+#   commonly ignored for libraries.
+#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
+#pdm.lock
+#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
+#   in version control.
+#   https://pdm.fming.dev/#use-with-ide
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
+#  be added to the global gitignore or merged into this project gitignore.  For a PyCharm
+#  project, it is recommended to ignore the entire .idea directory.
+.idea/
+
+# =============================================================================
+# Project Specific
+# =============================================================================
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+logs/
+*.log
+
+# Uploads and temporary files
+uploads/
+temp/
+tmp/
+/tmp/actnexus_uploads/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+test.db
+
+# Alembic
+# Keep alembic.ini and versions/ but ignore temporary files
+alembic/versions/__pycache__/
+
+# LangFlow exports (keep structure but ignore actual exports)
+langflow_exports/*.json
+!langflow_exports/.gitkeep
+
+# MinIO data (if running locally)
+minio_data/
+
+# Redis data
+redis_data/
+
+# Docker volumes
+postgres_data/
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+*.csr
+
+# Backup files
+*.bak
+*.backup
+*.sql
+backup_*
+
+# Profiling
+profile.stats
+*.prof
+profiling/
+
+# IDE specific
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Security
+secrets/
+*.secret
+api_keys.txt
+
+# Documentation builds
+docs/build/
+docs/_build/
+
+# Static files (if any)
+static/
+
+# Media files
+media/
+
+# Cache
+.cache/
+cache/
+
+# Monitoring
+prometheus_data/
+grafana_data/
+
+# Load testing
+locust_reports/
+
+# Jupyter notebooks (if any)
+*.ipynb
+
+# Temporary Python files
+*.tmp
+*.temp
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Local configuration overrides
+local_config.py
+local_settings.py
+
+# Development databases
+dev.db
+development.db
+
+# Test artifacts
+test_results/
+test_reports/
+
+# Performance monitoring
+newrelic.ini
+
+# Sentry
+.sentryclirc
+
+# Terraform (if used for infrastructure)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Kubernetes (if used)
+*.kubeconfig
+
+# Local scripts
+local_*.sh
+local_*.py
+
+# Experimental features
+experiments/
+playground/
+
+# Third-party integrations
+integrations/local/
+
+# Custom ignore patterns (add your own below)
+# ============================================
+
+# ActNexus specific
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+processed_documents/
+ai_models/
+model_cache/
+vectorstore/
+embeddings_cache/
+
+# LangFlow specific
+langflow.db
+langflow_data/
+flows_backup/
+
+# MinIO/S3 local testing
+s3_local/
+buckets/
+
+# AI/ML artifacts
+*.pkl
+*.joblib
+*.h5
+*.onnx
+checkpoints/
+models/
+weights/
+
+# Large files
+*.bin
+*.model
+*.vec
+
+# Temporary processing files
+processing_*
+temp_*
+extracted_*
+
+# Configuration overrides
+config_local.py
+settings_local.py
+
+# Development tools
+.coverage.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Docker development
+docker-compose.override.yml
+.dockerignore.local
+
+# Performance profiling
+*.pstats
+*.cprof
+profile_*
+
+# Database dumps
+*.dump
+*.sql.gz
+database_backup_*
+
+# Monitoring and metrics
+metrics/
+traces/
+logs_archive/
+
+# Development notebooks
+notebooks/
+*.ipynb_checkpoints/
+
+# Local development scripts
+dev_*.py
+test_*.py
+script_*.py
+
+# IDE and editor files
+.fleet/
+.nova/
+*.sublime-*
+
+# OS and system files
+.fuse_hidden*
+.nfs*
+
+# Backup and archive files
+*.orig
+*.rej
+*.patch
+
+# Local environment overrides
+.env.override
+.env.*.local
